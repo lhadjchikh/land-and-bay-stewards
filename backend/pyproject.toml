@@ -1,0 +1,43 @@
+[tool.poetry]
+name = "labs"
+version = "0.1.0"
+description = "Land and Bay Stewards"
+authors = ["Leila Hadj-Chikh <lhadjchikh@gmail.com>"]
+license = "n"
+readme = "README.md"
+packages = [
+    { include = "labs" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+django = "^5.2.1"
+django-ninja = "^1.4.2"
+dj-database-url = "^2.3.0"
+gdal = "3.10.3"
+whitenoise = "^6.9.0"
+psycopg = "^3.2.9"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.3.0"
+ruff = "^0.3.0"
+
+[tool.black]
+line-length = 88
+target-version = ["py312"]
+include = '\.pyi?$'
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "C90", "N", "B", "UP", "ANN", "A", "COM", "C4", "DTZ", "T10", "T20", "PT", "Q", "SIM", "ARG", "ERA"]
+ignore = ["ANN101", "ANN102", "ARG001"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["labs_project", "campaigns", "endorsers", "legislators", "regions", "api"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

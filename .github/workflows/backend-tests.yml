@@ -1,0 +1,49 @@
+name: Backend Tests
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'backend/**'
+      - 'docker-compose.yml'
+      - 'Dockerfile'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Build and start containers
+      run: docker compose up -d db
+    
+    - name: Wait for PostgreSQL
+      run: |
+        timeout=60
+        until docker compose exec -T db pg_isready -U postgres || [ $timeout -le 0 ]; do
+          echo "Waiting for PostgreSQL to be ready..."
+          sleep 5
+          timeout=$((timeout-5))
+        done
+        if [ $timeout -le 0 ]; then
+          echo "PostgreSQL failed to start in time"
+          exit 1
+        fi
+    
+    - name: Run backend tests
+      run: |
+        docker compose run --rm app sh -c "cd /app && python manage.py test"
+    
+    - name: Stop containers
+      if: always()
+      run: docker compose down
