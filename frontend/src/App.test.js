@@ -7,6 +7,7 @@ jest.mock('./services/api', () => ({
   getCampaigns: jest.fn(),
   getEndorsers: jest.fn(),
   getLegislators: jest.fn(),
+  getBaseUrl: jest.fn(() => ''),
 }));
 
 describe('App component', () => {
@@ -62,10 +63,26 @@ describe('App component', () => {
   });
 
   test('renders CampaignsList component', async () => {
+    // Setup a delayed response to ensure we can see the loading state
+    let resolvePromise;
+    const delayedResponse = new Promise(resolve => {
+      resolvePromise = resolve;
+    });
+    
+    API.getCampaigns.mockImplementationOnce(() => delayedResponse);
+    
     render(<App />);
     
     // First it should show loading state
     expect(screen.getByTestId('loading')).toBeInTheDocument();
+    
+    // Resolve the promise after checking loading state
+    resolvePromise([{
+      id: 1,
+      title: 'Test Campaign',
+      slug: 'test-campaign',
+      summary: 'This is a test campaign'
+    }]);
     
     // Wait for campaigns to load
     await waitFor(() => {
@@ -80,10 +97,21 @@ describe('App component', () => {
   });
 
   test('handles API errors gracefully', async () => {
-    // Override the mock to simulate an error
-    API.getCampaigns.mockRejectedValueOnce(new Error('API Error'));
+    // Create a delayed rejection
+    let rejectPromise;
+    const delayedRejection = new Promise((_, reject) => {
+      rejectPromise = reject;
+    });
+    
+    API.getCampaigns.mockImplementationOnce(() => delayedRejection);
     
     render(<App />);
+    
+    // First it should show loading state
+    expect(screen.getByTestId('loading')).toBeInTheDocument();
+    
+    // Trigger the rejection after checking loading state
+    rejectPromise(new Error('API Error'));
     
     // Wait for the error message
     await waitFor(() => {

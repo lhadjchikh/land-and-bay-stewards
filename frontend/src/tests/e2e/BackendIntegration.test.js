@@ -11,6 +11,7 @@
  * npm test -- src/tests/e2e/BackendIntegration.test.js
  */
 
+import { act } from '@testing-library/react';
 import API from '../../services/api';
 
 // These tests should run in CI with a real backend
@@ -77,7 +78,12 @@ const shouldSkip = process.env.SKIP_E2E === 'true';
 
   test('Can fetch campaigns from the backend', async () => {
     // Get campaigns using the mocked API
-    const campaigns = await API.getCampaigns();
+    let campaigns;
+    
+    // Wrap API call in act
+    await act(async () => {
+      campaigns = await API.getCampaigns();
+    });
     
     // Verify API method was called
     expect(API.getCampaigns).toHaveBeenCalled();
@@ -96,7 +102,12 @@ const shouldSkip = process.env.SKIP_E2E === 'true';
 
   test('Can fetch endorsers from the backend', async () => {
     // Get endorsers using the mocked API
-    const endorsers = await API.getEndorsers();
+    let endorsers;
+    
+    // Wrap API call in act
+    await act(async () => {
+      endorsers = await API.getEndorsers();
+    });
     
     // Verify API method was called
     expect(API.getEndorsers).toHaveBeenCalled();
@@ -116,7 +127,12 @@ const shouldSkip = process.env.SKIP_E2E === 'true';
 
   test('Can fetch legislators from the backend', async () => {
     // Get legislators using the mocked API
-    const legislators = await API.getLegislators();
+    let legislators;
+    
+    // Wrap API call in act
+    await act(async () => {
+      legislators = await API.getLegislators();
+    });
     
     // Verify API method was called
     expect(API.getLegislators).toHaveBeenCalled();
