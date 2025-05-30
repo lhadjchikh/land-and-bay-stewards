@@ -96,7 +96,7 @@ After the initial deployment, you need to enable the PostGIS extension in the RD
 1. Connect to your RDS instance:
 
    ```bash
-   psql -h <database_endpoint> -U postgres -d labs
+   psql -h <database_endpoint> -U postgres -d labandbay
    ```
 
    (Get the database_endpoint from Terraform outputs by running: `terraform -chdir=terraform output database_endpoint`)
