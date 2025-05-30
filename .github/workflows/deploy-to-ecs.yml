@@ -63,6 +63,7 @@ jobs:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    environment: prod
 
     steps:
       - name: Checkout
@@ -93,6 +94,7 @@ jobs:
     name: Deploy to ECS
     needs: build_and_push
     runs-on: ubuntu-latest
+    environment: prod
 
     steps:
       - name: Checkout
