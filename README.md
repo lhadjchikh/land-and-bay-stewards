@@ -32,7 +32,7 @@ The repository is organized into two main directories:
 
 - Docker and Docker Compose (recommended)
 - Alternatively:
-  - Python 3.12+ with Poetry
+  - Python 3.13+ with Poetry
   - Node.js 18+ with npm
   - PostgreSQL with PostGIS
   - GDAL 3.10.3

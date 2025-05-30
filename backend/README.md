@@ -30,7 +30,7 @@ The project is structured following standard Python package practices:
 
 ```
 backend/
-├── labs/                       # Main package
+├── landandbay/                 # Main package
 │   ├── api/                    # API endpoints
 │   ├── campaigns/              # Campaign models and views
 │   ├── core/                   # Core project settings and configuration
@@ -117,6 +117,12 @@ Run the tests with:
 
 ```bash
 poetry run python manage.py test
+```
+
+For debugging test issues, use the verbose flag:
+
+```bash
+poetry run python manage.py test -v 2
 ```
 
 ## Environment Variables
