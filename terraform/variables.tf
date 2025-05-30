@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "db_username" {
   description = "Database master username"
   type        = string
-  default     = "landandbay_admin"
+  # Removed default value for security
 }
 
 variable "db_password" {
@@ -25,7 +25,7 @@ variable "db_name" {
 variable "app_db_username" {
   description = "Application database username with restricted privileges"
   type        = string
-  default     = "landandbay_app"
+  # Removed default value for security
 }
 
 variable "app_db_password" {
@@ -67,4 +67,16 @@ variable "django_secret_key" {
   description = "Secret key for Django application"
   type        = string
   sensitive   = true
+}
+
+variable "allowed_bastion_cidrs" {
+  description = "List of CIDR blocks allowed to access the bastion host"
+  type        = list(string)
+  default     = ["0.0.0.0/0"] # Replace with your IP address for security
+}
+
+variable "bastion_key_name" {
+  description = "SSH key pair name for the bastion host"
+  type        = string
+  default     = "landandbay-bastion" # Create this key pair in AWS console
 }
