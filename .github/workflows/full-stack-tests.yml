@@ -78,55 +78,54 @@ jobs:
       - name: Create test data
         run: |
           # Create test data for the API tests
-            docker compose exec -T app bash -c '
-              export PYTHONPATH="${PYTHONPATH}:/app/backend"
-              python backend/manage.py shell -c "
-              try:
-                from land_and_bay.campaigns.models import PolicyCampaign
-                from land_and_bay.endorsers.models import Endorser
-                from land_and_bay.legislators.models import Legislator
-              except ImportError as e:
-                print(f\"Error importing models: {e}\")
-                exit(1)
-              "
-            '
-
-          # Create a test campaign if none exists
-          if not PolicyCampaign.objects.exists():
-              PolicyCampaign.objects.create(
-                  title='Test Campaign',
-                  slug='test-campaign',
-                  summary='This is a test campaign for integration testing'
-              )
-              print('Created test campaign')
-
-          # Create a test endorser if none exists
-          if not Endorser.objects.exists():
-              Endorser.objects.create(
-                  name='Test Endorser',
-                  organization='Test Organization',
-                  role='Test Role',
-                  email='test@example.com',
-                  state='MD',
-                  county='Test County',
-                  type='other',
-                  campaign=PolicyCampaign.objects.first()
-              )
-              print('Created test endorser')
-
-          # Create a test legislator if none exists
-          if not Legislator.objects.exists():
-              Legislator.objects.create(
-                  bioguide_id='TEST001',
-                  first_name='Test',
-                  last_name='Legislator',
-                  chamber='House',
-                  state='MD',
-                  district='01',
-                  party='D'
-              )
-              print('Created test legislator')
+          docker compose exec -T app bash -c '
+          export PYTHONPATH="${PYTHONPATH}:/app/backend"
+          python backend/manage.py shell -c "
+          try:
+              from landandbay.campaigns.models import PolicyCampaign
+              from landandbay.endorsers.models import Endorser
+              from landandbay.legislators.models import Legislator
+              
+              # Create a test campaign if none exists
+              if not PolicyCampaign.objects.exists():
+                  PolicyCampaign.objects.create(
+                      title=\"Test Campaign\",
+                      slug=\"test-campaign\",
+                      summary=\"This is a test campaign for integration testing\"
+                  )
+                  print(\"Created test campaign\")
+              
+              # Create a test endorser if none exists
+              if not Endorser.objects.exists():
+                  Endorser.objects.create(
+                      name=\"Test Endorser\",
+                      organization=\"Test Organization\",
+                      role=\"Test Role\",
+                      email=\"test@example.com\",
+                      state=\"MD\",
+                      county=\"Test County\",
+                      type=\"other\",
+                      campaign=PolicyCampaign.objects.first()
+                  )
+                  print(\"Created test endorser\")
+              
+              # Create a test legislator if none exists
+              if not Legislator.objects.exists():
+                  Legislator.objects.create(
+                      bioguide_id=\"TEST001\",
+                      first_name=\"Test\",
+                      last_name=\"Legislator\",
+                      chamber=\"House\",
+                      state=\"MD\",
+                      district=\"01\",
+                      party=\"D\"
+                  )
+                  print(\"Created test legislator\")
+          except ImportError as e:
+              print(f\"Error importing models: {e}\")
+              exit(1)
           "
+          '
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
