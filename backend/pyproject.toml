@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "labs"
+name = "landandbay"
 version = "0.1.0"
-description = "Land and Bay Stewards (landandbay.org)"
+description = "Land and Bay (landandbay.org)"
 authors = ["Leila Hadj-Chikh <lhadjchikh@gmail.com>"]
 license = "n"
 readme = "README.md"
 packages = [
-    { include = "labs" }
+    { include = "landandbay" }
 ]
 
 [tool.poetry.dependencies]
@@ -37,7 +37,7 @@ select = ["E", "F", "I", "C90", "N", "B", "UP", "ANN", "A", "COM", "C4", "DTZ", 
 ignore = ["ARG001"]
 
 [tool.ruff.lint.isort]
-known-first-party = ["labs_project", "campaigns", "endorsers", "legislators", "regions", "api"]
+known-first-party = ["landandbay", "campaigns", "endorsers", "legislators", "regions", "api"]
 
 [build-system]
 requires = ["poetry-core"]
