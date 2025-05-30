@@ -14,7 +14,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     
     -- Grant privileges to the application user
     GRANT CONNECT ON DATABASE landandbay TO landandbay_app;
-    GRANT USAGE ON SCHEMA public TO landandbay_app;
+    GRANT USAGE, CREATE ON SCHEMA public TO landandbay_app;
     GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO landandbay_app;
     GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO landandbay_app;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO landandbay_app;
