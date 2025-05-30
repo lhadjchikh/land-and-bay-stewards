@@ -13,8 +13,8 @@
 
 import API from '../../services/api';
 
-// Skip these tests in CI/CD environments
-const shouldSkip = process.env.CI === 'true' || process.env.SKIP_E2E === 'true';
+// Only skip if explicitly told to skip via env var
+const shouldSkip = process.env.SKIP_E2E === 'true';
 
 // Use conditionally running tests with test.skip
 (shouldSkip ? describe.skip : describe)('Backend Integration Tests', () => {
