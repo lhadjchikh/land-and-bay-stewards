@@ -55,7 +55,7 @@ output "ssh_tunnel_command" {
 }
 
 output "pgadmin_connection_info" {
-  value = <<-EOT
+  value       = <<-EOT
     Set up pgAdmin with:
     - Host: localhost
     - Port: 5432

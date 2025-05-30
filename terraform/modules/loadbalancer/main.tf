@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.0.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # Load Balancer Module
 
 # Application Load Balancer
@@ -7,13 +18,13 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   security_groups    = [var.app_security_group_id]
   subnets            = var.public_subnet_ids
-  
+
   access_logs {
     bucket  = var.alb_logs_bucket
     prefix  = "alb-logs"
     enabled = true
   }
-  
+
   tags = {
     Name = "${var.prefix}-alb"
   }
@@ -26,7 +37,7 @@ resource "aws_lb_target_group" "app" {
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   target_type = "ip"
-  
+
   health_check {
     enabled             = true
     path                = var.health_check_path
@@ -37,7 +48,7 @@ resource "aws_lb_target_group" "app" {
     interval            = 30
     matcher             = "200"
   }
-  
+
   tags = {
     Name = "${var.prefix}-tg"
   }
@@ -48,7 +59,7 @@ resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = 80
   protocol          = "HTTP"
-  
+
   default_action {
     type = "redirect"
     redirect {
@@ -66,7 +77,7 @@ resource "aws_lb_listener" "https" {
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
   certificate_arn   = var.acm_certificate_arn
-  
+
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app.arn

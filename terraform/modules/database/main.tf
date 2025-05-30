@@ -1,3 +1,18 @@
+terraform {
+  required_version = ">= 1.0.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+    null = {
+      source  = "hashicorp/null"
+      version = "~> 3.0"
+    }
+  }
+}
+
 # Database Module
 
 # KMS key for RDS encryption
@@ -5,7 +20,7 @@ resource "aws_kms_key" "rds" {
   description             = "KMS key for RDS encryption"
   deletion_window_in_days = 7
   enable_key_rotation     = true
-  
+
   tags = {
     Name = "${var.prefix}-rds-kms-key"
   }
@@ -20,7 +35,7 @@ resource "aws_kms_alias" "rds" {
 resource "aws_db_subnet_group" "main" {
   name       = "${var.prefix}-db-subnet"
   subnet_ids = var.db_subnet_ids
-  
+
   tags = {
     Name = "${var.prefix}-db-subnet"
   }
@@ -28,30 +43,30 @@ resource "aws_db_subnet_group" "main" {
 
 # RDS PostgreSQL Instance
 resource "aws_db_instance" "postgres" {
-  allocated_storage      = var.db_allocated_storage
-  storage_type           = "gp3"
-  engine                 = "postgres"
-  engine_version         = var.db_engine_version
-  instance_class         = var.db_instance_class
-  name                   = var.db_name
-  username               = var.db_username
-  password               = var.db_password
-  parameter_group_name   = aws_db_parameter_group.postgres.name
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [var.db_security_group_id]
-  skip_final_snapshot    = false
-  final_snapshot_identifier = "${var.prefix}-final-snapshot"
-  deletion_protection    = true
-  multi_az               = false
-  backup_retention_period = var.db_backup_retention_period
-  backup_window          = "03:00-04:00"
-  maintenance_window     = "mon:04:00-mon:05:00"
+  allocated_storage            = var.db_allocated_storage
+  storage_type                 = "gp3"
+  engine                       = "postgres"
+  engine_version               = var.db_engine_version
+  instance_class               = var.db_instance_class
+  name                         = var.db_name
+  username                     = var.db_username
+  password                     = var.db_password
+  parameter_group_name         = aws_db_parameter_group.postgres.name
+  db_subnet_group_name         = aws_db_subnet_group.main.name
+  vpc_security_group_ids       = [var.db_security_group_id]
+  skip_final_snapshot          = false
+  final_snapshot_identifier    = "${var.prefix}-final-snapshot"
+  deletion_protection          = true
+  multi_az                     = false
+  backup_retention_period      = var.db_backup_retention_period
+  backup_window                = "03:00-04:00"
+  maintenance_window           = "mon:04:00-mon:05:00"
   performance_insights_enabled = false
-  storage_encrypted     = true
-  kms_key_id            = aws_kms_key.rds.arn
-  monitoring_interval   = 0
-  publicly_accessible   = false
-  
+  storage_encrypted            = true
+  kms_key_id                   = aws_kms_key.rds.arn
+  monitoring_interval          = 0
+  publicly_accessible          = false
+
   tags = {
     Name = "${var.prefix}-db"
   }
@@ -66,7 +81,7 @@ resource "aws_db_parameter_group" "postgres" {
     name  = "shared_preload_libraries"
     value = "postgis"
   }
-  
+
   tags = {
     Name = "${var.prefix}-pg${split(".", var.db_engine_version)[0]}"
   }

@@ -1,18 +1,29 @@
+terraform {
+  required_version = ">= 1.0.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # Compute Module
 
 # ECR Repository
 resource "aws_ecr_repository" "app" {
   name                 = var.prefix
   image_tag_mutability = "IMMUTABLE"
-  
+
   image_scanning_configuration {
     scan_on_push = true
   }
-  
+
   encryption_configuration {
     encryption_type = "KMS"
   }
-  
+
   tags = {
     Name = var.prefix
   }
@@ -21,12 +32,12 @@ resource "aws_ecr_repository" "app" {
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "${var.prefix}-cluster"
-  
+
   setting {
     name  = "containerInsights"
     value = "disabled"
   }
-  
+
   tags = {
     Name = "${var.prefix}-cluster"
   }
@@ -36,7 +47,7 @@ resource "aws_ecs_cluster" "main" {
 resource "aws_cloudwatch_log_group" "ecs_logs" {
   name              = "/ecs/${var.prefix}"
   retention_in_days = 30
-  
+
   tags = {
     Name = "${var.prefix}-logs"
   }
@@ -45,7 +56,7 @@ resource "aws_cloudwatch_log_group" "ecs_logs" {
 # ECS Task Execution Role
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecsTaskExecutionRole"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -58,7 +69,7 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       }
     ]
   })
-  
+
   tags = {
     Name = "ecsTaskExecutionRole"
   }
@@ -73,7 +84,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 resource "aws_iam_policy" "secrets_access" {
   name        = "SecretsManagerAccess"
   description = "Allow access to Secrets Manager for ECS tasks"
-  
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -89,7 +100,7 @@ resource "aws_iam_policy" "secrets_access" {
       }
     ]
   })
-  
+
   tags = {
     Name = "SecretsManagerAccess"
   }
@@ -103,7 +114,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_secrets_policy" {
 # ECS Task Role
 resource "aws_iam_role" "ecs_task_role" {
   name = "ecsTaskRole"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
@@ -116,7 +127,7 @@ resource "aws_iam_role" "ecs_task_role" {
       }
     ]
   })
-  
+
   tags = {
     Name = "ecsTaskRole"
   }
@@ -126,7 +137,7 @@ resource "aws_iam_role" "ecs_task_role" {
 resource "aws_iam_policy" "ecs_task_policy" {
   name        = "ecsTaskPolicy"
   description = "Policy for ECS tasks with least privilege permissions"
-  
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -141,7 +152,7 @@ resource "aws_iam_policy" "ecs_task_policy" {
       }
     ]
   })
-  
+
   tags = {
     Name = "ecsTaskPolicy"
   }
@@ -161,7 +172,7 @@ resource "aws_ecs_task_definition" "app" {
   memory                   = var.task_memory
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
-  
+
   container_definitions = jsonencode([
     {
       name      = "app"
@@ -186,11 +197,11 @@ resource "aws_ecs_task_definition" "app" {
       ]
       secrets = [
         {
-          name = "SECRET_KEY",
+          name      = "SECRET_KEY",
           valueFrom = var.secret_key_secret_arn
         },
         {
-          name = "DATABASE_URL",
+          name      = "DATABASE_URL",
           valueFrom = var.db_url_secret_arn
         }
       ]
@@ -199,9 +210,9 @@ resource "aws_ecs_task_definition" "app" {
           "CMD-SHELL",
           "curl -f http://localhost:${var.container_port}/api/campaigns/ || exit 1"
         ],
-        interval = 30,
-        timeout = 5,
-        retries = 3,
+        interval    = 30,
+        timeout     = 5,
+        retries     = 3,
         startPeriod = 60
       }
       logConfiguration = {
@@ -214,7 +225,7 @@ resource "aws_ecs_task_definition" "app" {
       }
     }
   ])
-  
+
   tags = {
     Name = "${var.prefix}-task-definition"
   }
@@ -227,34 +238,34 @@ resource "aws_ecs_service" "app" {
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
-  
+
   network_configuration {
     subnets          = var.private_subnet_ids
     security_groups  = [var.app_security_group_id]
     assign_public_ip = true
   }
-  
+
   load_balancer {
     target_group_arn = var.target_group_arn
     container_name   = "app"
     container_port   = var.container_port
   }
-  
+
   # Enable deployment circuit breaker for safe deployments
   deployment_circuit_breaker {
     enable   = true
     rollback = true
   }
-  
+
   # Simple deployment configuration
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 0
-  
+
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution_role_policy,
     aws_iam_role_policy_attachment.ecs_task_policy_attachment
   ]
-  
+
   tags = {
     Name = "${var.prefix}-service"
   }
@@ -264,12 +275,12 @@ resource "aws_ecs_service" "app" {
 data "aws_ami" "amazon_linux_2" {
   most_recent = true
   owners      = ["amazon"]
-  
+
   filter {
     name   = "name"
     values = ["amzn2-ami-hvm-*-arm64-gp2"]
   }
-  
+
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
@@ -277,19 +288,19 @@ data "aws_ami" "amazon_linux_2" {
 }
 
 resource "aws_instance" "bastion" {
-  ami                    = data.aws_ami.amazon_linux_2.id
-  instance_type          = "t4g.nano"
-  key_name               = var.bastion_key_name
-  vpc_security_group_ids = [var.bastion_security_group_id]
-  subnet_id              = var.public_subnet_id
+  ami                         = data.aws_ami.amazon_linux_2.id
+  instance_type               = "t4g.nano"
+  key_name                    = var.bastion_key_name
+  vpc_security_group_ids      = [var.bastion_security_group_id]
+  subnet_id                   = var.public_subnet_id
   associate_public_ip_address = true
-  
+
   root_block_device {
     volume_size = 8
     volume_type = "gp3"
     encrypted   = true
   }
-  
+
   user_data = <<-EOF
     #!/bin/bash
     # Install PostgreSQL client for troubleshooting if needed
@@ -346,11 +357,11 @@ resource "aws_instance" "bastion" {
     =======================================================
     MOTD
   EOF
-  
+
   tags = {
     Name = "${var.prefix}-bastion"
   }
-  
+
   lifecycle {
     create_before_destroy = true
   }

@@ -1,3 +1,14 @@
+terraform {
+  required_version = ">= 1.0.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # Security Module
 
 # Application Security Group
@@ -30,7 +41,7 @@ resource "aws_security_group" "app_sg" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "HTTPS outbound traffic"
   }
-  
+
   egress {
     from_port   = 80
     to_port     = 80
@@ -38,13 +49,13 @@ resource "aws_security_group" "app_sg" {
     cidr_blocks = ["0.0.0.0/0"]
     description = "HTTP outbound traffic"
   }
-  
+
   egress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
     security_groups = [aws_security_group.db_sg.id]
-    description = "PostgreSQL access"
+    description     = "PostgreSQL access"
   }
 
   tags = {
@@ -65,7 +76,7 @@ resource "aws_security_group" "db_sg" {
     security_groups = [aws_security_group.app_sg.id]
     description     = "PostgreSQL from application"
   }
-  
+
   # Allow access from the bastion host
   ingress {
     from_port       = 5432
@@ -78,20 +89,20 @@ resource "aws_security_group" "db_sg" {
   # Since database is in isolated subnet with no internet access,
   # we need to be careful about what outbound traffic we allow
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
     security_groups = [aws_security_group.app_sg.id]
-    description = "Allow return traffic to the application"
+    description     = "Allow return traffic to the application"
   }
-  
+
   # Allow return traffic to the bastion host
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
     security_groups = [aws_security_group.bastion_sg.id]
-    description = "Allow return traffic to the bastion host"
+    description     = "Allow return traffic to the bastion host"
   }
 
   tags = {
@@ -164,7 +175,7 @@ resource "aws_wafv2_web_acl" "main" {
     metric_name                = "${var.prefix}-waf"
     sampled_requests_enabled   = true
   }
-  
+
   tags = {
     Name = "${var.prefix}-waf"
   }

@@ -90,10 +90,3 @@ variable "bastion_key_name" {
   type        = string
   default     = "landandbay-bastion" # Create this key pair in AWS console
 }
-
-# Application Variables
-variable "django_secret_key" {
-  description = "Secret key for Django application"
-  type        = string
-  sensitive   = true
-}

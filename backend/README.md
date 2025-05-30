@@ -4,7 +4,8 @@
 [![Ruff Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml)
 [![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml)
 
-This is the Django backend for the Land and Bay Stewards (landandbay.org) project. It provides a REST API for managing policy campaigns, endorsers, and legislators.
+This is the Django backend for the Land and Bay Stewards (landandbay.org) project. It provides a REST API for managing
+policy campaigns, endorsers, and legislators.
 
 ## Technology Stack
 
@@ -67,6 +68,7 @@ backend/
    ```
 
 3. **Start the development server**:
+
    ```bash
    poetry run python manage.py runserver
    ```
@@ -107,6 +109,7 @@ We use several tools to ensure code quality:
   ```
 
 - **Ruff**: Fast linting
+
   ```bash
   poetry run ruff check .
   ```

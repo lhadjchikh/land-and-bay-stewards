@@ -1,9 +1,20 @@
+terraform {
+  required_version = ">= 1.0.0"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
 # Monitoring Module
 
 # S3 Bucket for ALB Logs
 resource "aws_s3_bucket" "alb_logs" {
   bucket = "${var.prefix}-alb-logs"
-  
+
   tags = {
     Name = "${var.prefix}-alb-logs"
   }
@@ -42,7 +53,7 @@ resource "aws_s3_bucket_policy" "alb_logs" {
         Principal = {
           AWS = "arn:aws:iam::${data.aws_elb_service_account.main.id}:root"
         },
-        Action = "s3:PutObject",
+        Action   = "s3:PutObject",
         Resource = "${aws_s3_bucket.alb_logs.arn}/AWSLogs/*"
       }
     ]
@@ -55,7 +66,7 @@ data "aws_elb_service_account" "main" {}
 resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
   name              = "/vpc/flow-logs"
   retention_in_days = 30
-  
+
   tags = {
     Name = "${var.prefix}-vpc-flow-logs"
   }
@@ -63,7 +74,7 @@ resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
 
 resource "aws_iam_role" "vpc_flow_log_role" {
   name = "vpc-flow-log-role"
-  
+
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -76,7 +87,7 @@ resource "aws_iam_role" "vpc_flow_log_role" {
       }
     ]
   })
-  
+
   tags = {
     Name = "vpc-flow-log-role"
   }
@@ -85,7 +96,7 @@ resource "aws_iam_role" "vpc_flow_log_role" {
 resource "aws_iam_role_policy" "vpc_flow_log_policy" {
   name = "vpc-flow-log-policy"
   role = aws_iam_role.vpc_flow_log_role.id
-  
+
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -109,7 +120,7 @@ resource "aws_flow_log" "vpc_flow_logs" {
   log_destination = aws_cloudwatch_log_group.vpc_flow_log_group.arn
   traffic_type    = "ALL"
   vpc_id          = var.vpc_id
-  
+
   tags = {
     Name = "${var.prefix}-vpc-flow-logs"
   }
@@ -123,10 +134,10 @@ resource "aws_budgets_budget" "monthly" {
   limit_unit        = "USD"
   time_unit         = "MONTHLY"
   time_period_start = formatdate("YYYY-MM-01_00:00", timestamp())
-  
+
   # Add cost allocation tag to the budget
   cost_filter {
-    name = "TagKeyValue"
+    name   = "TagKeyValue"
     values = ["user:Project$${var.prefix}"]
   }
 

@@ -1,6 +1,7 @@
 # Deploying to Amazon ECS with Terraform
 
-This guide explains how to deploy the Land and Bay application to Amazon ECS (Elastic Container Service) using Terraform and GitHub Actions. The application is built with Python 3.13 and PostgreSQL 16 with PostGIS extension.
+This guide explains how to deploy the Land and Bay application to Amazon ECS (Elastic Container Service) using Terraform
+and GitHub Actions. The application is built with Python 3.13 and PostgreSQL 16 with PostGIS extension.
 
 ## Overview
 
@@ -59,15 +60,15 @@ TERRAFORM_DIR=terraform
 
 For CI/CD deployment, add the following secrets to your GitHub repository:
 
-1. `AWS_ACCESS_KEY_ID`: Your AWS access key
-2. `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
-3. `AWS_REGION`: The AWS region to deploy to (e.g., `us-east-1`)
-4. `DB_USERNAME`: Database username (default: `landandbay_admin`)
-5. `DB_PASSWORD`: A secure password for the database
-6. `APP_DB_USERNAME`: Application database username (default: `landandbay_app`)
-7. `APP_DB_PASSWORD`: Application database password
-8. `TF_VAR_db_name`: Database name (default: `landandbay`)
-9. `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
+1.  `AWS_ACCESS_KEY_ID`: Your AWS access key
+2.  `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
+3.  `AWS_REGION`: The AWS region to deploy to (e.g., `us-east-1`)
+4.  `DB_USERNAME`: Database username (default: `landandbay_admin`)
+5.  `DB_PASSWORD`: A secure password for the database
+6.  `APP_DB_USERNAME`: Application database username (default: `landandbay_app`)
+7.  `APP_DB_PASSWORD`: Application database password
+8.  `TF_VAR_db_name`: Database name (default: `landandbay`)
+9.  `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
 10. `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`)
 11. `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate for HTTPS
 12. `TF_VAR_alert_email`: Email address to receive budget and other alerts
@@ -110,6 +111,7 @@ After the initial deployment, you need to enable the PostGIS extension in the RD
    ```
 
 3. Verify the PostGIS installation:
+
    ```sql
    SELECT PostGIS_version();
    ```
@@ -144,6 +146,7 @@ The Terraform configuration creates:
    - Listener
 
 5. **Cost Management**:
+
    - Monthly budget alert ($30)
    - Notification thresholds at 70%, 90%, and forecast
    - Email notifications for budget alerts
@@ -186,7 +189,8 @@ To use a custom domain name:
    - `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`)
    - `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate
 
-> **Note**: You must have already created an ACM certificate for your domain. If you don't have one, you can create it in the AWS console or use Terraform to provision it.
+> **Note**: You must have already created an ACM certificate for your domain. If you don't have one, you can create it
+> in the AWS console or use Terraform to provision it.
 
 ## Monitoring and Logs
 
@@ -212,7 +216,8 @@ To view or modify the budget:
 2. Navigate to "Budgets"
 3. Select the "landandbay-monthly-budget"
 
-> **Important**: Make sure to set the `TF_VAR_alert_email` variable with a valid email address to receive these alerts. If you change the email address, you'll need to redeploy the infrastructure.
+> **Important**: Make sure to set the `TF_VAR_alert_email` variable with a valid email address to receive these alerts.
+> If you change the email address, you'll need to redeploy the infrastructure.
 
 #### Cost Allocation Tags
 
@@ -221,15 +226,18 @@ All resources are automatically tagged with essential AWS provider tags and two 
 - `Project`: Identifies all resources as part of "Land and Bay"
 - `Environment`: Specifies the deployment environment (e.g., "Production")
 
-AWS Cost Explorer and AWS Budgets can use these tags for cost tracking and allocation. Resources are also automatically tracked by their creator (Terraform) for budget monitoring.
+AWS Cost Explorer and AWS Budgets can use these tags for cost tracking and allocation. Resources are also automatically
+tracked by their creator (Terraform) for budget monitoring.
 
 ## Cleanup
 
 To clean up all AWS resources:
 
-> **IMPORTANT**: Before attempting to destroy the infrastructure, you must disable deletion protection on the RDS database. The terraform destroy will fail if you don't complete this step first.
+> **IMPORTANT**: Before attempting to destroy the infrastructure, you must disable deletion protection on the RDS
+> database. The terraform destroy will fail if you don't complete this step first.
 
-1. Disable RDS deletion protection by editing `terraform/main.tf` and setting `deletion_protection = false` in the `aws_db_instance` resource, then applying the change:
+1. Disable RDS deletion protection by editing `terraform/main.tf` and setting `deletion_protection = false` in the
+   `aws_db_instance` resource, then applying the change:
 
    ```bash
    terraform -chdir=terraform apply -target=aws_db_instance.postgres

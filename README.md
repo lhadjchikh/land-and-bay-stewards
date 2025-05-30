@@ -8,7 +8,9 @@
 [![TypeScript Type Check](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml)
 [![JavaScript & TypeScript Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml)
 
-The Land and Bay Stewards (landandbay.org) project is a web application for managing and promoting policy campaigns, tracking legislative support, and organizing endorsers. The application consists of a Django backend with GeoDjango support and a React frontend with TypeScript.
+The Land and Bay Stewards (landandbay.org) project is a web application for managing and promoting policy campaigns,
+tracking legislative support, and organizing endorsers. The application consists of a Django backend with GeoDjango
+support and a React frontend with TypeScript.
 
 ## Project Overview
 
