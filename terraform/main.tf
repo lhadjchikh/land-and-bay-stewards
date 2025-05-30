@@ -158,7 +158,7 @@ resource "aws_db_instance" "postgres" {
   engine                 = "postgres"
   engine_version         = "16.9"
   instance_class         = "db.t4g.micro"
-  name                   = "labs"
+  name                   = "landandbay"
   username               = "postgres"
   password               = var.db_password
   parameter_group_name   = aws_db_parameter_group.postgres16.name
