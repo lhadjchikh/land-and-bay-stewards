@@ -26,7 +26,7 @@ services:
     environment:
       - DEBUG=True
       - SECRET_KEY=dev_secret_key_replace_in_production
-      - DATABASE_URL=postgis://landandbay_app:app_password@db:5432/landandbay
+      - DATABASE_URL=postgresql://landandbay_app:app_password@db:5432/landandbay
       - ALLOWED_HOSTS=localhost,127.0.0.1,app
       - REACT_APP_API_URL=http://localhost:8000/api
       - DB_USERNAME=landandbay_admin
