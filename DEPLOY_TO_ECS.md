@@ -33,7 +33,7 @@ For local testing and development with Terraform, you can use the `.env` file in
 
 ```bash
 # AWS deployment settings
-AWS_REGION=us-west-2
+AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-aws-access-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret-key
 
@@ -42,7 +42,7 @@ DB_USERNAME=landandbay_admin
 DB_PASSWORD=your-secure-password
 
 # Domain and certificate settings
-TF_VAR_aws_region=us-west-2
+TF_VAR_aws_region=us-east-1
 TF_VAR_db_username=landandbay_admin
 TF_VAR_db_password=your-secure-password
 TF_VAR_db_name=landandbay
@@ -60,7 +60,7 @@ For CI/CD deployment, add the following secrets to your GitHub repository:
 
 1. `AWS_ACCESS_KEY_ID`: Your AWS access key
 2. `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
-3. `AWS_REGION`: The AWS region to deploy to (e.g., `us-west-2`)
+3. `AWS_REGION`: The AWS region to deploy to (e.g., `us-east-1`)
 4. `DB_USERNAME`: Database username (default: `landandbay_admin`)
 5. `DB_PASSWORD`: A secure password for the database
 6. `APP_DB_USERNAME`: Application database username (default: `landandbay_app`)
