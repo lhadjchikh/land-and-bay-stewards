@@ -26,9 +26,35 @@ This deployment strategy uses:
 
 ## Setup
 
-### 1. Configure GitHub Secrets
+### 1. Configure Environment Variables
 
-In your GitHub repository, add the following secrets:
+For local testing and development with Terraform, you can use the `.env` file in the project root:
+
+```bash
+# AWS deployment settings
+AWS_REGION=us-west-2
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+
+# Database credentials for deployment
+DB_USERNAME=postgres
+DB_PASSWORD=your-secure-password
+
+# Domain and certificate settings
+TF_VAR_aws_region=us-west-2
+TF_VAR_db_username=postgres
+TF_VAR_db_password=your-secure-password
+TF_VAR_route53_zone_id=your-route53-zone-id
+TF_VAR_domain_name=landandbay.org
+TF_VAR_acm_certificate_arn=your-acm-certificate-arn
+
+# Terraform directory
+TERRAFORM_DIR=terraform
+```
+
+### 2. Configure GitHub Secrets
+
+For CI/CD deployment, add the following secrets to your GitHub repository:
 
 1. `AWS_ACCESS_KEY_ID`: Your AWS access key
 2. `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
@@ -44,7 +70,7 @@ To add these secrets:
 2. Click on "Settings" > "Secrets and variables" > "Actions"
 3. Click "New repository secret" and add each secret
 
-### 2. Initial Deployment
+### 3. Initial Deployment
 
 The initial deployment will be triggered automatically when you push to the main branch, or you can manually trigger it:
 
@@ -56,7 +82,7 @@ The workflow consists of two jobs:
 1. **Terraform**: Sets up all AWS infrastructure
 2. **Deploy**: Builds and deploys the application container
 
-### 3. PostGIS Extension Setup
+### 4. PostGIS Extension Setup
 
 After the initial deployment, you need to enable the PostGIS extension in the RDS database:
 

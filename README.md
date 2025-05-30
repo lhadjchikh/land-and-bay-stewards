@@ -79,14 +79,23 @@ npm start
 
 ### Environment Variables
 
-Create a `.env` file in the project root with the following variables:
+A `.env.example` file is provided in the project root as a template. Copy it to create your own `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+For local development, the following variables are required:
 
 ```
+# Django settings
 DEBUG=True
 SECRET_KEY=your-secret-key
 DATABASE_URL=postgis://postgres:postgres@localhost:5432/labs
 ALLOWED_HOSTS=localhost,127.0.0.1
 ```
+
+For deployment to AWS, additional variables are required. See [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md) for details.
 
 ### Testing
 
