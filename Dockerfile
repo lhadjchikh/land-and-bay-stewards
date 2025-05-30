@@ -71,5 +71,10 @@ COPY backend/ /app/
 # Copy the built frontend static files to the backend static directory
 COPY --from=frontend-builder /app/build/static /app/static/frontend
 
-# Command to run the application
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn labs.core.wsgi:application --bind 0.0.0.0:8000"]
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Set entrypoint and default command
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["gunicorn", "labs.core.wsgi:application", "--bind", "0.0.0.0:8000"]
