@@ -17,6 +17,7 @@ dj-database-url = "^2.3.0"
 gdal = "3.10.3"
 whitenoise = "^6.9.0"
 psycopg = "^3.2.9"
+gunicorn = "^21.2.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.3.0"

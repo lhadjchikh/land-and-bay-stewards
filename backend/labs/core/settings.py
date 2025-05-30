@@ -23,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-=lvqp2vsu5)=!t*_qzm3%h%7btagcgw1#cj^sut9f@95^vbclv"
+SECRET_KEY = os.getenv("SECRET_KEY", "django-insecure-=lvqp2vsu5)=!t*_qzm3%h%7btagcgw1#cj^sut9f@95^vbclv")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -139,11 +139,21 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-STATICFILES_DIRS = [
+
+# Look for static files in these directories
+# Note: We check multiple locations to support different deployment scenarios
+STATICFILES_DIRS = []
+
+# Try to add frontend static files if they exist
+frontend_static_dirs = [
     os.path.join(BASE_DIR, "static"),
     os.path.join(BASE_DIR, "frontend", "build", "static"),
     os.path.join(BASE_DIR.parent, "frontend", "build", "static"),
 ]
+
+for static_dir in frontend_static_dirs:
+    if os.path.exists(static_dir):
+        STATICFILES_DIRS.append(static_dir)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

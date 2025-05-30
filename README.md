@@ -128,4 +128,47 @@ GitHub Actions workflows run tests and linting on pull requests and pushes to th
 
 ## Deployment
 
-The application can be deployed using the provided Dockerfile, which creates a multi-stage build optimized for production.
+This project is set up for deployment to AWS ECS (Elastic Container Service) with Terraform infrastructure as code.
+
+### Deploying to Amazon ECS
+
+This project includes a comprehensive setup for deploying to AWS ECS with:
+
+1. **Terraform** for infrastructure provisioning
+2. **GitHub Actions** for CI/CD
+3. **Amazon ECS** for container orchestration
+4. **Amazon RDS** for PostgreSQL with PostGIS
+
+To deploy:
+
+1. Set up your AWS account and create IAM credentials
+2. Configure GitHub repository secrets for AWS access
+3. Trigger the GitHub Actions workflow
+4. Follow the detailed steps in [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md)
+
+The deployment includes:
+- Containerized application running on ECS Fargate
+- RDS PostgreSQL database with PostGIS extension
+- Application Load Balancer for routing traffic
+- ECR for container registry
+- Automated CI/CD pipeline via GitHub Actions
+- Infrastructure as code with Terraform
+
+## Cleanup
+
+To remove all AWS resources created by this project:
+
+1. Navigate to the "Actions" tab in your GitHub repository
+2. Select the "Terraform Destroy" workflow
+3. Click "Run workflow" 
+4. Confirm the action
+
+This will clean up all AWS resources created for this project.
+
+## License
+
+This project is licensed under the terms of the license included in the repository.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
