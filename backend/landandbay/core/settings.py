@@ -93,11 +93,11 @@ WSGI_APPLICATION = "landandbay.core.wsgi.application"
 if os.getenv("DATABASE_URL"):
     # Parse DATABASE_URL and ensure PostGIS is used for PostgreSQL
     db_config = dj_database_url.config(default=os.getenv("DATABASE_URL"))
-    
+
     # If using PostgreSQL, make sure to use the PostGIS backend
     if db_config.get("ENGINE") == "django.db.backends.postgresql":
         db_config["ENGINE"] = "django.contrib.gis.db.backends.postgis"
-    
+
     DATABASES = {
         "default": db_config,
     }
