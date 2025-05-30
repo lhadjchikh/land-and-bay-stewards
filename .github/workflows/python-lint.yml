@@ -28,4 +28,5 @@ jobs:
 
       - name: Run linters in Docker container
         run: |
-          docker run --rm landandbay:latest bash -c "cd /app && black --check . && ruff check ."
+          # Override the entrypoint to skip database connection and migrations
+          docker run --rm --entrypoint="" landandbay:latest bash -c "cd /app && black --check . && ruff check ."
