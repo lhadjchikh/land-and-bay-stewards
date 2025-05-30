@@ -36,7 +36,11 @@ const shouldSkip = process.env.SKIP_E2E === 'true';
 
   test('Can fetch campaigns from the backend', async () => {
     try {
+      console.log('Testing API URL:', process.env.REACT_APP_API_URL || 'default');
+      console.log('Fetching campaigns from:', `${API.getBaseUrl ? API.getBaseUrl() : ''}/api/campaigns/`);
+      
       const campaigns = await API.getCampaigns();
+      console.log('Campaigns response:', campaigns ? 'Received data' : 'No data');
       
       // Verify we got an array response
       expect(Array.isArray(campaigns)).toBe(true);
@@ -44,12 +48,16 @@ const shouldSkip = process.env.SKIP_E2E === 'true';
       // If there are campaigns, verify they have the expected structure
       if (campaigns.length > 0) {
         const campaign = campaigns[0];
+        console.log('First campaign:', campaign);
         expect(campaign).toHaveProperty('id');
         expect(campaign).toHaveProperty('title');
         expect(campaign).toHaveProperty('slug');
         expect(campaign).toHaveProperty('summary');
+      } else {
+        console.log('No campaigns found in the database, but API call succeeded');
       }
     } catch (error) {
+      console.error('Detailed error:', error);
       // This will cause the test to fail, but with a more helpful message
       throw new Error(`Backend connection failed: ${error.message}. Make sure the backend server is running at http://localhost:8000`);
     }

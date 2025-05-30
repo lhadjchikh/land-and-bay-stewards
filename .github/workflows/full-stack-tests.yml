@@ -74,6 +74,51 @@ jobs:
           echo "Backend API failed to start in time"
           # Continue anyway, as we'll see test failures if API isn't available
         fi
+        
+    - name: Create test data
+      run: |
+        # Create test data for the API tests
+        docker compose exec -T app python backend/manage.py shell -c "
+        from labs.campaigns.models import PolicyCampaign
+        from labs.endorsers.models import Endorser
+        from labs.legislators.models import Legislator
+        
+        # Create a test campaign if none exists
+        if not PolicyCampaign.objects.exists():
+            PolicyCampaign.objects.create(
+                title='Test Campaign',
+                slug='test-campaign',
+                summary='This is a test campaign for integration testing'
+            )
+            print('Created test campaign')
+        
+        # Create a test endorser if none exists
+        if not Endorser.objects.exists():
+            Endorser.objects.create(
+                name='Test Endorser',
+                organization='Test Organization',
+                role='Test Role',
+                email='test@example.com',
+                state='MD',
+                county='Test County',
+                type='other',
+                campaign=PolicyCampaign.objects.first()
+            )
+            print('Created test endorser')
+        
+        # Create a test legislator if none exists
+        if not Legislator.objects.exists():
+            Legislator.objects.create(
+                bioguide_id='TEST001',
+                first_name='Test',
+                last_name='Legislator',
+                chamber='House',
+                state='MD',
+                district='01',
+                party='D'
+            )
+            print('Created test legislator')
+        "
     
     - name: Setup Node.js
       uses: actions/setup-node@v4
@@ -89,7 +134,11 @@ jobs:
     # Run the E2E tests that test both frontend and backend together
     - name: Run E2E tests
       working-directory: frontend
-      run: npm run test:e2e || echo "E2E tests completed with issues"
+      env:
+        REACT_APP_API_URL: http://localhost:8000
+        # Make sure we don't skip E2E tests
+        SKIP_E2E: false
+      run: npm run test:e2e
     
     # Stop all containers when done
     - name: Stop containers
