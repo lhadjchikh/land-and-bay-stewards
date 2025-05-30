@@ -33,3 +33,8 @@ output "vpc_id" {
 output "subnets" {
   value = [aws_subnet.public_a.id, aws_subnet.public_b.id]
 }
+
+output "budget_info" {
+  value = "Monthly budget alert of $${aws_budgets_budget.monthly.limit_amount} set with notifications at 70%, 90%, and forecast thresholds to ${var.alert_email}"
+}
+}

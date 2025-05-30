@@ -49,6 +49,7 @@ TF_VAR_db_name=landandbay
 TF_VAR_route53_zone_id=your-route53-zone-id
 TF_VAR_domain_name=landandbay.org
 TF_VAR_acm_certificate_arn=your-acm-certificate-arn
+TF_VAR_alert_email=your-email@example.com
 
 # Terraform directory
 TERRAFORM_DIR=terraform
@@ -69,6 +70,7 @@ For CI/CD deployment, add the following secrets to your GitHub repository:
 9. `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
 10. `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`)
 11. `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate for HTTPS
+12. `TF_VAR_alert_email`: Email address to receive budget and other alerts
 
 To add these secrets:
 
@@ -140,6 +142,11 @@ The Terraform configuration creates:
    - Target Group
    - Listener
 
+5. **Cost Management**:
+   - Monthly budget alert ($30)
+   - Notification thresholds at 70%, 90%, and forecast
+   - Email notifications for budget alerts
+
 ## Continuous Deployment
 
 Every time you push to the main branch, the GitHub Actions workflow will:
@@ -188,6 +195,24 @@ Your application logs are sent to CloudWatch Logs:
 2. Navigate to "Log groups"
 3. Find the `/ecs/landandbay` log group
 
+### Cost Monitoring
+
+A monthly budget alert is set up to help monitor AWS costs:
+
+1. The budget is set to $30 per month
+2. You'll receive email notifications at the following thresholds:
+   - When you reach 70% of your budget ($21)
+   - When you reach 90% of your budget ($27)
+   - When AWS forecasts that you'll exceed your budget
+
+To view or modify the budget:
+
+1. Go to the AWS Billing Dashboard
+2. Navigate to "Budgets"
+3. Select the "landandbay-monthly-budget"
+
+> **Important**: Make sure to set the `TF_VAR_alert_email` variable with a valid email address to receive these alerts. If you change the email address, you'll need to redeploy the infrastructure.
+
 ## Cleanup
 
 To clean up all AWS resources:
@@ -219,6 +244,7 @@ To clean up all AWS resources:
      TF_VAR_route53_zone_id: ${{ secrets.TF_VAR_route53_zone_id }}
      TF_VAR_domain_name: ${{ secrets.TF_VAR_domain_name }}
      TF_VAR_acm_certificate_arn: ${{ secrets.TF_VAR_acm_certificate_arn }}
+     TF_VAR_alert_email: ${{ secrets.TF_VAR_alert_email }}
      TERRAFORM_DIR: terraform
 
    jobs:

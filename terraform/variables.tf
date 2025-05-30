@@ -48,3 +48,8 @@ variable "acm_certificate_arn" {
   description = "The ARN of the ACM certificate to use for HTTPS"
   type        = string
 }
+
+variable "alert_email" {
+  description = "Email address to receive budget and other alerts"
+  type        = string
+}

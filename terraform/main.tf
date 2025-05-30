@@ -439,3 +439,46 @@ resource "aws_route53_record" "app" {
     evaluate_target_health = true
   }
 }
+
+# Budget Monitoring
+resource "aws_budgets_budget" "monthly" {
+  name              = "landandbay-monthly-budget"
+  budget_type       = "COST"
+  limit_amount      = "30"
+  limit_unit        = "USD"
+  time_unit         = "MONTHLY"
+  time_period_start = formatdate("YYYY-MM-01_00:00", timestamp())
+  
+  # Add cost allocation tag to the budget - specifically filter by Project tag
+  cost_filter {
+    name = "TagKeyValue"
+    values = ["Project$Land and Bay"]
+  }
+
+  # Early warning at 70% of budget
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 70
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = [var.alert_email]
+  }
+
+  # Near limit warning at 90% of budget
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 90
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = [var.alert_email]
+  }
+
+  # Forecast warning if we're projected to exceed budget
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "FORECASTED"
+    subscriber_email_addresses = [var.alert_email]
+  }
+}
