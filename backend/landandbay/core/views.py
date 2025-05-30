@@ -4,6 +4,7 @@ import os
 from django.conf import settings
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
+from django.views.decorators.http import require_GET
 
 
 def get_react_assets() -> dict[str, str]:
@@ -46,3 +47,9 @@ def get_react_assets() -> dict[str, str]:
 def home(request: HttpRequest) -> HttpResponse:
     assets = get_react_assets()
     return render(request, "index.html", {"assets": assets})
+
+
+@require_GET
+def robots_txt(request: HttpRequest) -> HttpResponse:
+    """Serve the robots.txt file to prevent search engine indexing"""
+    return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain")
