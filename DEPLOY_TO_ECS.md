@@ -1,6 +1,6 @@
 # Deploying to Amazon ECS with Terraform
 
-This guide explains how to deploy the Land and Bay Stewards application to Amazon ECS (Elastic Container Service) using Terraform and GitHub Actions.
+This guide explains how to deploy the Land and Bay Stewards application to Amazon ECS (Elastic Container Service) using Terraform and GitHub Actions. The application is built with Python 3.13 and PostgreSQL 16 with PostGIS extension.
 
 ## Overview
 

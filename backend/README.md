@@ -8,7 +8,7 @@ This is the Django backend for the Land and Bay Stewards project. It provides a 
 
 ## Technology Stack
 
-- **Python 3.12**: Core programming language
+- **Python 3.13**: Core programming language
 - **Django 5.2**: Web framework
 - **Django Ninja**: API framework (FastAPI-inspired)
 - **GeoDjango**: For geographic data handling
@@ -46,10 +46,10 @@ backend/
 
 ### Prerequisites
 
-- Python 3.12
+- Python 3.13
 - Poetry
 - GDAL 3.10.3
-- PostGIS
+- PostgreSQL 16 with PostGIS
 
 ### Local Setup
 

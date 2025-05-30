@@ -10,7 +10,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.13"
 django = "^5.2.1"
 django-ninja = "^1.4.2"
 dj-database-url = "^2.3.0"
@@ -25,11 +25,11 @@ ruff = "^0.3.0"
 
 [tool.black]
 line-length = 88
-target-version = ["py312"]
+target-version = ["py313"]
 include = '\.pyi?$'
 
 [tool.ruff]
-target-version = "py312"
+# Omitting target-version to use current Python version
 line-length = 88
 
 [tool.ruff.lint]
