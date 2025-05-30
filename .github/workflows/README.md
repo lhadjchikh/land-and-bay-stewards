@@ -67,6 +67,7 @@ All workflows can be manually triggered from the GitHub Actions UI. When manuall
 ## AWS Credentials
 
 The deployment and infrastructure workflows require AWS credentials to be configured as GitHub environment secrets:
+
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
 

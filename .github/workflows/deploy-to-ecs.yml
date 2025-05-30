@@ -3,22 +3,23 @@ name: Deploy to ECS
 on:
   # This workflow will only run after the test workflows complete successfully
   workflow_run:
-    workflows: ["Frontend Tests", "Backend Tests", "Full Stack Integration Tests"]
+    workflows:
+      ["Frontend Tests", "Backend Tests", "Full Stack Integration Tests"]
     types:
       - completed
     branches: [main]
-  
+
   # Allow manual triggers regardless of test outcomes
   workflow_dispatch:
     inputs:
       skip_tests:
-        description: 'Skip test requirement (use with caution)'
+        description: "Skip test requirement (use with caution)"
         required: true
-        default: 'false'
+        default: "false"
         type: choice
         options:
-          - 'true'
-          - 'false'
+          - "true"
+          - "false"
 
 jobs:
   check_tests:
