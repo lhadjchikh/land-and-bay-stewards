@@ -53,10 +53,10 @@ variable "app_db_username" {
   type        = string
 }
 
-variable "app_db_password" {
-  description = "Application database password"
-  type        = string
-  sensitive   = true
+variable "use_secrets_manager" {
+  description = "Whether to use Secrets Manager for database passwords"
+  type        = bool
+  default     = false
 }
 
 variable "db_backup_retention_period" {

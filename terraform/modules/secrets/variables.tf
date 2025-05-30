@@ -18,3 +18,23 @@ variable "db_name" {
   description = "Database name"
   type        = string
 }
+
+variable "db_username" {
+  description = "Database master username"
+  type        = string
+  default     = ""
+}
+
+variable "db_password" {
+  description = "Database master password (only used for initial setup, then stored in Secrets Manager)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "app_db_password" {
+  description = "Application database password (only used for initial setup, then stored in Secrets Manager)"
+  type        = string
+  sensitive   = true
+  default     = ""
+}

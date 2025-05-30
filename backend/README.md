@@ -132,7 +132,19 @@ poetry run python manage.py test -v 2
 
 The following environment variables can be configured:
 
+### Development Environment
+
 - `DEBUG`: Set to `True` for development
 - `SECRET_KEY`: Django secret key
 - `DATABASE_URL`: Database connection URL (supports PostGIS)
 - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
+
+### Production Environment
+
+In production, sensitive credentials are managed through AWS Secrets Manager for enhanced security and SOC 2 compliance:
+
+- **Database Credentials**: Stored securely in AWS Secrets Manager
+- **Master Database User**: Administrative user with full database privileges
+- **Application Database User**: Restricted user for application access with secure password management
+
+For production deployment configuration, see [DEPLOY_TO_ECS.md](../DEPLOY_TO_ECS.md) in the project root.

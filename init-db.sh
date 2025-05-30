@@ -2,14 +2,16 @@
 set -e
 
 # This script is executed when the PostgreSQL container starts
+# NOTE: This contains development-only credentials. In production, 
+# credentials are managed through AWS Secrets Manager as described in DEPLOY_TO_ECS.md and terraform/README.md
 
 # Create the admin user
 psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
-    -- Create the admin user
+    -- Create the admin user (DEVELOPMENT ENVIRONMENT ONLY)
     CREATE USER landandbay_admin WITH PASSWORD 'admin_password';
     ALTER USER landandbay_admin WITH SUPERUSER;
     
-    -- Create the application user with restricted privileges
+    -- Create the application user with restricted privileges (DEVELOPMENT ENVIRONMENT ONLY)
     CREATE USER landandbay_app WITH PASSWORD 'app_password';
     
     -- Grant privileges to the application user

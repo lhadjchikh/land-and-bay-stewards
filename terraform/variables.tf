@@ -26,28 +26,26 @@ variable "db_name" {
   default     = "landandbay"
 }
 
+# While usernames are not as sensitive as passwords,
+# they still should not be hardcoded for production environments
 variable "db_username" {
-  description = "Database master username"
+  description = "Database master username (default value only for initial setup)"
   type        = string
-  # No default for security
+  default     = "postgres_admin" # Default value used only for development
 }
 
+# Only used for initial setup or when Secrets Manager integration is disabled
+# In production environments, this should be managed through Secrets Manager
 variable "db_password" {
-  description = "Database master password"
+  description = "Database master password (only used for initial setup, then stored in Secrets Manager)"
   type        = string
   sensitive   = true
 }
 
 variable "app_db_username" {
-  description = "Application database username with restricted privileges"
+  description = "Application database username with restricted privileges (default value only for initial setup)"
   type        = string
-  # No default for security
-}
-
-variable "app_db_password" {
-  description = "Application database password"
-  type        = string
-  sensitive   = true
+  default     = "app_user" # Default value used only for development
 }
 
 # DNS and SSL Variables

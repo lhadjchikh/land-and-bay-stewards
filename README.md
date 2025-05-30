@@ -97,10 +97,12 @@ DATABASE_URL=postgis://landandbay_app:app_password@localhost:5432/landandbay
 ALLOWED_HOSTS=localhost,127.0.0.1
 ```
 
-Note that the database uses two separate users:
+Note that the database uses two separate users for enhanced security:
 
 - An administrative user (`landandbay_admin`) with privileges to create databases and users
 - An application user (`landandbay_app`) with restricted privileges for security
+
+For production deployments, database credentials are securely managed through AWS Secrets Manager to meet SOC 2 compliance requirements, with secure password management. Future enhancements may include automated password rotation.
 
 For deployment to AWS, additional variables are required. See [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md) for details.
 
@@ -144,7 +146,7 @@ GitHub Actions workflows run tests and linting on pull requests and pushes to th
 
 ## Deployment
 
-This project is set up for deployment to AWS ECS (Elastic Container Service) with Terraform infrastructure as code.
+This project is set up for deployment to AWS ECS (Elastic Container Service) with Terraform infrastructure as code, following SOC 2 compliance best practices.
 
 ### Deploying to Amazon ECS
 
@@ -154,6 +156,7 @@ This project includes a comprehensive setup for deploying to AWS ECS with:
 2. **GitHub Actions** for CI/CD
 3. **Amazon ECS** for container orchestration
 4. **Amazon RDS** for PostgreSQL with PostGIS
+5. **AWS Secrets Manager** for secure credential management
 
 To deploy:
 

@@ -13,6 +13,7 @@ This deployment strategy uses:
 - **Amazon ECR** for container registry
 - **Amazon RDS** for PostgreSQL with PostGIS
 - **Application Load Balancer** for routing traffic
+- **AWS Secrets Manager** for secure credentials management
 
 ## Prerequisites
 
@@ -38,23 +39,22 @@ AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-aws-access-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret-key
 
-# Database credentials for deployment
-DB_USERNAME=landandbay_admin
-DB_PASSWORD=your-secure-password
-
 # Domain and certificate settings
 TF_VAR_aws_region=us-east-1
-TF_VAR_db_username=landandbay_admin
-TF_VAR_db_password=your-secure-password
 TF_VAR_db_name=landandbay
 TF_VAR_route53_zone_id=your-route53-zone-id
 TF_VAR_domain_name=landandbay.org
 TF_VAR_acm_certificate_arn=your-acm-certificate-arn
 TF_VAR_alert_email=your-email@example.com
 
+# Secrets Manager configuration
+TF_VAR_use_secrets_manager=true
+
 # Terraform directory
 TERRAFORM_DIR=terraform
 ```
+
+> **IMPORTANT**: For security best practices, database credentials are stored in AWS Secrets Manager rather than specified directly in environment variables. See the "Secure Credentials Management" section below.
 
 ### 2. Configure GitHub Secrets
 
@@ -63,15 +63,14 @@ For CI/CD deployment, add the following secrets to your GitHub repository:
 1.  `AWS_ACCESS_KEY_ID`: Your AWS access key
 2.  `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
 3.  `AWS_REGION`: The AWS region to deploy to (e.g., `us-east-1`)
-4.  `DB_USERNAME`: Database username (default: `landandbay_admin`)
-5.  `DB_PASSWORD`: A secure password for the database
-6.  `APP_DB_USERNAME`: Application database username (default: `landandbay_app`)
-7.  `APP_DB_PASSWORD`: Application database password
-8.  `TF_VAR_db_name`: Database name (default: `landandbay`)
-9.  `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
-10. `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`)
-11. `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate for HTTPS
-12. `TF_VAR_alert_email`: Email address to receive budget and other alerts
+4.  `TF_VAR_db_name`: Database name (default: `landandbay`)
+5.  `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
+6.  `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`)
+7.  `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate for HTTPS
+8.  `TF_VAR_alert_email`: Email address to receive budget and other alerts
+9.  `TF_VAR_use_secrets_manager`: Set to `true` to use AWS Secrets Manager (recommended for production)
+
+> **IMPORTANT**: Database credentials (`DB_USERNAME`, `DB_PASSWORD`, `APP_DB_USERNAME`, `APP_DB_PASSWORD`) are managed through AWS Secrets Manager for security rather than GitHub Secrets. For initial setup only, you may need to provide these values once, after which they will be securely stored.
 
 To add these secrets:
 
@@ -79,7 +78,31 @@ To add these secrets:
 2. Click on "Settings" > "Secrets and variables" > "Actions"
 3. Click "New repository secret" and add each secret
 
-### 3. Initial Deployment
+### 3. Secure Credentials Management with AWS Secrets Manager
+
+Before deployment, set up your database credentials in AWS Secrets Manager:
+
+1. **Create a secret for database master credentials**:
+
+   ```bash
+   aws secretsmanager create-secret \
+     --name landandbay/database-master \
+     --description "PostgreSQL master database credentials" \
+     --secret-string '{"username":"your_secure_username","password":"your_secure_password","host":"pending-db-creation","port":"5432","dbname":"landandbay"}'
+   ```
+
+2. **Create a secret for application database credentials** (optional, will be auto-generated if not provided):
+
+   ```bash
+   aws secretsmanager create-secret \
+     --name landandbay/database-app \
+     --description "PostgreSQL application database credentials" \
+     --secret-string '{"username":"app_user","password":"your_secure_app_password","host":"pending-db-creation","port":"5432","dbname":"landandbay"}'
+   ```
+
+> **IMPORTANT**: Once these secrets are created, Terraform will use them for all deployments. For initial setup, if no secrets exist yet, Terraform will create them using secure random passwords.
+
+### 4. Initial Deployment
 
 The initial deployment will be triggered automatically when you push to the main branch, or you can manually trigger it:
 
@@ -92,17 +115,21 @@ The workflow consists of two jobs:
 1. **Terraform**: Sets up all AWS infrastructure
 2. **Deploy**: Builds and deploys the application container
 
-### 4. PostGIS Extension Setup
+### 5. PostGIS Extension Setup
 
 After the initial deployment, you need to enable the PostGIS extension in the RDS database:
 
 1. Connect to your RDS instance:
 
    ```bash
-   psql -h <database_endpoint> -U postgres -d labandbay
+   # Get database connection details from Secrets Manager
+   aws secretsmanager get-secret-value --secret-id landandbay/database-master --query SecretString --output text | jq .
+
+   # Connect to the database (replace values with those from the secret)
+   psql -h <database_endpoint> -U <master_username> -d landandbay
    ```
 
-   (Get the database_endpoint from Terraform outputs by running: `terraform -chdir=terraform output database_endpoint`)
+   (You can also get the database_endpoint from Terraform outputs by running: `terraform -chdir=terraform output database_endpoint`)
 
 2. Create the PostGIS extension:
 
@@ -131,7 +158,14 @@ The Terraform configuration creates:
    - Amazon RDS PostgreSQL instance
    - Custom parameter group for PostGIS
 
-3. **Container Infrastructure**:
+3. **Security**:
+
+   - AWS Secrets Manager for secure credential storage
+   - IAM roles with least privilege access
+   - KMS keys for encryption
+   - Secure credential management
+
+4. **Container Infrastructure**:
 
    - ECR Repository
    - ECS Cluster
@@ -139,13 +173,13 @@ The Terraform configuration creates:
    - ECS Service
    - IAM Roles for ECS tasks
 
-4. **Load Balancing**:
+5. **Load Balancing**:
 
    - Application Load Balancer
    - Target Group
    - Listener
 
-5. **Cost Management**:
+6. **Cost Management**:
 
    - Monthly budget alert ($30)
    - Notification thresholds at 70%, 90%, and forecast
@@ -254,15 +288,12 @@ To clean up all AWS resources:
    env:
      AWS_REGION: ${{ secrets.AWS_REGION }}
      TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
-     TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
-     TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
      TF_VAR_db_name: ${{ secrets.TF_VAR_db_name || 'landandbay' }}
-     TF_VAR_app_db_username: ${{ secrets.APP_DB_USERNAME || 'landandbay_app' }}
-     TF_VAR_app_db_password: ${{ secrets.APP_DB_PASSWORD }}
      TF_VAR_route53_zone_id: ${{ secrets.TF_VAR_route53_zone_id }}
      TF_VAR_domain_name: ${{ secrets.TF_VAR_domain_name }}
      TF_VAR_acm_certificate_arn: ${{ secrets.TF_VAR_acm_certificate_arn }}
      TF_VAR_alert_email: ${{ secrets.TF_VAR_alert_email }}
+     TF_VAR_use_secrets_manager: ${{ secrets.TF_VAR_use_secrets_manager || 'true' }}
      TERRAFORM_DIR: terraform
 
    jobs:

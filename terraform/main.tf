@@ -61,7 +61,7 @@ module "database" {
   db_username                = var.db_username
   db_password                = var.db_password
   app_db_username            = var.app_db_username
-  app_db_password            = var.app_db_password
+  use_secrets_manager        = true
   db_backup_retention_period = 14
 }
 
@@ -71,6 +71,8 @@ module "secrets" {
 
   prefix          = var.prefix
   app_db_username = var.app_db_username
+  db_username     = var.db_username
+  db_password     = var.db_password
   db_endpoint     = module.database.db_instance_endpoint
   db_name         = module.database.db_instance_name
 }

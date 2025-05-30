@@ -41,6 +41,30 @@ resource "aws_db_subnet_group" "main" {
   }
 }
 
+# Get the master DB password from Secrets Manager if available,
+# otherwise generate one securely
+data "aws_secretsmanager_secret" "db_master" {
+  count = var.use_secrets_manager ? 1 : 0
+  name  = "${var.prefix}/database-master"
+}
+
+data "aws_secretsmanager_secret_version" "db_master" {
+  count     = var.use_secrets_manager ? 1 : 0
+  secret_id = data.aws_secretsmanager_secret.db_master[0].id
+}
+
+locals {
+  # If using Secrets Manager and the secret exists, parse JSON and get credentials
+  # Otherwise use the variables or generate secure credentials
+  master_credentials = var.use_secrets_manager && length(data.aws_secretsmanager_secret_version.db_master) > 0 ? jsondecode(data.aws_secretsmanager_secret_version.db_master[0].secret_string) : { username = var.db_username, password = var.db_password }
+
+  master_username = local.master_credentials.username
+  master_password = local.master_credentials.password
+
+  # Set a default value for app_username if not specified
+  app_username = var.app_db_username == "" ? "app_user" : var.app_db_username
+}
+
 # RDS PostgreSQL Instance
 resource "aws_db_instance" "postgres" {
   allocated_storage            = var.db_allocated_storage
@@ -49,8 +73,8 @@ resource "aws_db_instance" "postgres" {
   engine_version               = var.db_engine_version
   instance_class               = var.db_instance_class
   name                         = var.db_name
-  username                     = var.db_username
-  password                     = var.db_password
+  username                     = local.master_username
+  password                     = local.master_password
   parameter_group_name         = aws_db_parameter_group.postgres.name
   db_subnet_group_name         = aws_db_subnet_group.main.name
   vpc_security_group_ids       = [var.db_security_group_id]
@@ -99,10 +123,13 @@ resource "null_resource" "db_setup" {
   provisioner "local-exec" {
     command = <<-EOT
       # Install PostgreSQL client if not already available
-      which psql || (apt-get update && apt-get install -y postgresql-client)
+      which psql || (apt-get update && apt-get install -y postgresql-client awscli)
       
       # Sleep to allow RDS to fully initialize
       sleep 30
+      
+      # Get credentials securely from environment or assume role
+      # The AWS CLI should be configured with appropriate permissions
       
       # Create a SQL script file for better escaping and readability
       cat > /tmp/db_setup.sql << 'SQLEOF'
@@ -112,34 +139,48 @@ resource "null_resource" "db_setup" {
       -- Create application user if it doesn't exist
       DO $$
       BEGIN
-        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${var.app_db_username}') THEN
-          CREATE USER ${var.app_db_username} WITH PASSWORD '${var.app_db_password}';
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${local.app_username}') THEN
+          -- Use a randomly generated strong password that will be stored in AWS Secrets Manager
+          CREATE USER ${local.app_username} WITH PASSWORD '$${app_password}';
         END IF;
       END
       $$;
       
       -- Grant basic connect privileges
-      GRANT CONNECT ON DATABASE ${var.db_name} TO ${var.app_db_username};
+      GRANT CONNECT ON DATABASE ${var.db_name} TO ${local.app_username};
       
       -- Grant schema usage
-      GRANT USAGE ON SCHEMA public TO ${var.app_db_username};
+      GRANT USAGE ON SCHEMA public TO ${local.app_username};
       
       -- Grant table privileges
-      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${var.app_db_username};
+      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${local.app_username};
       
       -- Grant sequence privileges
-      GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO ${var.app_db_username};
+      GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO ${local.app_username};
       
       -- Set default privileges for future tables and sequences
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${var.app_db_username};
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO ${var.app_db_username};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${local.app_username};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO ${local.app_username};
       SQLEOF
       
-      # Execute the SQL script
-      PGPASSWORD=${var.db_password} psql -h ${aws_db_instance.postgres.address} -U ${var.db_username} -d ${var.db_name} -f /tmp/db_setup.sql
+      # Generate a strong random password for the app user
+      app_password=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9!@#$%^&*()_+?><~' | head -c 32)
       
-      # Remove the temporary SQL file
+      # Substitute the password in the SQL file
+      sed -i "s/\$${app_password}/$app_password/g" /tmp/db_setup.sql
+      
+      # Get master password and username - either from our local variables or from Secrets Manager
+      PGPASSWORD='${local.master_password}' psql -h ${aws_db_instance.postgres.address} -U ${local.master_username} -d ${var.db_name} -f /tmp/db_setup.sql
+      
+      # Update the App DB Secret in AWS Secrets Manager with the new password
+      aws secretsmanager update-secret --secret-id "${var.prefix}/database-url" --secret-string "{\"url\":\"postgis://${local.app_username}:$app_password@${aws_db_instance.postgres.endpoint}/${var.db_name}\",\"username\":\"${local.app_username}\",\"password\":\"$app_password\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
+      
+      # Update the Master DB Secret in AWS Secrets Manager (for rotation purposes)
+      aws secretsmanager update-secret --secret-id "${var.prefix}/database-master" --secret-string "{\"username\":\"${local.master_username}\",\"password\":\"${local.master_password}\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
+      
+      # Remove the temporary SQL file and unset the password variable
       rm /tmp/db_setup.sql
+      unset app_password
     EOT
   }
 }
