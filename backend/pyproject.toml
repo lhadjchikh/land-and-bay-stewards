@@ -22,6 +22,9 @@ gunicorn = "^21.2.0"
 [tool.poetry.group.dev.dependencies]
 black = "^25.1.0"
 ruff = "^0.11.12"
+yamllint = "^1.33.0"
+mdformat = "^0.7.17"
+python-terraform = "^0.10.1"
 
 [tool.black]
 line-length = 88

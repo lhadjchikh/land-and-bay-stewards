@@ -1,0 +1,53 @@
+name: Prettier Lint
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**/*.{js,jsx,ts,tsx,css,md,json,yml,yaml}'
+      - '.github/workflows/prettier-lint.yml'
+      - '!terraform/**/*.{yml,yaml}'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - '**/*.{js,jsx,ts,tsx,css,md,json,yml,yaml}'
+      - '.github/workflows/prettier-lint.yml'
+      - '!terraform/**/*.{yml,yaml}'
+
+jobs:
+  prettier_lint:
+    name: Prettier Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: cd frontend && npm ci
+          
+      - name: Check Frontend files
+        run: |
+          cd frontend
+          npm run format:check
+
+      - name: Create .prettierignore
+        run: |
+          echo "node_modules/" > .prettierignore
+          echo "build/" >> .prettierignore
+          echo "dist/" >> .prettierignore
+          echo "coverage/" >> .prettierignore
+          echo "frontend/node_modules/" >> .prettierignore
+          echo "backend/.venv/" >> .prettierignore
+          echo "terraform/" >> .prettierignore
+
+      - name: Check project-wide Markdown and YAML
+        run: |
+          cd frontend
+          npx prettier --check "../**/*.{md,yml,yaml}" --ignore-path ../.prettierignore

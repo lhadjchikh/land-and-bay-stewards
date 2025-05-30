@@ -1,0 +1,42 @@
+name: Terraform Lint
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'terraform/**/*.tf'
+      - '.github/workflows/terraform-lint.yml'
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'terraform/**/*.tf'
+      - '.github/workflows/terraform-lint.yml'
+
+jobs:
+  terraform_lint:
+    name: Terraform Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: 1.0.0
+          
+      - name: Terraform Format Check
+        run: |
+          cd terraform
+          terraform fmt -check -recursive
+          
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v3
+        with:
+          tflint_version: v0.44.1
+          
+      - name: Run TFLint
+        run: |
+          cd terraform
+          tflint --init
+          tflint --recursive
