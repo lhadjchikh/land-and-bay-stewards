@@ -62,3 +62,9 @@ variable "tags" {
     Environment = "Production"
   }
 }
+
+variable "django_secret_key" {
+  description = "Secret key for Django application"
+  type        = string
+  sensitive   = true
+}

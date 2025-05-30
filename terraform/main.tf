@@ -203,6 +203,35 @@ resource "aws_db_parameter_group" "postgres16" {
   }
 }
 
+# Secrets Management for the application
+resource "aws_secretsmanager_secret" "db_url" {
+  name        = "landandbay/database-url"
+  description = "PostgreSQL database connection URL for the Land and Bay application"
+  
+  tags = {
+    Name = "landandbay-db-url"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "db_url" {
+  secret_id     = aws_secretsmanager_secret.db_url.id
+  secret_string = "postgis://${var.app_db_username}:${var.app_db_password}@${aws_db_instance.postgres.endpoint}/${var.db_name}"
+}
+
+resource "aws_secretsmanager_secret" "secret_key" {
+  name        = "landandbay/secret-key"
+  description = "Django secret key for the Land and Bay application"
+  
+  tags = {
+    Name = "landandbay-secret-key"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "secret_key" {
+  secret_id     = aws_secretsmanager_secret.secret_key.id
+  secret_string = var.django_secret_key
+}
+
 # Create application user and enable PostGIS extension
 resource "null_resource" "db_setup" {
   depends_on = [aws_db_instance.postgres]
@@ -351,6 +380,37 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Add permissions to access Secrets Manager
+resource "aws_iam_policy" "secrets_access" {
+  name        = "SecretsManagerAccess"
+  description = "Allow access to Secrets Manager for ECS tasks"
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Resource = [
+          aws_secretsmanager_secret.db_url.arn,
+          aws_secretsmanager_secret.secret_key.arn
+        ]
+      }
+    ]
+  })
+  
+  tags = {
+    Name = "SecretsManagerAccess"
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_secrets_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.secrets_access.arn
+}
+
 resource "aws_iam_role" "ecs_task_role" {
   name = "ecsTaskRole"
   
@@ -402,12 +462,28 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "ALLOWED_HOSTS"
           value = "*"
-        },
-        {
-          name  = "DATABASE_URL"
-          value = "postgis://${var.app_db_username}:${var.app_db_password}@${aws_db_instance.postgres.endpoint}/${var.db_name}"
         }
       ]
+      secrets = [
+        {
+          name = "SECRET_KEY",
+          valueFrom = aws_secretsmanager_secret.secret_key.arn
+        },
+        {
+          name = "DATABASE_URL",
+          valueFrom = aws_secretsmanager_secret.db_url.arn
+        }
+      ]
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "curl -f http://localhost:8000/api/campaigns/ || exit 1"
+        ],
+        interval = 30,
+        timeout = 5,
+        retries = 3,
+        startPeriod = 60
+      }
       logConfiguration = {
         logDriver = "awslogs"
         options = {
