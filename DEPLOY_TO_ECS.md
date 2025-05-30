@@ -5,6 +5,7 @@ This guide explains how to deploy the Land and Bay application to Amazon ECS (El
 ## Overview
 
 This deployment strategy uses:
+
 - **Terraform** to provision and manage AWS infrastructure
 - **GitHub Actions** for CI/CD pipeline
 - **Amazon ECS** for container orchestration
@@ -37,13 +38,14 @@ AWS_ACCESS_KEY_ID=your-aws-access-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret-key
 
 # Database credentials for deployment
-DB_USERNAME=postgres
+DB_USERNAME=landandbay_admin
 DB_PASSWORD=your-secure-password
 
 # Domain and certificate settings
 TF_VAR_aws_region=us-west-2
-TF_VAR_db_username=postgres
+TF_VAR_db_username=landandbay_admin
 TF_VAR_db_password=your-secure-password
+TF_VAR_db_name=landandbay
 TF_VAR_route53_zone_id=your-route53-zone-id
 TF_VAR_domain_name=landandbay.org
 TF_VAR_acm_certificate_arn=your-acm-certificate-arn
@@ -59,13 +61,17 @@ For CI/CD deployment, add the following secrets to your GitHub repository:
 1. `AWS_ACCESS_KEY_ID`: Your AWS access key
 2. `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
 3. `AWS_REGION`: The AWS region to deploy to (e.g., `us-west-2`)
-4. `DB_USERNAME`: Database username (default: `postgres`)
+4. `DB_USERNAME`: Database username (default: `landandbay_admin`)
 5. `DB_PASSWORD`: A secure password for the database
-6. `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
-7. `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`) 
-8. `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate for HTTPS
+6. `APP_DB_USERNAME`: Application database username (default: `landandbay_app`)
+7. `APP_DB_PASSWORD`: Application database password
+8. `TF_VAR_db_name`: Database name (default: `landandbay`)
+9. `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
+10. `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`)
+11. `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate for HTTPS
 
 To add these secrets:
+
 1. Go to your GitHub repository
 2. Click on "Settings" > "Secrets and variables" > "Actions"
 3. Click "New repository secret" and add each secret
@@ -79,6 +85,7 @@ The initial deployment will be triggered automatically when you push to the main
 3. Click "Run workflow" and select the main branch
 
 The workflow consists of two jobs:
+
 1. **Terraform**: Sets up all AWS infrastructure
 2. **Deploy**: Builds and deploys the application container
 
@@ -87,12 +94,15 @@ The workflow consists of two jobs:
 After the initial deployment, you need to enable the PostGIS extension in the RDS database:
 
 1. Connect to your RDS instance:
+
    ```bash
    psql -h <database_endpoint> -U postgres -d labs
    ```
+
    (Get the database_endpoint from Terraform outputs by running: `terraform -chdir=terraform output database_endpoint`)
 
 2. Create the PostGIS extension:
+
    ```sql
    CREATE EXTENSION postgis;
    ```
@@ -107,15 +117,18 @@ After the initial deployment, you need to enable the PostGIS extension in the RD
 The Terraform configuration creates:
 
 1. **Networking**:
+
    - VPC with public subnets
    - Internet Gateway
    - Security Groups
 
 2. **Database**:
+
    - Amazon RDS PostgreSQL instance
    - Custom parameter group for PostGIS
 
 3. **Container Infrastructure**:
+
    - ECR Repository
    - ECS Cluster
    - ECS Task Definition
@@ -188,45 +201,49 @@ To clean up all AWS resources:
    ```
 
 2. Create a new workflow file in `.github/workflows/terraform-destroy.yml`
+
    ```yaml
    name: Terraform Destroy
-   
+
    on:
      workflow_dispatch:
-   
+
    env:
      AWS_REGION: ${{ secrets.AWS_REGION }}
      TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
      TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
      TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+     TF_VAR_db_name: ${{ secrets.TF_VAR_db_name || 'landandbay' }}
+     TF_VAR_app_db_username: ${{ secrets.APP_DB_USERNAME || 'landandbay_app' }}
+     TF_VAR_app_db_password: ${{ secrets.APP_DB_PASSWORD }}
      TF_VAR_route53_zone_id: ${{ secrets.TF_VAR_route53_zone_id }}
      TF_VAR_domain_name: ${{ secrets.TF_VAR_domain_name }}
      TF_VAR_acm_certificate_arn: ${{ secrets.TF_VAR_acm_certificate_arn }}
      TERRAFORM_DIR: terraform
-   
+
    jobs:
      destroy:
        runs-on: ubuntu-latest
        steps:
-       - uses: actions/checkout@v4
-       
-       - name: Configure AWS credentials
-         uses: aws-actions/configure-aws-credentials@v4
-         with:
-           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-           aws-region: ${{ env.AWS_REGION }}
-       
-       - name: Setup Terraform
-         uses: hashicorp/setup-terraform@v3
-       
-       - name: Terraform Init
-         working-directory: ${{ env.TERRAFORM_DIR }}
-         run: terraform init
-       
-       - name: Terraform Destroy
-         working-directory: ${{ env.TERRAFORM_DIR }}
-         run: terraform destroy -auto-approve
+         - uses: actions/checkout@v4
+
+         - name: Configure AWS credentials
+           uses: aws-actions/configure-aws-credentials@v4
+           with:
+             aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+             aws-region: ${{ env.AWS_REGION }}
+
+         - name: Setup Terraform
+           uses: hashicorp/setup-terraform@v3
+
+         - name: Terraform Init
+           working-directory: ${{ env.TERRAFORM_DIR }}
+           run: terraform init
+
+         - name: Terraform Destroy
+           working-directory: ${{ env.TERRAFORM_DIR }}
+           run: terraform destroy -auto-approve
    ```
 
 3. Run the "Terraform Destroy" workflow from the Actions tab

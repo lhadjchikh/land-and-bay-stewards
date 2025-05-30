@@ -91,9 +91,14 @@ For local development, the following variables are required:
 # Django settings
 DEBUG=True
 SECRET_KEY=your-secret-key
-DATABASE_URL=postgis://postgres:postgres@localhost:5432/labs
+DATABASE_URL=postgis://landandbay_app:app_password@localhost:5432/landandbay
 ALLOWED_HOSTS=localhost,127.0.0.1
 ```
+
+Note that the database uses two separate users:
+
+- An administrative user (`landandbay_admin`) with privileges to create databases and users
+- An application user (`landandbay_app`) with restricted privileges for security
 
 For deployment to AWS, additional variables are required. See [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md) for details.
 

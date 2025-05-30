@@ -10,6 +10,9 @@ env:
   TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
   TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
   TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+  TF_VAR_db_name: ${{ secrets.TF_VAR_db_name || 'landandbay' }}
+  TF_VAR_app_db_username: ${{ secrets.APP_DB_USERNAME || 'landandbay_app' }}
+  TF_VAR_app_db_password: ${{ secrets.APP_DB_PASSWORD }}
   TF_VAR_route53_zone_id: ${{ secrets.TF_VAR_route53_zone_id }}
   TF_VAR_domain_name: ${{ secrets.TF_VAR_domain_name }}
   TF_VAR_acm_certificate_arn: ${{ secrets.TF_VAR_acm_certificate_arn }}

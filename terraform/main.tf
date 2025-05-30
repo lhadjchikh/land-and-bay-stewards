@@ -158,8 +158,8 @@ resource "aws_db_instance" "postgres" {
   engine                 = "postgres"
   engine_version         = "16.9"
   instance_class         = "db.t4g.micro"
-  name                   = "landandbay"
-  username               = "postgres"
+  name                   = var.db_name
+  username               = var.db_username
   password               = var.db_password
   parameter_group_name   = aws_db_parameter_group.postgres16.name
   db_subnet_group_name   = aws_db_subnet_group.main.name
@@ -187,8 +187,62 @@ resource "aws_db_parameter_group" "postgres16" {
   }
 }
 
-# Enable PostGIS extension (requires custom resource or manual setup)
-# Note: You'll need to connect to the database and run "CREATE EXTENSION postgis;" after creation
+# Create application user and enable PostGIS extension
+resource "null_resource" "db_setup" {
+  depends_on = [aws_db_instance.postgres]
+
+  # This will run every time the RDS endpoint changes (e.g., after creation)
+  triggers = {
+    db_instance_endpoint = aws_db_instance.postgres.endpoint
+  }
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      # Install PostgreSQL client if not already available
+      which psql || (apt-get update && apt-get install -y postgresql-client)
+      
+      # Sleep to allow RDS to fully initialize
+      sleep 30
+      
+      # Create a SQL script file for better escaping and readability
+      cat > /tmp/db_setup.sql << 'SQLEOF'
+      -- Enable PostGIS extension
+      CREATE EXTENSION IF NOT EXISTS postgis;
+
+      -- Create application user if it doesn't exist
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${var.app_db_username}') THEN
+          CREATE USER ${var.app_db_username} WITH PASSWORD '${var.app_db_password}';
+        END IF;
+      END
+      $$;
+      
+      -- Grant basic connect privileges
+      GRANT CONNECT ON DATABASE ${var.db_name} TO ${var.app_db_username};
+      
+      -- Grant schema usage
+      GRANT USAGE ON SCHEMA public TO ${var.app_db_username};
+      
+      -- Grant table privileges
+      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${var.app_db_username};
+      
+      -- Grant sequence privileges
+      GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO ${var.app_db_username};
+      
+      -- Set default privileges for future tables and sequences
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${var.app_db_username};
+      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO ${var.app_db_username};
+      SQLEOF
+      
+      # Execute the SQL script
+      PGPASSWORD=${var.db_password} psql -h ${aws_db_instance.postgres.address} -U ${var.db_username} -d ${var.db_name} -f /tmp/db_setup.sql
+      
+      # Remove the temporary SQL file
+      rm /tmp/db_setup.sql
+    EOT
+  }
+}
 
 # Load Balancer
 resource "aws_lb" "main" {
@@ -323,7 +377,7 @@ resource "aws_ecs_task_definition" "app" {
         },
         {
           name  = "DATABASE_URL"
-          value = "postgis://${var.db_username}:${var.db_password}@${aws_db_instance.postgres.endpoint}/${aws_db_instance.postgres.name}"
+          value = "postgis://${var.app_db_username}:${var.app_db_password}@${aws_db_instance.postgres.endpoint}/${var.db_name}"
         }
       ]
       logConfiguration = {

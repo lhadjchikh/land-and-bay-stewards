@@ -7,11 +7,29 @@ variable "aws_region" {
 variable "db_username" {
   description = "Database master username"
   type        = string
-  default     = "postgres"
+  default     = "landandbay_admin"
 }
 
 variable "db_password" {
   description = "Database master password"
+  type        = string
+  sensitive   = true
+}
+
+variable "db_name" {
+  description = "Database name"
+  type        = string
+  default     = "landandbay"
+}
+
+variable "app_db_username" {
+  description = "Application database username with restricted privileges"
+  type        = string
+  default     = "landandbay_app"
+}
+
+variable "app_db_password" {
+  description = "Application database password"
   type        = string
   sensitive   = true
 }
