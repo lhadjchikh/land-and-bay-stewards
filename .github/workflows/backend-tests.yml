@@ -7,12 +7,16 @@ on:
       - "backend/**"
       - "docker-compose.yml"
       - "Dockerfile"
+      - ".github/workflows/backend-tests.yml"
   pull_request:
     branches: [main]
     paths:
       - "backend/**"
       - "docker-compose.yml"
       - "Dockerfile"
+      - ".github/workflows/backend-tests.yml"
+  # Allow manual triggers
+  workflow_dispatch:
 
 jobs:
   test:

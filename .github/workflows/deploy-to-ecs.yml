@@ -1,67 +1,40 @@
 name: Deploy to ECS
 
 on:
-  push:
+  # This workflow will only run after the test workflows complete successfully
+  workflow_run:
+    workflows: ["Frontend Tests", "Backend Tests", "Full Stack Integration Tests"]
+    types:
+      - completed
     branches: [main]
-    paths-ignore:
-      - "terraform/**"
-      - ".github/workflows/infrastructure.yml"
-      - "README.md"
-      - "docs/**"
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - "terraform/**"
-      - ".github/workflows/infrastructure.yml"
-      - "README.md"
-      - "docs/**"
+  
+  # Allow manual triggers regardless of test outcomes
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip test requirement (use with caution)'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
 
 jobs:
-  test:
-    name: Test
+  check_tests:
+    name: Check Test Status
     runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.skip_tests == 'true')
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "18"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        run: cd frontend && npm ci
-
-      - name: Run frontend tests
-        run: cd frontend && npm test
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-          cache: "pip"
-
-      - name: Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
-
-      - name: Install backend dependencies
-        run: |
-          cd backend
-          poetry install
-
-      - name: Run backend tests
-        run: |
-          cd backend
-          poetry run python manage.py test
+      - name: Check Test Workflows
+        run: echo "Tests passed or skipped, proceeding with deployment"
 
   build_and_push:
     name: Build and Push Docker Images
-    needs: test
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: check_tests
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: prod
 

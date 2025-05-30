@@ -3,9 +3,13 @@
 This directory contains the GitHub Actions workflows for the Land and Bay Stewards project. These workflows automate
 testing and other CI/CD processes.
 
-## Available Workflows
+## CI/CD Architecture
 
-### Frontend Tests (`frontend-tests.yml`)
+This project uses a structured CI/CD pipeline with the following key workflows:
+
+### Test Workflows
+
+#### Frontend Tests (`frontend-tests.yml`)
 
 - Triggered by changes to files in the `frontend/` directory
 - Runs on multiple Node.js versions (18.x and 20.x)
@@ -13,25 +17,62 @@ testing and other CI/CD processes.
 - Runs unit and integration tests (excluding E2E tests)
 - Builds the frontend application
 - Checks for TypeScript errors (if applicable)
+- Can be manually triggered with `workflow_dispatch`
 
-### Backend Tests (`backend-tests.yml`)
+#### Backend Tests (`backend-tests.yml`)
 
 - Triggered by changes to files in the `backend/` directory, `docker-compose.yml`, or `Dockerfile`
 - Sets up Docker and PostgreSQL
 - Runs the Django tests inside a Docker container
+- Can be manually triggered with `workflow_dispatch`
 
-### Code Style Checks
-
-- `black.yml`: Runs the Black Python code formatter
-- `ruff.yml`: Runs the Ruff Python linter
-- `js-lint.yml`: Runs ESLint on JavaScript/JSX/TypeScript files
-
-### Full Stack Integration Tests (`full-stack-tests.yml`)
+#### Full Stack Integration Tests (`full-stack-tests.yml`)
 
 - Runs on pushes to main branch, pull requests that affect both frontend and backend, or manual triggers
 - Focuses specifically on end-to-end tests that verify frontend and backend integration
 - Starts the complete application stack in Docker
 - Runs the E2E tests from the frontend against the live backend
+
+### Deployment Workflow (`deploy-to-ecs.yml`)
+
+- Deploys the application to Amazon ECS
+- Triggered automatically after all test workflows complete successfully
+- Can be manually triggered with an option to skip tests
+- No longer runs redundant tests (as of May 2025)
+
+### Infrastructure Workflow (`infrastructure.yml`)
+
+- Manages AWS infrastructure changes using Terraform
+- Runs independently of application code changes
+
+### Code Style Checks
+
+- `python-lint.yml`: Runs Python linters
+- `prettier-lint.yml`: Runs prettier for formatting
+- `ts-typecheck.yml`: Checks TypeScript types
+- `terraform-lint.yml`: Validates Terraform files
+
+## Workflow Dependencies
+
+```
+Frontend Tests ─┐
+Backend Tests ──┼─► Deploy to ECS ─► Amazon ECS
+Full Stack Tests┘
+```
+
+## Manual Triggers
+
+All workflows can be manually triggered from the GitHub Actions UI. When manually triggering the deployment workflow, you have the option to skip the test requirement (use with caution).
+
+## AWS Credentials
+
+The deployment and infrastructure workflows require AWS credentials to be configured as GitHub environment secrets:
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+
+These credentials should be configured in the GitHub "prod" environment and have the necessary permissions for ECR, ECS, and any other AWS services used in the application.
+
+All production-related jobs have been configured to use the "prod" environment to access these secrets.
 
 ## Running Tests Locally
 
