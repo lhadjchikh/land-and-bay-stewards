@@ -78,10 +78,18 @@ jobs:
       - name: Create test data
         run: |
           # Create test data for the API tests
-          docker compose exec -T app python backend/manage.py shell -c "
-          from labandbay.campaigns.models import PolicyCampaign
-          from labandbay.endorsers.models import Endorser
-          from labandbay.legislators.models import Legislator
+            docker compose exec -T app bash -c '
+              export PYTHONPATH="${PYTHONPATH}:/app/backend"
+              python backend/manage.py shell -c "
+              try:
+                from land_and_bay.campaigns.models import PolicyCampaign
+                from land_and_bay.endorsers.models import Endorser
+                from land_and_bay.legislators.models import Legislator
+              except ImportError as e:
+                print(f\"Error importing models: {e}\")
+                exit(1)
+              "
+            '
 
           # Create a test campaign if none exists
           if not PolicyCampaign.objects.exists():
