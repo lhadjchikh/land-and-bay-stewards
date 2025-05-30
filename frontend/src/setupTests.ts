@@ -5,9 +5,9 @@
 import '@testing-library/jest-dom';
 
 // Mock fetch globally
-global.fetch = jest.fn();
+global.fetch = jest.fn() as jest.Mock;
 
 // Helper to reset mocks
 beforeEach(() => {
-  global.fetch.mockClear();
+  (global.fetch as jest.Mock).mockClear();
 });

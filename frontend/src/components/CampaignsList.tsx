@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import API from '../services/api';
+import { Campaign } from '../types';
 
-function CampaignsList() {
-  const [campaigns, setCampaigns] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const CampaignsList: React.FC = () => {
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchCampaigns = async () => {
+    const fetchCampaigns = async (): Promise<void> => {
       try {
         const data = await API.getCampaigns();
         setCampaigns(data);
@@ -41,6 +42,6 @@ function CampaignsList() {
       )}
     </div>
   );
-}
+};
 
 export default CampaignsList;

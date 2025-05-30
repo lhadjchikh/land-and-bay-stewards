@@ -1,8 +1,12 @@
 # Land and Bay Stewards Frontend
 
-This is the frontend for the Land and Bay Stewards project. It's a React application that interacts with the Django backend API.
+[![TypeScript Type Check](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/ts-typecheck.yml)
+[![JavaScript & TypeScript Linting](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/js-lint.yml/badge.svg)](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/js-lint.yml)
+[![Frontend Tests](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/frontend-tests.yml)
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This is the frontend for the Land and Bay Stewards project. It's a React application with TypeScript that interacts with the Django backend API.
+
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and has been migrated to TypeScript.
 
 ## Available Scripts
 
@@ -41,6 +45,14 @@ See `src/tests/README.md` for more information on running tests.
 
 ## Code Quality
 
+### TypeScript
+
+This project uses TypeScript for type safety. You can run the type checker with:
+
+```bash
+npm run typecheck   # Check for type errors
+```
+
 ### Linting
 
 This project uses ESLint for code quality. You can run the linter with:
@@ -78,6 +90,8 @@ You can learn more in the [Create React App documentation](https://facebook.gith
 
 To learn React, check out the [React documentation](https://reactjs.org/).
 
+To learn TypeScript, check out the [TypeScript documentation](https://www.typescriptlang.org/docs/).
+
 ### Code Splitting
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
@@ -97,7 +111,3 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/a
 ### Deployment
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import CampaignsList from '../../components/CampaignsList';
 import API from '../../services/api';
+import { Campaign } from '../../types';
 
 // Mock the API module
 jest.mock('../../services/api', () => ({
@@ -19,7 +20,7 @@ describe('CampaignsList Integration', () => {
 
   test('renders campaigns from API', async () => {
     // Mock data for the test
-    const mockData = [{
+    const mockData: Campaign[] = [{
       id: 1,
       title: 'Test Campaign',
       slug: 'test-campaign',
@@ -27,7 +28,7 @@ describe('CampaignsList Integration', () => {
     }];
     
     // Setup the API mock to return data
-    API.getCampaigns.mockResolvedValue(mockData);
+    (API.getCampaigns as jest.Mock).mockResolvedValue(mockData);
     
     render(<CampaignsList />);
     
@@ -49,7 +50,7 @@ describe('CampaignsList Integration', () => {
 
   test('handles API error states', async () => {
     // Mock API error
-    API.getCampaigns.mockRejectedValue(new Error('API Error'));
+    (API.getCampaigns as jest.Mock).mockRejectedValue(new Error('API Error'));
     
     render(<CampaignsList />);
     
@@ -66,7 +67,7 @@ describe('CampaignsList Integration', () => {
 
   test('handles empty response from API', async () => {
     // Mock empty array response
-    API.getCampaigns.mockResolvedValue([]);
+    (API.getCampaigns as jest.Mock).mockResolvedValue([]);
     
     render(<CampaignsList />);
     

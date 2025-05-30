@@ -33,13 +33,10 @@ jobs:
         cache-dependency-path: frontend/package-lock.json
     
     - name: Install dependencies
-      run: npm ci
+      run: npm ci || npm ci --legacy-peer-deps
       
     - name: Run tests
       run: npm run test:ci
     
     - name: Build
       run: npm run build
-      
-    - name: Check for TypeScript errors
-      run: npm run tsc || echo "No TypeScript config found, skipping type check."

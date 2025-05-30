@@ -3,7 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 import CampaignsList from './components/CampaignsList';
 
-function App() {
+const App: React.FC = () => {
   return (
     <div className="App">
       <header className="App-header">
@@ -23,6 +23,6 @@ function App() {
       </main>
     </div>
   );
-}
+};
 
 export default App;

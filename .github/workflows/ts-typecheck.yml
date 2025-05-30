@@ -1,32 +1,30 @@
-name: JavaScript & TypeScript Linting
+name: TypeScript Type Check
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'frontend/src/**/*.js'
-      - 'frontend/src/**/*.jsx'
       - 'frontend/src/**/*.ts'
       - 'frontend/src/**/*.tsx'
+      - 'frontend/tsconfig.json'
       - 'frontend/package.json'
       - 'frontend/package-lock.json'
-      - '.github/workflows/js-lint.yml'
+      - '.github/workflows/ts-typecheck.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'frontend/src/**/*.js'
-      - 'frontend/src/**/*.jsx'
       - 'frontend/src/**/*.ts'
       - 'frontend/src/**/*.tsx'
+      - 'frontend/tsconfig.json'
       - 'frontend/package.json'
       - 'frontend/package-lock.json'
-      - '.github/workflows/js-lint.yml'
+      - '.github/workflows/ts-typecheck.yml'
   # Allow manual triggers
   workflow_dispatch:
 
 jobs:
-  lint:
-    name: ESLint
+  typecheck:
+    name: TypeScript Check
     runs-on: ubuntu-latest
     
     defaults:
@@ -46,5 +44,5 @@ jobs:
     - name: Install dependencies
       run: npm ci || npm ci --legacy-peer-deps
     
-    - name: Lint JavaScript/JSX files
-      run: npm run lint:ci
+    - name: Run TypeScript type check
+      run: npm run typecheck
