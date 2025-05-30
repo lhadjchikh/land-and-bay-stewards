@@ -15,7 +15,7 @@ output "db_instance_port" {
 
 output "db_instance_name" {
   description = "The name of the database"
-  value       = aws_db_instance.postgres.name
+  value       = aws_db_instance.postgres.db_name
 }
 
 output "db_kms_key_arn" {
