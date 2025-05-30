@@ -1,5 +1,9 @@
 provider "aws" {
   region = var.aws_region
+  
+  default_tags {
+    tags = var.tags
+  }
 }
 
 # VPC and Networking
@@ -106,6 +110,10 @@ resource "aws_ecr_repository" "app" {
   image_scanning_configuration {
     scan_on_push = true
   }
+  
+  tags = {
+    Name = "landandbay"
+  }
 }
 
 # ECS Cluster
@@ -116,6 +124,10 @@ resource "aws_ecs_cluster" "main" {
     name  = "containerInsights"
     value = "disabled"
   }
+  
+  tags = {
+    Name = "landandbay-cluster"
+  }
 }
 
 # RDS PostgreSQL with PostGIS
@@ -124,7 +136,7 @@ resource "aws_db_subnet_group" "main" {
   subnet_ids = [aws_subnet.public_a.id, aws_subnet.public_b.id]
   
   tags = {
-    Name = "Land and Bay DB subnet group"
+    Name = "landandbay-db-subnet"
   }
 }
 
@@ -184,6 +196,10 @@ resource "aws_db_parameter_group" "postgres16" {
   parameter {
     name  = "shared_preload_libraries"
     value = "postgis"
+  }
+  
+  tags = {
+    Name = "landandbay-pg16"
   }
 }
 
@@ -274,6 +290,10 @@ resource "aws_lb_target_group" "app" {
     interval            = 30
     matcher             = "200"
   }
+  
+  tags = {
+    Name = "landandbay-tg"
+  }
 }
 
 resource "aws_lb_listener" "http" {
@@ -320,6 +340,10 @@ resource "aws_iam_role" "ecs_task_execution_role" {
       }
     ]
   })
+  
+  tags = {
+    Name = "ecsTaskExecutionRole"
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
@@ -342,6 +366,10 @@ resource "aws_iam_role" "ecs_task_role" {
       }
     ]
   })
+  
+  tags = {
+    Name = "ecsTaskRole"
+  }
 }
 
 # ECS Service
@@ -399,6 +427,10 @@ resource "aws_ecs_task_definition" "app" {
 resource "aws_cloudwatch_log_group" "ecs_logs" {
   name              = "/ecs/landandbay"
   retention_in_days = 7
+  
+  tags = {
+    Name = "landandbay-logs"
+  }
 }
 
 resource "aws_ecs_service" "app" {
@@ -425,6 +457,10 @@ resource "aws_ecs_service" "app" {
     aws_lb_listener.https,
     aws_iam_role_policy_attachment.ecs_task_execution_role_policy
   ]
+  
+  tags = {
+    Name = "landandbay-service"
+  }
 }
 
 # Route 53 Record
@@ -437,6 +473,10 @@ resource "aws_route53_record" "app" {
     name                   = aws_lb.main.dns_name
     zone_id                = aws_lb.main.zone_id
     evaluate_target_health = true
+  }
+  
+  tags = {
+    Name = var.domain_name
   }
 }
 
@@ -452,7 +492,7 @@ resource "aws_budgets_budget" "monthly" {
   # Add cost allocation tag to the budget - specifically filter by Project tag
   cost_filter {
     name = "TagKeyValue"
-    values = ["Project$Land and Bay"]
+    values = ["user:Project$landandbay"]
   }
 
   # Early warning at 70% of budget

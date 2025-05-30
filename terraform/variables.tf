@@ -53,3 +53,12 @@ variable "alert_email" {
   description = "Email address to receive budget and other alerts"
   type        = string
 }
+
+variable "tags" {
+  description = "Default tags to apply to all resources"
+  type        = map(string)
+  default = {
+    Project     = "landandbay"
+    Environment = "Production"
+  }
+}

@@ -138,6 +138,7 @@ The Terraform configuration creates:
    - IAM Roles for ECS tasks
 
 4. **Load Balancing**:
+
    - Application Load Balancer
    - Target Group
    - Listener
@@ -212,6 +213,15 @@ To view or modify the budget:
 3. Select the "landandbay-monthly-budget"
 
 > **Important**: Make sure to set the `TF_VAR_alert_email` variable with a valid email address to receive these alerts. If you change the email address, you'll need to redeploy the infrastructure.
+
+#### Cost Allocation Tags
+
+All resources are automatically tagged with essential AWS provider tags and two custom tags:
+
+- `Project`: Identifies all resources as part of "Land and Bay"
+- `Environment`: Specifies the deployment environment (e.g., "Production")
+
+AWS Cost Explorer and AWS Budgets can use these tags for cost tracking and allocation. Resources are also automatically tracked by their creator (Terraform) for budget monitoring.
 
 ## Cleanup
 
