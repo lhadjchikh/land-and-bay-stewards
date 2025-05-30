@@ -46,7 +46,7 @@ jobs:
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
             --load \
-            -t land-and-bay-stewards_app:latest \
+            -t landandbay_app:latest \
             .
 
       - name: Start all containers
