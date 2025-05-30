@@ -1,6 +1,6 @@
-# Land and Bay Stewards Tests
+# Land and Bay Tests
 
-This directory contains tests for the Land and Bay Stewards frontend application.
+This directory contains tests for the Land and Bay frontend application.
 
 ## Test Structure
 

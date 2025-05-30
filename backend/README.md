@@ -1,10 +1,10 @@
-# Land and Bay Stewards Backend
+# Land and Bay Backend (landandbay.org)
 
-[![Black Code Style](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/black.yml)
-[![Ruff Linting](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ruff.yml)
-[![Backend Tests](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/backend-tests.yml)
+[![Black Code Style](https://github.com/lhadjchikh/landandbay/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/black.yml)
+[![Ruff Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml)
+[![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml)
 
-This is the Django backend for the Land and Bay Stewards project. It provides a REST API for managing policy campaigns, endorsers, and legislators.
+This is the Django backend for the Land and Bay Stewards (landandbay.org) project. It provides a REST API for managing policy campaigns, endorsers, and legislators.
 
 ## Technology Stack
 

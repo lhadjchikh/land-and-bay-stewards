@@ -1,10 +1,10 @@
-# Land and Bay Stewards Frontend
+# Land and Bay Frontend (landandbay.org)
 
-[![TypeScript Type Check](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/ts-typecheck.yml)
-[![JavaScript & TypeScript Linting](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/js-lint.yml/badge.svg)](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/js-lint.yml)
-[![Frontend Tests](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/land-and-bay-stewards/land-and-bay-stewards/actions/workflows/frontend-tests.yml)
+[![TypeScript Type Check](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml)
+[![JavaScript & TypeScript Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml)
+[![Frontend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml)
 
-This is the frontend for the Land and Bay Stewards project. It's a React application with TypeScript that interacts with the Django backend API.
+This is the frontend for the Land and Bay Stewards (landandbay.org) project. It's a React application with TypeScript that interacts with the Django backend API.
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and has been migrated to TypeScript.
 

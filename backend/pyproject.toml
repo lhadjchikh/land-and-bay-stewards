@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "labs"
 version = "0.1.0"
-description = "Land and Bay Stewards"
+description = "Land and Bay Stewards (landandbay.org)"
 authors = ["Leila Hadj-Chikh <lhadjchikh@gmail.com>"]
 license = "n"
 readme = "README.md"

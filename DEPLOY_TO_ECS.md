@@ -1,6 +1,6 @@
 # Deploying to Amazon ECS with Terraform
 
-This guide explains how to deploy the Land and Bay Stewards application to Amazon ECS (Elastic Container Service) using Terraform and GitHub Actions. The application is built with Python 3.13 and PostgreSQL 16 with PostGIS extension.
+This guide explains how to deploy the Land and Bay application to Amazon ECS (Elastic Container Service) using Terraform and GitHub Actions. The application is built with Python 3.13 and PostgreSQL 16 with PostGIS extension.
 
 ## Overview
 
@@ -36,7 +36,7 @@ In your GitHub repository, add the following secrets:
 4. `DB_USERNAME`: Database username (default: `postgres`)
 5. `DB_PASSWORD`: A secure password for the database
 6. `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
-7. `TF_VAR_domain_name`: Your domain name (e.g., `app.example.com`) 
+7. `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`) 
 8. `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate for HTTPS
 
 To add these secrets:
@@ -136,7 +136,7 @@ To use a custom domain name:
 1. The Route 53 and HTTPS configuration is already enabled in `terraform/main.tf`
 2. You need to add the following GitHub secrets:
    - `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
-   - `TF_VAR_domain_name`: Your domain name (e.g., `app.example.com`)
+   - `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`)
    - `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate
 
 > **Note**: You must have already created an ACM certificate for your domain. If you don't have one, you can create it in the AWS console or use Terraform to provision it.
@@ -147,7 +147,7 @@ Your application logs are sent to CloudWatch Logs:
 
 1. Go to CloudWatch in the AWS Console
 2. Navigate to "Log groups"
-3. Find the `/ecs/land-and-bay-stewards` log group
+3. Find the `/ecs/landandbay` log group
 
 ## Cleanup
 
@@ -173,6 +173,9 @@ To clean up all AWS resources:
      TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
      TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
      TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+     TF_VAR_route53_zone_id: ${{ secrets.TF_VAR_route53_zone_id }}
+     TF_VAR_domain_name: ${{ secrets.TF_VAR_domain_name }}
+     TF_VAR_acm_certificate_arn: ${{ secrets.TF_VAR_acm_certificate_arn }}
      TERRAFORM_DIR: terraform
    
    jobs:

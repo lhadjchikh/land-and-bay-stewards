@@ -1,14 +1,14 @@
-# Land and Bay Stewards
+# Land and Bay Stewards (landandbay.org)
 
-[![Backend Tests](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/backend-tests.yml)
-[![Frontend Tests](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/frontend-tests.yml)
-[![Full Stack Tests](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/full-stack-tests.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/full-stack-tests.yml)
-[![Black Code Style](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/black.yml)
-[![Ruff Linting](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ruff.yml)
-[![TypeScript Type Check](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ts-typecheck.yml)
-[![JavaScript & TypeScript Linting](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/js-lint.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/js-lint.yml)
+[![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml)
+[![Full Stack Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/full-stack-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/full-stack-tests.yml)
+[![Black Code Style](https://github.com/lhadjchikh/landandbay/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/black.yml)
+[![Ruff Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml)
+[![TypeScript Type Check](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml)
+[![JavaScript & TypeScript Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml)
 
-The Land and Bay Stewards project is a web application for managing and promoting policy campaigns, tracking legislative support, and organizing endorsers. The application consists of a Django backend with GeoDjango support and a React frontend with TypeScript.
+The Land and Bay Stewards (landandbay.org) project is a web application for managing and promoting policy campaigns, tracking legislative support, and organizing endorsers. The application consists of a Django backend with GeoDjango support and a React frontend with TypeScript.
 
 ## Project Overview
 
@@ -43,8 +43,8 @@ The easiest way to run the application is using Docker Compose:
 
 ```bash
 # Clone the repository
-git clone https://github.com/lhadjchikh/land-and-bay-stewards.git
-cd land-and-bay-stewards
+git clone https://github.com/lhadjchikh/landandbay.git
+cd landandbay
 
 # Start the application
 docker-compose up
@@ -147,6 +147,7 @@ To deploy:
 4. Follow the detailed steps in [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md)
 
 The deployment includes:
+
 - Containerized application running on ECS Fargate
 - RDS PostgreSQL database with PostGIS extension
 - Application Load Balancer for routing traffic
@@ -160,7 +161,7 @@ To remove all AWS resources created by this project:
 
 1. Navigate to the "Actions" tab in your GitHub repository
 2. Select the "Terraform Destroy" workflow
-3. Click "Run workflow" 
+3. Click "Run workflow"
 4. Confirm the action
 
 This will clean up all AWS resources created for this project.
