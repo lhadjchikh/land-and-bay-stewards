@@ -52,7 +52,7 @@ docker-compose up
 
 This will start:
 
-- A PostgreSQL database with PostGIS at port 5433
+- A PostgreSQL database with PostGIS at port 5432
 - The Django backend at http://localhost:8000
 - The React frontend at http://localhost:3000
 
@@ -84,7 +84,7 @@ Create a `.env` file in the project root with the following variables:
 ```
 DEBUG=True
 SECRET_KEY=your-secret-key
-DATABASE_URL=postgis://postgres:postgres@localhost:5433/labs
+DATABASE_URL=postgis://postgres:postgres@localhost:5432/labs
 ALLOWED_HOSTS=localhost,127.0.0.1
 ```
 
