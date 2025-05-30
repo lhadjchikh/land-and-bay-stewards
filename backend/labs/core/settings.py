@@ -141,19 +141,11 @@ STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 # Look for static files in these directories
-# Note: We check multiple locations to support different deployment scenarios
-STATICFILES_DIRS = []
-
-# Try to add frontend static files if they exist
-frontend_static_dirs = [
+# Static files are stored in BASE_DIR/static
+# Frontend static files are copied to BASE_DIR/static/frontend during build
+STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
-    os.path.join(BASE_DIR, "frontend", "build", "static"),
-    os.path.join(BASE_DIR.parent, "frontend", "build", "static"),
 ]
-
-for static_dir in frontend_static_dirs:
-    if os.path.exists(static_dir):
-        STATICFILES_DIRS.append(static_dir)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
