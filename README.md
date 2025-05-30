@@ -3,10 +3,10 @@
 [![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml)
 [![Frontend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml)
 [![Full Stack Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/full-stack-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/full-stack-tests.yml)
-[![Black Code Style](https://github.com/lhadjchikh/landandbay/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/black.yml)
-[![Ruff Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml)
+[![Python Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/python-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/python-lint.yml)
+[![Prettier Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/prettier-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/prettier-lint.yml)
 [![TypeScript Type Check](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml)
-[![JavaScript & TypeScript Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml)
+[![Terraform Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/terraform-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/terraform-lint.yml)
 
 The Land and Bay Stewards (landandbay.org) project is a web application for managing and promoting policy campaigns,
 tracking legislative support, and organizing endorsers. The application consists of a Django backend with GeoDjango
