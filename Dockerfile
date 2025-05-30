@@ -40,7 +40,7 @@ COPY backend/pyproject.toml backend/poetry.lock /app/
 
 # Install Python dependencies
 # This layer will be cached as long as the dependencies don't change
-RUN poetry install --no-root
+RUN poetry lock && poetry install --no-root
 
 # Stage 3: Build React frontend
 # This stage is separate and can be rebuilt without affecting the Python base
