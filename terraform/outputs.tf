@@ -1,50 +1,56 @@
-output "ecr_repository_url" {
-  value = aws_ecr_repository.app.repository_url
+# Network Outputs
+output "vpc_id" {
+  value = module.networking.vpc_id
 }
 
-output "ecs_cluster_name" {
-  value = aws_ecs_cluster.main.name
+output "public_subnet_ids" {
+  value = module.networking.public_subnet_ids
 }
 
-output "ecs_service_name" {
-  value = aws_ecs_service.app.name
+output "private_subnet_ids" {
+  value = module.networking.private_subnet_ids
 }
 
-output "load_balancer_dns" {
-  value = aws_lb.main.dns_name
-}
-
-output "website_url" {
-  value = "https://${var.domain_name}"
-}
-
+# Database Outputs
 output "database_endpoint" {
-  value = aws_db_instance.postgres.endpoint
+  value = module.database.db_instance_endpoint
 }
 
 output "database_name" {
-  value = aws_db_instance.postgres.name
+  value = module.database.db_instance_name
 }
 
-output "vpc_id" {
-  value = aws_vpc.main.id
+# Application Outputs
+output "ecr_repository_url" {
+  value = module.compute.ecr_repository_url
 }
 
-output "subnets" {
-  value = [aws_subnet.public_a.id, aws_subnet.public_b.id]
+output "ecs_cluster_name" {
+  value = module.compute.ecs_cluster_name
 }
 
-output "budget_info" {
-  value = "Monthly budget alert of $${aws_budgets_budget.monthly.limit_amount} set with notifications at 70%, 90%, and forecast thresholds to ${var.alert_email}"
+output "ecs_service_name" {
+  value = module.compute.ecs_service_name
 }
 
+# Load Balancer Outputs
+output "load_balancer_dns" {
+  value = module.loadbalancer.alb_dns_name
+}
+
+# DNS Outputs
+output "website_url" {
+  value = module.dns.website_url
+}
+
+# Bastion Host Outputs
 output "bastion_public_ip" {
-  value       = aws_instance.bastion.public_ip
+  value       = module.compute.bastion_public_ip
   description = "Public IP address of the bastion host"
 }
 
 output "ssh_tunnel_command" {
-  value       = "ssh -i ${var.bastion_key_name}.pem ec2-user@${aws_instance.bastion.public_ip} -L 5432:${aws_db_instance.postgres.address}:5432"
+  value       = "ssh -i ${var.bastion_key_name}.pem ec2-user@${module.compute.bastion_public_ip} -L 5432:${module.database.db_instance_address}:5432"
   description = "Command to create SSH tunnel for database access"
 }
 
@@ -61,4 +67,8 @@ output "pgadmin_connection_info" {
   description = "Connection information for pgAdmin"
   sensitive   = true
 }
+
+# Monitoring Outputs
+output "budget_info" {
+  value = module.monitoring.budget_info
 }

@@ -1,0 +1,159 @@
+# Monitoring Module
+
+# S3 Bucket for ALB Logs
+resource "aws_s3_bucket" "alb_logs" {
+  bucket = "${var.prefix}-alb-logs"
+  
+  tags = {
+    Name = "${var.prefix}-alb-logs"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+
+  rule {
+    id     = "log-expiration"
+    status = "Enabled"
+
+    expiration {
+      days = 30
+    }
+  }
+}
+
+resource "aws_s3_bucket_policy" "alb_logs" {
+  bucket = aws_s3_bucket.alb_logs.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          AWS = "arn:aws:iam::${data.aws_elb_service_account.main.id}:root"
+        },
+        Action = "s3:PutObject",
+        Resource = "${aws_s3_bucket.alb_logs.arn}/AWSLogs/*"
+      }
+    ]
+  })
+}
+
+data "aws_elb_service_account" "main" {}
+
+# VPC Flow Logs
+resource "aws_cloudwatch_log_group" "vpc_flow_log_group" {
+  name              = "/vpc/flow-logs"
+  retention_in_days = 30
+  
+  tags = {
+    Name = "${var.prefix}-vpc-flow-logs"
+  }
+}
+
+resource "aws_iam_role" "vpc_flow_log_role" {
+  name = "vpc-flow-log-role"
+  
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "vpc-flow-logs.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+  
+  tags = {
+    Name = "vpc-flow-log-role"
+  }
+}
+
+resource "aws_iam_role_policy" "vpc_flow_log_policy" {
+  name = "vpc-flow-log-policy"
+  role = aws_iam_role.vpc_flow_log_role.id
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_flow_log" "vpc_flow_logs" {
+  iam_role_arn    = aws_iam_role.vpc_flow_log_role.arn
+  log_destination = aws_cloudwatch_log_group.vpc_flow_log_group.arn
+  traffic_type    = "ALL"
+  vpc_id          = var.vpc_id
+  
+  tags = {
+    Name = "${var.prefix}-vpc-flow-logs"
+  }
+}
+
+# Budget Monitoring
+resource "aws_budgets_budget" "monthly" {
+  name              = "${var.prefix}-monthly-budget"
+  budget_type       = "COST"
+  limit_amount      = var.budget_limit_amount
+  limit_unit        = "USD"
+  time_unit         = "MONTHLY"
+  time_period_start = formatdate("YYYY-MM-01_00:00", timestamp())
+  
+  # Add cost allocation tag to the budget
+  cost_filter {
+    name = "TagKeyValue"
+    values = ["user:Project$${var.prefix}"]
+  }
+
+  # Early warning at 70% of budget
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 70
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = [var.alert_email]
+  }
+
+  # Near limit warning at 90% of budget
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 90
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "ACTUAL"
+    subscriber_email_addresses = [var.alert_email]
+  }
+
+  # Forecast warning if we're projected to exceed budget
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "FORECASTED"
+    subscriber_email_addresses = [var.alert_email]
+  }
+}
