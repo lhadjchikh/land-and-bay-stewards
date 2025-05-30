@@ -15,6 +15,10 @@ if not database_url:
     print('ERROR: DATABASE_URL environment variable is not set')
     sys.exit(1)
 
+# Ensure the URL starts with postgresql:// for psycopg
+if database_url.startswith('postgis://'):
+    database_url = database_url.replace('postgis://', 'postgresql://', 1)
+
 # Maximum wait time: 60 seconds
 max_attempts = 60
 attempt = 0
