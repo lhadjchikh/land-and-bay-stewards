@@ -44,6 +44,5 @@ def get_react_assets() -> dict[str, str]:
 
 
 def home(request: HttpRequest) -> HttpResponse:
-
     assets = get_react_assets()
     return render(request, "index.html", {"assets": assets})
