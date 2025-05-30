@@ -8,17 +8,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     PATH=/root/.local/bin:$PATH
 
-# Configure apt sources for GDAL
+# Configure apt sources and install system dependencies including GDAL
+# Combining these operations into a single layer reduces image size
 RUN echo "deb https://deb.debian.org/debian unstable main contrib" >> /etc/apt/sources.list && \
     echo "Package: *" >> /etc/apt/preferences && \
     echo "Pin: release a=unstable" >> /etc/apt/preferences && \
-    echo "Pin-Priority: 10" >> /etc/apt/preferences
-
-# Install system dependencies including GDAL
-# This layer will be cached as long as the package list doesn't change
-RUN apt-get update && \
+    echo "Pin-Priority: 10" >> /etc/apt/preferences && \
+    apt-get update && \
     apt-get install --yes --no-install-recommends curl g++ python3-dev && \
     apt-get install --yes -t unstable gdal-bin libgdal-dev && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Set GDAL environment variables
