@@ -39,12 +39,13 @@ resource "aws_security_group" "app_sg" {
     description = "HTTP outbound traffic"
   }
 
+  # Removed DB SG reference - now using CIDR blocks for the DB subnet
   egress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.db_sg.id]
-    description     = "PostgreSQL access"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = var.database_subnet_cidrs
+    description = "PostgreSQL access to database subnets"
   }
 
   tags = {
@@ -58,12 +59,13 @@ resource "aws_security_group" "db_sg" {
   description = "Allow PostgreSQL inbound traffic"
   vpc_id      = var.vpc_id
 
+  # Using CIDR blocks for app subnets instead of SG reference
   ingress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app_sg.id]
-    description     = "PostgreSQL from application"
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = var.app_subnet_cidrs
+    description = "PostgreSQL from application subnets"
   }
 
   # Allow access from the bastion host
@@ -78,11 +80,11 @@ resource "aws_security_group" "db_sg" {
   # Since database is in isolated subnet with no internet access,
   # we need to be careful about what outbound traffic we allow
   egress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = [aws_security_group.app_sg.id]
-    description     = "Allow return traffic to the application"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = var.app_subnet_cidrs
+    description = "Allow return traffic to the application subnets"
   }
 
   # Allow return traffic to the bastion host

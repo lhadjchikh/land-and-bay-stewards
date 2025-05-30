@@ -18,6 +18,16 @@ output "private_db_subnet_ids" {
   value       = [aws_subnet.private_db_a.id, aws_subnet.private_db_b.id]
 }
 
+output "app_subnet_cidrs" {
+  description = "List of private app subnet CIDR blocks"
+  value       = [var.private_subnet_a_cidr, var.private_subnet_b_cidr]
+}
+
+output "db_subnet_cidrs" {
+  description = "List of private database subnet CIDR blocks"
+  value       = [var.private_db_subnet_a_cidr, var.private_db_subnet_b_cidr]
+}
+
 output "s3_endpoint_id" {
   description = "ID of the S3 VPC endpoint"
   value       = aws_vpc_endpoint.s3.id
