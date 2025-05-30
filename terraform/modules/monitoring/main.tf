@@ -26,6 +26,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "alb_logs" {
     id     = "log-expiration"
     status = "Enabled"
 
+    filter {
+      prefix = ""  # Empty prefix to apply to all objects
+    }
+
     expiration {
       days = 30
     }

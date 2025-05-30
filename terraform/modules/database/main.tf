@@ -57,7 +57,7 @@ resource "aws_db_instance" "postgres" {
   engine                       = "postgres"
   engine_version               = var.db_engine_version
   instance_class               = var.db_instance_class
-  name                         = var.db_name
+  db_name                      = var.db_name
   username                     = local.master_username
   password                     = local.master_password
   parameter_group_name         = aws_db_parameter_group.postgres.name
