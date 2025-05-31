@@ -149,42 +149,51 @@ data "aws_internet_gateway" "existing" {
 
 locals {
   # Use the created IGW or the existing one
-  igw_id = var.create_vpc ? aws_internet_gateway.igw[0].id : (length(data.aws_internet_gateway.existing) > 0 ? data.aws_internet_gateway.existing[0].id : null)
+  igw_id = var.create_vpc ? (length(aws_internet_gateway.igw) > 0 ? aws_internet_gateway.igw[0].id : null) : (length(data.aws_internet_gateway.existing) > 0 ? data.aws_internet_gateway.existing[0].id : null)
 }
 
 # Public route table - only created if create_public_subnets is true
 resource "aws_route_table" "public" {
-  count = var.create_public_subnets && local.igw_id != null ? 1 : 0
+  count = var.create_public_subnets ? 1 : 0
 
   vpc_id = local.vpc_id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = local.igw_id
-  }
 
   tags = {
     Name = "${var.prefix}-public-rt"
   }
 }
 
-# App subnet route table - direct to IGW - only created if create_private_subnets is true
+# Separate the route from the route table to avoid dependency issues
+resource "aws_route" "public_internet_gateway" {
+  count = var.create_public_subnets && local.igw_id != null ? 1 : 0
+
+  route_table_id         = aws_route_table.public[0].id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = local.igw_id
+
+  depends_on = [aws_route_table.public]
+}
+
+# App subnet route table - only created if create_private_subnets is true
 resource "aws_route_table" "private_app" {
   count = var.create_private_subnets ? 1 : 0
 
   vpc_id = local.vpc_id
 
-  dynamic "route" {
-    for_each = local.igw_id != null ? [1] : []
-    content {
-      cidr_block = "0.0.0.0/0"
-      gateway_id = local.igw_id
-    }
-  }
-
   tags = {
     Name = "${var.prefix}-private-app-rt"
   }
+}
+
+# Separate route for private app subnets to IGW to avoid dependency issues
+resource "aws_route" "private_app_internet_gateway" {
+  count = var.create_private_subnets && local.igw_id != null ? 1 : 0
+
+  route_table_id         = aws_route_table.private_app[0].id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = local.igw_id
+
+  depends_on = [aws_route_table.private_app]
 }
 
 # Database subnet route table - isolated - only created if create_db_subnets is true
