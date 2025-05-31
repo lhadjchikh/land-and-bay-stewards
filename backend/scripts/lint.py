@@ -102,6 +102,34 @@ def main() -> int:
                 print("Running tflint...")
                 success &= run_command(["tflint", "--init"], cwd=terraform_dir)
                 success &= run_command(["tflint", "--recursive"], cwd=terraform_dir)
+    
+    # Check for shellcheck binary using shutil.which
+    if not which("shellcheck"):
+        print("ShellCheck is not installed. Skipping shell script lint checks.")
+    else:
+        print("Running ShellCheck on shell scripts...")
+        # Find all .sh files in the project
+        shell_scripts = list(project_root.glob("**/*.sh"))
+        if shell_scripts:
+            for script in shell_scripts:
+                # Skip files in .git, node_modules, and other ignore dirs
+                if any(
+                    ignore_dir in str(script)
+                    for ignore_dir in [".git", "node_modules", ".terraform"]
+                ):
+                    continue
+                print(f"Checking {script.relative_to(project_root)}...")
+                # Run shellcheck with -x to follow external sources
+                success &= run_command(["shellcheck", "-x", str(script)])
+                
+                # Auto-fix shell scripts if the shellcheck-fix command is available
+                if which("shellcheck-fix"):
+                    print(f"Auto-fixing {script.relative_to(project_root)}...")
+                    run_command(["shellcheck-fix", str(script)])
+                elif which("shfmt"):
+                    # As an alternative, format the shell scripts with shfmt
+                    print(f"Formatting {script.relative_to(project_root)} with shfmt...")
+                    run_command(["shfmt", "-w", "-i", "2", "-ci", str(script)])
 
     if success:
         print("All linters completed successfully!")
