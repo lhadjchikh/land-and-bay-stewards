@@ -152,7 +152,7 @@ aws secretsmanager get-secret-value --secret-id landandbay/database-app --query 
 | `db_username` | Master database username (used only for initial setup) | `postgres_admin` | No |
 | `db_password` | Master database password (used only for initial setup) | n/a | Yes, for initial setup only |
 | `app_db_username` | Application database username | `app_user` | No |
-| `app_db_password` | Application database password (auto-generated if not provided) | n/a | No |
+| `app_db_password` | Application database password (auto-generated if empty) | `""` | No |
 | `db_name` | Database name | `landandbay` | No |
 
 ## Usage Examples

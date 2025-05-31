@@ -97,6 +97,13 @@ variable "app_db_username" {
   default     = "app_user" # Default value used only for development
 }
 
+variable "app_db_password" {
+  description = "Application database password (only used for initial setup, then stored in Secrets Manager)"
+  type        = string
+  sensitive   = true
+  default     = "" # Will be auto-generated if empty
+}
+
 # DNS and SSL Variables
 variable "route53_zone_id" {
   description = "The Route 53 zone ID to create records in"
