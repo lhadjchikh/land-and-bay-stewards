@@ -33,6 +33,15 @@ jobs:
     outputs:
       terraform_plan: ${{ steps.plan.outputs.stdout || steps.skip_plan.outputs.stdout }}
       plan_success: ${{ steps.plan.outputs.plan_success || steps.skip_plan.outputs.plan_success }}
+    env:
+      TF_LOG: debug
+      TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+      TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+      TF_VAR_app_db_username: ${{ secrets.APP_DB_USERNAME }}
+      TF_VAR_route53_zone_id: ${{ secrets.TF_VAR_ROUTE53_ZONE_ID }}
+      TF_VAR_domain_name: ${{ secrets.TF_VAR_DOMAIN_NAME }}
+      TF_VAR_acm_certificate_arn: ${{ secrets.TF_VAR_ACM_CERTIFICATE_ARN }}
+      TF_VAR_alert_email: ${{ secrets.TF_VAR_ALERT_EMAIL }}
 
     steps:
       - name: Checkout
@@ -51,8 +60,6 @@ jobs:
           terraform_version: 1.0.0
 
       - name: Terraform Init
-        env:
-          TF_LOG: debug
         run: |
           cd terraform
           # Use -input=false to prevent interactive prompts
@@ -66,8 +73,6 @@ jobs:
       - name: Terraform Plan
         id: plan
         if: github.event.inputs.skip_plan != 'true'
-        env:
-          TF_LOG: debug
         run: |
           cd terraform
 
@@ -111,6 +116,11 @@ jobs:
       - name: Debug Terraform State
         if: always() && github.event.inputs.skip_plan != 'true'
         run: |
+          echo "::group::Environment Variables"
+          echo "Checking for Terraform variables"
+          env | grep -E "^TF_VAR_" | cut -d= -f1 | sort
+          echo "::endgroup::"
+
           cd terraform
           echo "::group::Terraform Environment"
           terraform version
@@ -174,8 +184,6 @@ jobs:
           terraform_version: 1.0.0
 
       - name: Terraform Init
-        env:
-          TF_LOG: debug
         run: |
           cd terraform
           # Use -input=false to prevent interactive prompts
@@ -183,8 +191,6 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && (needs.terraform_plan.outputs.plan_success == 'true' || needs.terraform_plan.outputs.plan_success == 'manual_override')
-        env:
-          TF_LOG: debug
         run: |
           cd terraform
           # Add timeout and more verbose options
