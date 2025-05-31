@@ -26,26 +26,46 @@ resource "aws_db_subnet_group" "main" {
   }
 }
 
-# Get the master DB password from Secrets Manager if available,
-# otherwise generate one securely
-data "aws_secretsmanager_secret" "db_master" {
-  count = var.use_secrets_manager ? 1 : 0
-  name  = "${var.prefix}/database-master"
+# Create the master DB secret in Secrets Manager if it doesn't exist
+resource "aws_secretsmanager_secret" "db_master" {
+  count       = var.use_secrets_manager ? 1 : 0
+  name        = "${var.prefix}/database-master"
+  description = "Master credentials for the ${var.prefix} database"
+  
+  # Add KMS key when available
+  # kms_key_id  = var.kms_key_id
+  
+  tags = {
+    Name = "${var.prefix}-db-master-secret"
+  }
+  
+  # Handle resource conflict
+  lifecycle {
+    ignore_changes = [
+      tags
+    ]
+  }
 }
 
-data "aws_secretsmanager_secret_version" "db_master" {
-  count     = var.use_secrets_manager ? 1 : 0
-  secret_id = data.aws_secretsmanager_secret.db_master[0].id
+# Store initial credentials in the secret
+resource "aws_secretsmanager_secret_version" "db_master_initial" {
+  count         = var.use_secrets_manager ? 1 : 0
+  secret_id     = aws_secretsmanager_secret.db_master[0].id
+  secret_string = jsonencode({
+    username = var.db_username
+    password = var.db_password
+    host     = ""  # Will be updated after DB creation
+    port     = ""  # Will be updated after DB creation
+    dbname   = var.db_name
+  })
 }
 
 locals {
-  # If using Secrets Manager and the secret exists, parse JSON and get credentials
-  # Otherwise use the variables or generate secure credentials
-  master_credentials = var.use_secrets_manager && length(data.aws_secretsmanager_secret_version.db_master) > 0 ? jsondecode(data.aws_secretsmanager_secret_version.db_master[0].secret_string) : { username = var.db_username, password = var.db_password }
-
-  master_username = local.master_credentials.username
-  master_password = local.master_credentials.password
-
+  # Always use the input variables for initial creation
+  # The secret will be updated with actual values after DB creation
+  master_username = var.db_username
+  master_password = var.db_password
+  
   # Set a default value for app_username if not specified
   app_username = var.app_db_username == "" ? "app_user" : var.app_db_username
 }
@@ -161,7 +181,13 @@ resource "null_resource" "db_setup" {
       aws secretsmanager update-secret --secret-id "${var.prefix}/database-url" --secret-string "{\"url\":\"postgis://${local.app_username}:$app_password@${aws_db_instance.postgres.endpoint}/${var.db_name}\",\"username\":\"${local.app_username}\",\"password\":\"$app_password\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
       
       # Update the Master DB Secret in AWS Secrets Manager (for rotation purposes)
-      aws secretsmanager update-secret --secret-id "${var.prefix}/database-master" --secret-string "{\"username\":\"${local.master_username}\",\"password\":\"${local.master_password}\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
+      if aws secretsmanager describe-secret --secret-id "${var.prefix}/database-master" > /dev/null 2>&1; then
+        echo "Updating existing master secret..."
+        aws secretsmanager update-secret --secret-id "${var.prefix}/database-master" --secret-string "{\"username\":\"${local.master_username}\",\"password\":\"${local.master_password}\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
+      else
+        echo "Creating new master secret..."
+        aws secretsmanager create-secret --name "${var.prefix}/database-master" --secret-string "{\"username\":\"${local.master_username}\",\"password\":\"${local.master_password}\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
+      fi
       
       # Remove the temporary SQL file and unset the password variable
       rm /tmp/db_setup.sql
