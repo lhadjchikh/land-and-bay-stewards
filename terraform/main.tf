@@ -106,7 +106,14 @@ module "compute" {
   db_url_secret_arn         = module.secrets.db_url_secret_arn
   secret_key_secret_arn     = module.secrets.secret_key_secret_arn
   bastion_key_name          = var.bastion_key_name
+  bastion_public_key        = var.bastion_public_key
   container_port            = 8000
+
+  # Make sure load balancer and secrets are created first
+  depends_on = [
+    module.loadbalancer,
+    module.secrets
+  ]
 }
 
 # DNS Module

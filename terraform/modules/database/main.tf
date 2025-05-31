@@ -108,7 +108,7 @@ resource "aws_db_parameter_group" "postgres" {
 
   parameter {
     name  = "shared_preload_libraries"
-    value = "postgis"
+    value = "pg_stat_statements" # Using a supported parameter value
   }
 
   tags = {

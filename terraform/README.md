@@ -123,6 +123,51 @@ aws secretsmanager get-secret-value --secret-id landandbay/database-master --que
 aws secretsmanager get-secret-value --secret-id landandbay/database-app --query SecretString --output text | jq .
 ```
 
+## Bastion Host SSH Key Management
+
+A bastion host is provisioned to allow secure access to the database. You must provide an SSH key to access this host.
+
+### Option 1: Manual Key Pair Creation (Recommended for Production)
+
+1. Create an SSH key pair locally:
+   ```bash
+   ssh-keygen -t rsa -b 4096 -f ~/.ssh/landandbay-bastion -C "landandbay-bastion-key"
+   ```
+
+2. Store the public key as a GitHub secret with the name `TF_VAR_BASTION_PUBLIC_KEY`.
+   - Copy the contents of `~/.ssh/landandbay-bastion.pub` 
+   - Go to your GitHub repository → Settings → Secrets and Variables → Actions
+   - Add new repository secret with name `TF_VAR_BASTION_PUBLIC_KEY` and paste the public key as value
+
+3. Keep the private key (`~/.ssh/landandbay-bastion`) secure for connecting to the bastion host.
+
+4. To connect to the bastion host:
+   ```bash
+   ssh -i ~/.ssh/landandbay-bastion ec2-user@<bastion-host-public-ip>
+   ```
+
+### Option 2: Using Existing Key Pair
+
+If you already have a key pair in AWS:
+
+1. Specify the key name in your Terraform configuration:
+   ```hcl
+   bastion_key_name = "your-existing-key-name"
+   ```
+
+2. Leave `bastion_public_key` empty to use the existing key.
+
+### SSH Tunnel for Database Access
+
+To access the RDS database through the bastion host:
+
+1. Create an SSH tunnel:
+   ```bash
+   ssh -i ~/.ssh/landandbay-bastion -L 5432:your-rds-endpoint:5432 ec2-user@<bastion-host-public-ip>
+   ```
+
+2. Connect to the database using localhost:5432 in your SQL client.
+
 ## Core Variables
 
 | Variable Name | Description | Default | Required |
@@ -130,6 +175,8 @@ aws secretsmanager get-secret-value --secret-id landandbay/database-app --query 
 | `prefix` | Prefix to use for resource names | `landandbay` | No |
 | `aws_region` | AWS region to deploy to | `us-east-1` | No |
 | `tags` | Default tags to apply to all resources | `{ Project = "landandbay", Environment = "Production" }` | No |
+| `bastion_key_name` | SSH key name for bastion host | `landandbay-bastion` | No |
+| `bastion_public_key` | SSH public key for bastion host | `""` | Yes, for bastion access |
 
 ## Networking Variables
 
@@ -188,6 +235,10 @@ module "infrastructure" {
   create_private_subnets = true
   create_db_subnets      = true
   
+  # Bastion host configuration
+  bastion_key_name    = "landandbay-bastion"
+  bastion_public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAAD... landandbay-bastion-key" # Your actual public key
+  
   # Required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
@@ -241,8 +292,13 @@ module "infrastructure" {
 3. **Limit access** to the secrets using IAM policies
 4. **Monitor access** to secrets through CloudTrail
 5. **Use encrypted communications** for all database connections
+6. **Store SSH keys securely** and never commit private keys to repositories
+7. **Store public keys as secrets** in your CI/CD platform rather than in code
+8. **Rotate SSH keys periodically** for enhanced security
 
 ### Networking
 1. **Evaluate existing VPC** resources before creating new ones
 2. **Use private subnets** for applications where possible
 3. **Isolate database subnets** from direct internet access
+4. **Use bastion hosts** for controlled access to private resources
+5. **Limit bastion host access** to specific IP addresses when possible

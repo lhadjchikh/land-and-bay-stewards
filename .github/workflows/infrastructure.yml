@@ -36,6 +36,7 @@ env:
   TF_VAR_domain_name: ${{ secrets.TF_VAR_DOMAIN_NAME }}
   TF_VAR_acm_certificate_arn: ${{ secrets.TF_VAR_ACM_CERTIFICATE_ARN }}
   TF_VAR_alert_email: ${{ secrets.TF_VAR_ALERT_EMAIL }}
+  TF_VAR_bastion_public_key: ${{ secrets.TF_VAR_BASTION_PUBLIC_KEY }}
 
 jobs:
   terraform_plan:
