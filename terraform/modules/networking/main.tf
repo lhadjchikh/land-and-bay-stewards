@@ -147,11 +147,6 @@ data "aws_internet_gateway" "existing" {
   }
 }
 
-locals {
-  # Use the created IGW or the existing one
-  igw_id = var.create_vpc ? (length(aws_internet_gateway.igw) > 0 ? aws_internet_gateway.igw[0].id : null) : (length(data.aws_internet_gateway.existing) > 0 ? data.aws_internet_gateway.existing[0].id : null)
-}
-
 # Public route table - only created if create_public_subnets is true
 resource "aws_route_table" "public" {
   count = var.create_public_subnets ? 1 : 0
@@ -163,15 +158,27 @@ resource "aws_route_table" "public" {
   }
 }
 
-# Separate the route from the route table to avoid dependency issues
-resource "aws_route" "public_internet_gateway" {
-  count = var.create_public_subnets && local.igw_id != null ? 1 : 0
+# Routes for the public route table
+# Route for the newly created IGW
+resource "aws_route" "public_internet_gateway_new" {
+  count = var.create_public_subnets && var.create_vpc ? 1 : 0
 
   route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = local.igw_id
+  gateway_id             = aws_internet_gateway.igw[0].id
 
-  depends_on = [aws_route_table.public]
+  depends_on = [aws_route_table.public, aws_internet_gateway.igw]
+}
+
+# Route for the existing IGW
+resource "aws_route" "public_internet_gateway_existing" {
+  count = var.create_public_subnets && !var.create_vpc ? 1 : 0
+
+  route_table_id         = aws_route_table.public[0].id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = data.aws_internet_gateway.existing[0].id
+
+  depends_on = [aws_route_table.public, data.aws_internet_gateway.existing]
 }
 
 # App subnet route table - only created if create_private_subnets is true
@@ -185,15 +192,27 @@ resource "aws_route_table" "private_app" {
   }
 }
 
-# Separate route for private app subnets to IGW to avoid dependency issues
-resource "aws_route" "private_app_internet_gateway" {
-  count = var.create_private_subnets && local.igw_id != null ? 1 : 0
+# Routes for the private app route table
+# Route for the newly created IGW
+resource "aws_route" "private_app_internet_gateway_new" {
+  count = var.create_private_subnets && var.create_vpc ? 1 : 0
 
   route_table_id         = aws_route_table.private_app[0].id
   destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = local.igw_id
+  gateway_id             = aws_internet_gateway.igw[0].id
 
-  depends_on = [aws_route_table.private_app]
+  depends_on = [aws_route_table.private_app, aws_internet_gateway.igw]
+}
+
+# Route for the existing IGW
+resource "aws_route" "private_app_internet_gateway_existing" {
+  count = var.create_private_subnets && !var.create_vpc ? 1 : 0
+
+  route_table_id         = aws_route_table.private_app[0].id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = data.aws_internet_gateway.existing[0].id
+
+  depends_on = [aws_route_table.private_app, data.aws_internet_gateway.existing]
 }
 
 # Database subnet route table - isolated - only created if create_db_subnets is true
@@ -253,7 +272,7 @@ resource "aws_route_table_association" "private_db_b" {
 
 # VPC Endpoint for S3 - allows DB to access S3 without internet - only created if create_db_subnets is true
 resource "aws_vpc_endpoint" "s3" {
-  count = var.create_db_subnets && length(aws_route_table.private_db) > 0 ? 1 : 0
+  count = var.create_db_subnets ? 1 : 0
 
   vpc_id            = local.vpc_id
   service_name      = "com.amazonaws.${var.aws_region}.s3"
