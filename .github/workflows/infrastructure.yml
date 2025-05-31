@@ -1,5 +1,8 @@
 name: Terraform Infrastructure CI/CD
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
@@ -151,6 +154,8 @@ jobs:
     environment: prod
     needs: terraform_plan
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout
