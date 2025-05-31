@@ -1,7 +1,7 @@
 #!/bin/bash
 # This script sets up the remote state resources for Terraform
 
-set -e
+set -euo pipefail
 
 # Configuration
 S3_BUCKET_NAME="landandbay-terraform-state"
