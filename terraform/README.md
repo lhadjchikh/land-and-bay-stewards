@@ -131,7 +131,7 @@ A bastion host is provisioned to allow secure access to the database. You must p
 
 1. Create an SSH key pair locally:
    ```bash
-   ssh-keygen -t rsa -b 4096 -f ~/.ssh/landandbay-bastion -C "landandbay-bastion-key"
+   ssh-keygen -t rsa -b 4096 -f ~/.ssh/landandbay-bastion -C "landandbay-bastion"
    ```
 
 2. Store the public key as a GitHub secret with the name `TF_VAR_BASTION_PUBLIC_KEY`.

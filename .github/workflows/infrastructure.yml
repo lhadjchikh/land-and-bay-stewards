@@ -63,6 +63,14 @@ jobs:
         with:
           terraform_version: 1.12.1
 
+      - name: Setup Remote State
+        run: |
+          cd terraform
+          # Make the setup script executable
+          chmod +x setup_remote_state.sh
+          # Run the setup script to create S3 bucket and DynamoDB table
+          ./setup_remote_state.sh
+
       - name: Terraform Init
         run: |
           cd terraform
@@ -174,6 +182,8 @@ jobs:
         with:
           terraform_version: 1.12.1
 
+      # Remote state is already set up in the plan job
+      # We just need to initialize Terraform to use it
       - name: Terraform Init
         run: |
           cd terraform
