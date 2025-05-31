@@ -250,9 +250,12 @@ resource "aws_ecs_service" "app" {
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 0
 
+  # Make sure the target group is properly associated with a load balancer
+  # and all IAM roles are attached before this service is created
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution_role_policy,
-    aws_iam_role_policy_attachment.ecs_task_policy_attachment
+    aws_iam_role_policy_attachment.ecs_task_policy_attachment,
+    aws_iam_role_policy_attachment.ecs_task_execution_secrets_policy
   ]
 
   tags = {
@@ -276,10 +279,17 @@ data "aws_ami" "amazon_linux_2" {
   }
 }
 
+# Create a key pair if public key is provided
+resource "aws_key_pair" "bastion" {
+  count      = var.bastion_public_key != "" ? 1 : 0
+  key_name   = var.bastion_key_name
+  public_key = var.bastion_public_key
+}
+
 resource "aws_instance" "bastion" {
   ami                         = data.aws_ami.amazon_linux_2.id
   instance_type               = "t4g.nano"
-  key_name                    = var.bastion_key_name
+  key_name                    = var.bastion_public_key != "" ? var.bastion_key_name : null
   vpc_security_group_ids      = [var.bastion_security_group_id]
   subnet_id                   = var.public_subnet_id
   associate_public_ip_address = true

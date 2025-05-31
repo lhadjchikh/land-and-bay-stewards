@@ -44,14 +44,37 @@ resource "aws_s3_bucket_policy" "alb_logs" {
       {
         Effect = "Allow",
         Principal = {
+          Service = "delivery.logs.amazonaws.com"
+        },
+        Action   = "s3:PutObject",
+        Resource = "${aws_s3_bucket.alb_logs.arn}/alb-logs/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      },
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "delivery.logs.amazonaws.com"
+        },
+        Action   = "s3:GetBucketAcl",
+        Resource = aws_s3_bucket.alb_logs.arn
+      },
+      {
+        Effect = "Allow",
+        Principal = {
           AWS = "arn:aws:iam::${data.aws_elb_service_account.main.id}:root"
         },
         Action   = "s3:PutObject",
-        Resource = "${aws_s3_bucket.alb_logs.arn}/AWSLogs/*"
+        Resource = "${aws_s3_bucket.alb_logs.arn}/alb-logs/AWSLogs/${data.aws_caller_identity.current.account_id}/*"
       }
     ]
   })
 }
+
+data "aws_caller_identity" "current" {}
 
 data "aws_elb_service_account" "main" {}
 

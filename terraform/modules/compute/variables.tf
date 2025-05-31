@@ -71,4 +71,12 @@ variable "secret_key_secret_arn" {
 variable "bastion_key_name" {
   description = "SSH key pair name for the bastion host"
   type        = string
+  default     = "landandbay-bastion-key"
+}
+
+variable "bastion_public_key" {
+  description = "SSH public key for the bastion host (leave empty to skip key pair creation)"
+  type        = string
+  default     = ""
+  sensitive   = true
 }
