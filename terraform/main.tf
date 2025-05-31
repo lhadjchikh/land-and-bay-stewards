@@ -12,20 +12,20 @@ module "networking" {
 
   prefix     = var.prefix
   aws_region = var.aws_region
-  
+
   # VPC settings
   create_vpc = var.create_vpc
   vpc_id     = var.vpc_id
-  
+
   # Subnet settings
-  create_public_subnets  = var.create_public_subnets
-  public_subnet_ids      = var.public_subnet_ids
-  
+  create_public_subnets = var.create_public_subnets
+  public_subnet_ids     = var.public_subnet_ids
+
   create_private_subnets = var.create_private_subnets
   private_subnet_ids     = var.private_subnet_ids
-  
-  create_db_subnets      = var.create_db_subnets
-  db_subnet_ids          = var.db_subnet_ids
+
+  create_db_subnets = var.create_db_subnets
+  db_subnet_ids     = var.db_subnet_ids
 }
 
 # Security Module

@@ -3,6 +3,11 @@ output "vpc_id" {
   value       = local.vpc_id
 }
 
+output "vpc_cidr" {
+  description = "The CIDR block of the VPC"
+  value       = var.create_vpc ? var.vpc_cidr : local.existing_vpc_cidr
+}
+
 output "public_subnet_ids" {
   description = "List of public subnet IDs"
   value       = local.public_subnet_ids

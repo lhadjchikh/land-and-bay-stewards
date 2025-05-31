@@ -31,14 +31,14 @@ resource "aws_secretsmanager_secret" "db_master" {
   count       = var.use_secrets_manager ? 1 : 0
   name        = "${var.prefix}/database-master"
   description = "Master credentials for the ${var.prefix} database"
-  
+
   # Add KMS key when available
   # kms_key_id  = var.kms_key_id
-  
+
   tags = {
     Name = "${var.prefix}-db-master-secret"
   }
-  
+
   # Handle resource conflict
   lifecycle {
     ignore_changes = [
@@ -49,13 +49,13 @@ resource "aws_secretsmanager_secret" "db_master" {
 
 # Store initial credentials in the secret
 resource "aws_secretsmanager_secret_version" "db_master_initial" {
-  count         = var.use_secrets_manager ? 1 : 0
-  secret_id     = aws_secretsmanager_secret.db_master[0].id
+  count     = var.use_secrets_manager ? 1 : 0
+  secret_id = aws_secretsmanager_secret.db_master[0].id
   secret_string = jsonencode({
     username = var.db_username
     password = var.db_password
-    host     = ""  # Will be updated after DB creation
-    port     = ""  # Will be updated after DB creation
+    host     = "" # Will be updated after DB creation
+    port     = "" # Will be updated after DB creation
     dbname   = var.db_name
   })
 }
@@ -65,7 +65,7 @@ locals {
   # The secret will be updated with actual values after DB creation
   master_username = var.db_username
   master_password = var.db_password
-  
+
   # Set a default value for app_username if not specified
   app_username = var.app_db_username == "" ? "app_user" : var.app_db_username
 }
