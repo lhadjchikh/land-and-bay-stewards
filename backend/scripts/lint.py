@@ -3,9 +3,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-# ruff: noqa: T201
-# Disable T201 (print found) since this is a CLI script where printing is expected
-
 
 def run_command(cmd: list[str], cwd: str | Path | None = None) -> bool:
     """Run a command and print its output.
