@@ -1,0 +1,186 @@
+name: Terraform Infrastructure CI/CD
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - ".github/workflows/infrastructure.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "terraform/**"
+      - ".github/workflows/infrastructure.yml"
+  workflow_dispatch:
+    inputs:
+      skip_plan:
+        description: "Skip Terraform plan step (use if plan is timing out)"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+jobs:
+  terraform_plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    environment: prod
+    outputs:
+      terraform_plan: ${{ steps.plan.outputs.stdout || steps.skip_plan.outputs.stdout }}
+      plan_success: ${{ steps.plan.outputs.plan_success || steps.skip_plan.outputs.plan_success }}
+    env:
+      TF_LOG: debug
+      TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+      TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+      TF_VAR_app_db_username: ${{ secrets.APP_DB_USERNAME }}
+      TF_VAR_route53_zone_id: ${{ secrets.TF_VAR_ROUTE53_ZONE_ID }}
+      TF_VAR_domain_name: ${{ secrets.TF_VAR_DOMAIN_NAME }}
+      TF_VAR_acm_certificate_arn: ${{ secrets.TF_VAR_ACM_CERTIFICATE_ARN }}
+      TF_VAR_alert_email: ${{ secrets.TF_VAR_ALERT_EMAIL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.1
+
+      - name: Terraform Init
+        run: |
+          cd terraform
+          # Use -input=false to prevent interactive prompts
+          timeout 5m terraform init -input=false
+
+      - name: Terraform Validate
+        run: |
+          cd terraform
+          terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event.inputs.skip_plan != 'true'
+        run: |
+          cd terraform
+
+          echo "Running terraform plan..."
+          set +e  # Don't exit on error
+          terraform plan -no-color -input=false > plan_output.txt 2>&1
+          PLAN_EXIT_CODE=$?
+          set -e  # Resume exiting on error
+
+          echo "Plan completed with exit code: $PLAN_EXIT_CODE"
+
+          # Always make stdout output available for debugging
+          echo "stdout<<EOF" >> $GITHUB_OUTPUT
+          cat plan_output.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+          if [ $PLAN_EXIT_CODE -ne 0 ]; then
+            echo "::error::Terraform plan failed or timed out with exit code $PLAN_EXIT_CODE"
+            echo "plan_success=false" >> $GITHUB_OUTPUT
+            
+            # Output errors for debugging
+            echo "::group::Plan output"
+            cat plan_output.txt
+            echo "::endgroup::"
+            
+            # Fail the step explicitly
+            exit 1
+          else
+            echo "plan_success=true" >> $GITHUB_OUTPUT
+            echo "::notice::Plan completed successfully"
+          fi
+
+      - name: Skip Terraform Plan
+        id: skip_plan
+        if: github.event.inputs.skip_plan == 'true'
+        run: |
+          echo "Skipping Terraform plan as requested"
+          echo "stdout=Plan step skipped as requested" >> $GITHUB_OUTPUT
+          echo "plan_success=manual_override" >> $GITHUB_OUTPUT
+
+      - name: Debug Terraform State
+        if: always() && github.event.inputs.skip_plan != 'true'
+        run: |
+          echo "::group::Environment Variables"
+          echo "Checking for Terraform variables"
+          env | grep -E "^TF_VAR_" | cut -d= -f1 | sort
+          echo "::endgroup::"
+
+          cd terraform
+          echo "::group::Terraform Environment"
+          terraform version
+          ls -la
+          echo "::endgroup::"
+
+          echo "::group::Terraform Provider Lock File"
+          if [ -f .terraform.lock.hcl ]; then
+            cat .terraform.lock.hcl
+          else
+            echo "No .terraform.lock.hcl file found"
+          fi
+          echo "::endgroup::"
+
+          echo "::group::Terraform Directory Structure"
+          if [ -d .terraform ]; then
+            ls -la .terraform
+            echo "Providers:"
+            find .terraform -name "*.tf" -o -name "*.hcl" | sort
+          else
+            echo "No .terraform directory found"
+          fi
+          echo "::endgroup::"
+
+  terraform_apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: terraform_plan
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.12.1
+
+      - name: Terraform Init
+        run: |
+          cd terraform
+          # Use -input=false to prevent interactive prompts
+          timeout 5m terraform init -input=false
+
+      - name: Terraform Apply
+        # Only apply on main branch - push events include direct pushes and PR merges to main
+        # Also ensure plan was successful or manually overridden
+        if: github.ref == 'refs/heads/main' && (needs.terraform_plan.outputs.plan_success == 'true' || needs.terraform_plan.outputs.plan_success == 'manual_override')
+        run: |
+          cd terraform
+          # Add timeout and more verbose options
+          timeout 15m terraform apply -auto-approve -input=false || (echo "Terraform apply timed out or failed" && exit 1)

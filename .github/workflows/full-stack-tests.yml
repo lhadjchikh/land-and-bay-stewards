@@ -2,21 +2,21 @@ name: Full Stack Integration Tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'frontend/**'
-      - 'backend/**'
-      - 'docker-compose.yml'
-      - 'Dockerfile'
-      - '.github/workflows/full-stack-tests.yml'
+      - "frontend/**"
+      - "backend/**"
+      - "docker-compose.yml"
+      - "Dockerfile"
+      - ".github/workflows/full-stack-tests.yml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
-      - 'frontend/**'
-      - 'backend/**'
-      - 'docker-compose.yml'
-      - 'Dockerfile'
-      - '.github/workflows/full-stack-tests.yml'
+      - "frontend/**"
+      - "backend/**"
+      - "docker-compose.yml"
+      - "Dockerfile"
+      - ".github/workflows/full-stack-tests.yml"
   # Allow manual triggers
   workflow_dispatch:
 
@@ -24,123 +24,90 @@ jobs:
   integration:
     name: End-to-End Integration Tests
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-    
-    - name: Cache Docker layers
-      uses: actions/cache@v4
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-
-    
-    # Build the Docker image with caching
-    - name: Build Docker image
-      run: |
-        docker buildx build \
-          --cache-from=type=local,src=/tmp/.buildx-cache \
-          --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
-          --load \
-          -t land-and-bay-stewards_app:latest \
-          .
-    
-    - name: Start all containers
-      run: docker compose up -d
-    
-    # Temp fix for https://github.com/docker/build-push-action/issues/252
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-    
-    - name: Wait for services to be ready
-      run: |
-        echo "Waiting for all services to be ready..."
-        sleep 30
-        
-        # Check if backend is responding
-        timeout=60
-        until curl -s http://localhost:8000/api/ || [ $timeout -le 0 ]; do
-          echo "Waiting for backend API to be ready..."
-          sleep 5
-          timeout=$((timeout-5))
-        done
-        if [ $timeout -le 0 ]; then
-          echo "Backend API failed to start in time"
-          # Continue anyway, as we'll see test failures if API isn't available
-        fi
-        
-    - name: Create test data
-      run: |
-        # Create test data for the API tests
-        docker compose exec -T app python backend/manage.py shell -c "
-        from labs.campaigns.models import PolicyCampaign
-        from labs.endorsers.models import Endorser
-        from labs.legislators.models import Legislator
-        
-        # Create a test campaign if none exists
-        if not PolicyCampaign.objects.exists():
-            PolicyCampaign.objects.create(
-                title='Test Campaign',
-                slug='test-campaign',
-                summary='This is a test campaign for integration testing'
-            )
-            print('Created test campaign')
-        
-        # Create a test endorser if none exists
-        if not Endorser.objects.exists():
-            Endorser.objects.create(
-                name='Test Endorser',
-                organization='Test Organization',
-                role='Test Role',
-                email='test@example.com',
-                state='MD',
-                county='Test County',
-                type='other',
-                campaign=PolicyCampaign.objects.first()
-            )
-            print('Created test endorser')
-        
-        # Create a test legislator if none exists
-        if not Legislator.objects.exists():
-            Legislator.objects.create(
-                bioguide_id='TEST001',
-                first_name='Test',
-                last_name='Legislator',
-                chamber='House',
-                state='MD',
-                district='01',
-                party='D'
-            )
-            print('Created test legislator')
-        "
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '18.x'
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
-    
-    - name: Install frontend dependencies
-      working-directory: frontend
-      run: npm ci
-    
-    # Run the E2E tests that test both frontend and backend together
-    - name: Run E2E tests
-      working-directory: frontend
-      env:
-        REACT_APP_API_URL: http://localhost:8000
-        # Make sure we don't skip E2E tests
-        SKIP_E2E: false
-      run: npm run test:e2e
-    
-    # Stop all containers when done
-    - name: Stop containers
-      if: always()
-      run: docker compose down
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # Build the Docker image with caching
+      - name: Build Docker image
+        run: |
+          docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            -t landandbay_app:latest \
+            .
+
+      - name: Start all containers
+        run: docker compose up -d
+
+      # Temp fix for https://github.com/docker/build-push-action/issues/252
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for all services to be ready..."
+          sleep 30
+
+          # Check if backend is responding
+          timeout=60
+          until curl -s http://localhost:8000/api/ || [ $timeout -le 0 ]; do
+            echo "Waiting for backend API to be ready..."
+            sleep 5
+            timeout=$((timeout-5))
+          done
+          if [ $timeout -le 0 ]; then
+            echo "Backend API failed to start in time"
+            # Continue anyway, as we'll see test failures if API isn't available
+          fi
+
+      - name: Create test data
+        run: |
+          # Run the test data creation script
+          docker compose exec -T app bash -c '
+          export PYTHONPATH="${PYTHONPATH}:/app/backend"
+          python backend/scripts/create_test_data.py
+          if [ $? -ne 0 ]; then
+            echo "Failed to create test data"
+            exit 1
+          fi
+          '
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18.x"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # Run the E2E tests that test both frontend and backend together
+      - name: Run E2E tests
+        working-directory: frontend
+        env:
+          REACT_APP_API_URL: http://localhost:8000
+          # Make sure we don't skip E2E tests
+          SKIP_E2E: false
+        run: npm run test:e2e
+
+      # Stop all containers when done
+      - name: Stop containers
+        if: always()
+        run: docker compose down
