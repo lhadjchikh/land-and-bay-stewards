@@ -1,14 +1,15 @@
-# Land and Bay Stewards Backend
+# Land and Bay Backend (landandbay.org)
 
-[![Black Code Style](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/black.yml)
-[![Ruff Linting](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ruff.yml)
-[![Backend Tests](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/backend-tests.yml)
+[![Black Code Style](https://github.com/lhadjchikh/landandbay/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/black.yml)
+[![Ruff Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ruff.yml)
+[![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml)
 
-This is the Django backend for the Land and Bay Stewards project. It provides a REST API for managing policy campaigns, endorsers, and legislators.
+This is the Django backend for the Land and Bay Stewards (landandbay.org) project. It provides a REST API for managing
+policy campaigns, endorsers, and legislators.
 
 ## Technology Stack
 
-- **Python 3.12**: Core programming language
+- **Python 3.13**: Core programming language
 - **Django 5.2**: Web framework
 - **Django Ninja**: API framework (FastAPI-inspired)
 - **GeoDjango**: For geographic data handling
@@ -30,7 +31,7 @@ The project is structured following standard Python package practices:
 
 ```
 backend/
-├── labs/                       # Main package
+├── landandbay/                 # Main package
 │   ├── api/                    # API endpoints
 │   ├── campaigns/              # Campaign models and views
 │   ├── core/                   # Core project settings and configuration
@@ -46,10 +47,10 @@ backend/
 
 ### Prerequisites
 
-- Python 3.12
+- Python 3.13
 - Poetry
 - GDAL 3.10.3
-- PostGIS
+- PostgreSQL 16 with PostGIS
 
 ### Local Setup
 
@@ -67,6 +68,7 @@ backend/
    ```
 
 3. **Start the development server**:
+
    ```bash
    poetry run python manage.py runserver
    ```
@@ -107,6 +109,7 @@ We use several tools to ensure code quality:
   ```
 
 - **Ruff**: Fast linting
+
   ```bash
   poetry run ruff check .
   ```
@@ -119,11 +122,29 @@ Run the tests with:
 poetry run python manage.py test
 ```
 
+For debugging test issues, use the verbose flag:
+
+```bash
+poetry run python manage.py test -v 2
+```
+
 ## Environment Variables
 
 The following environment variables can be configured:
+
+### Development Environment
 
 - `DEBUG`: Set to `True` for development
 - `SECRET_KEY`: Django secret key
 - `DATABASE_URL`: Database connection URL (supports PostGIS)
 - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
+
+### Production Environment
+
+In production, sensitive credentials are managed through AWS Secrets Manager for enhanced security and SOC 2 compliance:
+
+- **Database Credentials**: Stored securely in AWS Secrets Manager
+- **Master Database User**: Administrative user with full database privileges
+- **Application Database User**: Restricted user for application access with secure password management
+
+For production deployment configuration, see [DEPLOY_TO_ECS.md](../DEPLOY_TO_ECS.md) in the project root.

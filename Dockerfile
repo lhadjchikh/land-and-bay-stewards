@@ -1,6 +1,6 @@
 # Stage 1: Python base with GDAL dependencies
 # This stage contains all the heavy dependencies that rarely change
-FROM python:3.12 AS python-base
+FROM python:3.13 AS python-base
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
@@ -8,17 +8,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     PATH=/root/.local/bin:$PATH
 
-# Configure apt sources for GDAL
+# Configure apt sources and install system dependencies including GDAL
+# Combining these operations into a single layer reduces image size
 RUN echo "deb https://deb.debian.org/debian unstable main contrib" >> /etc/apt/sources.list && \
     echo "Package: *" >> /etc/apt/preferences && \
     echo "Pin: release a=unstable" >> /etc/apt/preferences && \
-    echo "Pin-Priority: 10" >> /etc/apt/preferences
-
-# Install system dependencies including GDAL
-# This layer will be cached as long as the package list doesn't change
-RUN apt-get update && \
+    echo "Pin-Priority: 10" >> /etc/apt/preferences && \
+    apt-get update && \
     apt-get install --yes --no-install-recommends curl g++ python3-dev && \
     apt-get install --yes -t unstable gdal-bin libgdal-dev && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Set GDAL environment variables
@@ -69,8 +68,13 @@ WORKDIR /app
 # Copy backend code (changes frequently)
 COPY backend/ /app/
 
-# Copy the built frontend from the frontend stage
-COPY --from=frontend-builder /app/build /app/frontend/build
+# Copy the built frontend static files to the backend static directory
+COPY --from=frontend-builder /app/build/static /app/static/frontend
 
-# Command to run the application
-CMD ["sh", "-c", "python manage.py collectstatic --noinput && gunicorn labs.core.wsgi:application --bind 0.0.0.0:8000"]
+# Copy entrypoint script
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Set entrypoint and default command
+ENTRYPOINT ["/app/entrypoint.sh"]
+CMD ["gunicorn", "landandbay.core.wsgi:application", "--bind", "0.0.0.0:8000"]

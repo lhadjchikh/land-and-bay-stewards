@@ -1,14 +1,16 @@
-# Land and Bay Stewards
+# Land and Bay Stewards (landandbay.org)
 
-[![Backend Tests](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/backend-tests.yml)
-[![Frontend Tests](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/frontend-tests.yml)
-[![Full Stack Tests](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/full-stack-tests.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/full-stack-tests.yml)
-[![Black Code Style](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/black.yml)
-[![Ruff Linting](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ruff.yml)
-[![TypeScript Type Check](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/ts-typecheck.yml)
-[![JavaScript & TypeScript Linting](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/js-lint.yml/badge.svg)](https://github.com/lhadjchikh/land-and-bay-stewards/actions/workflows/js-lint.yml)
+[![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml)
+[![Frontend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml)
+[![Full Stack Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/full-stack-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/full-stack-tests.yml)
+[![Python Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/python-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/python-lint.yml)
+[![Prettier Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/prettier-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/prettier-lint.yml)
+[![TypeScript Type Check](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml)
+[![Terraform Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/terraform-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/terraform-lint.yml)
 
-The Land and Bay Stewards project is a web application for managing and promoting policy campaigns, tracking legislative support, and organizing endorsers. The application consists of a Django backend with GeoDjango support and a React frontend with TypeScript.
+The Land and Bay Stewards (landandbay.org) project is a web application for managing and promoting policy campaigns,
+tracking legislative support, and organizing endorsers. The application consists of a Django backend with GeoDjango
+support and a React frontend with TypeScript.
 
 ## Project Overview
 
@@ -32,7 +34,7 @@ The repository is organized into two main directories:
 
 - Docker and Docker Compose (recommended)
 - Alternatively:
-  - Python 3.12+ with Poetry
+  - Python 3.13+ with Poetry
   - Node.js 18+ with npm
   - PostgreSQL with PostGIS
   - GDAL 3.10.3
@@ -43,8 +45,8 @@ The easiest way to run the application is using Docker Compose:
 
 ```bash
 # Clone the repository
-git clone https://github.com/lhadjchikh/land-and-bay-stewards.git
-cd land-and-bay-stewards
+git clone https://github.com/lhadjchikh/landandbay.git
+cd landandbay
 
 # Start the application
 docker-compose up
@@ -79,14 +81,30 @@ npm start
 
 ### Environment Variables
 
-Create a `.env` file in the project root with the following variables:
+A `.env.example` file is provided in the project root as a template. Copy it to create your own `.env` file:
+
+```bash
+cp .env.example .env
+```
+
+For local development, the following variables are required:
 
 ```
+# Django settings
 DEBUG=True
 SECRET_KEY=your-secret-key
-DATABASE_URL=postgis://postgres:postgres@localhost:5432/labs
+DATABASE_URL=postgis://landandbay_app:app_password@localhost:5432/landandbay
 ALLOWED_HOSTS=localhost,127.0.0.1
 ```
+
+Note that the database uses two separate users for enhanced security:
+
+- An administrative user (`landandbay_admin`) with privileges to create databases and users
+- An application user (`landandbay_app`) with restricted privileges for security
+
+For production deployments, database credentials are securely managed through AWS Secrets Manager to meet SOC 2 compliance requirements, with secure password management. Future enhancements may include automated password rotation.
+
+For deployment to AWS, additional variables are required. See [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md) for details.
 
 ### Testing
 
@@ -128,4 +146,49 @@ GitHub Actions workflows run tests and linting on pull requests and pushes to th
 
 ## Deployment
 
-The application can be deployed using the provided Dockerfile, which creates a multi-stage build optimized for production.
+This project is set up for deployment to AWS ECS (Elastic Container Service) with Terraform infrastructure as code, following SOC 2 compliance best practices.
+
+### Deploying to Amazon ECS
+
+This project includes a comprehensive setup for deploying to AWS ECS with:
+
+1. **Terraform** for infrastructure provisioning
+2. **GitHub Actions** for CI/CD
+3. **Amazon ECS** for container orchestration
+4. **Amazon RDS** for PostgreSQL with PostGIS
+5. **AWS Secrets Manager** for secure credential management
+
+To deploy:
+
+1. Set up your AWS account and create IAM credentials
+2. Configure GitHub repository secrets for AWS access
+3. Trigger the GitHub Actions workflow
+4. Follow the detailed steps in [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md)
+
+The deployment includes:
+
+- Containerized application running on ECS Fargate
+- RDS PostgreSQL database with PostGIS extension
+- Application Load Balancer for routing traffic
+- ECR for container registry
+- Automated CI/CD pipeline via GitHub Actions
+- Infrastructure as code with Terraform
+
+## Cleanup
+
+To remove all AWS resources created by this project:
+
+1. Navigate to the "Actions" tab in your GitHub repository
+2. Select the "Terraform Destroy" workflow
+3. Click "Run workflow"
+4. Confirm the action
+
+This will clean up all AWS resources created for this project.
+
+## License
+
+This project is licensed under the terms of the license included in the repository.
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.

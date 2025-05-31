@@ -1,12 +1,12 @@
 /**
  * This file contains end-to-end integration tests that verify
  * the connection between the frontend and backend.
- * 
+ *
  * NOTE: These tests require the backend server to be running.
  * Run the backend server with:
- * 
+ *
  * cd ../backend && python manage.py runserver
- * 
+ *
  * To run only these tests:
  * npm test -- src/tests/e2e/BackendIntegration.test.js
  */
@@ -30,39 +30,45 @@ const shouldSkip = process.env.SKIP_E2E === 'true';
     const originalMethods = {
       getCampaigns: API.getCampaigns,
       getEndorsers: API.getEndorsers,
-      getLegislators: API.getLegislators
+      getLegislators: API.getLegislators,
     };
-    
+
     // If REACT_APP_API_URL is set, use mock methods that return the expected structure
     // This way we don't need to make actual HTTP requests in the test environment
-    API.getCampaigns = jest.fn().mockResolvedValue([{
-      id: 1,
-      title: 'Test Campaign',
-      slug: 'test-campaign',
-      summary: 'This is a test campaign for integration testing'
-    }]);
-    
-    API.getEndorsers = jest.fn().mockResolvedValue([{
-      id: 1,
-      name: 'Test Endorser',
-      organization: 'Test Organization',
-      state: 'MD',
-      type: 'other'
-    }]);
-    
-    API.getLegislators = jest.fn().mockResolvedValue([{
-      id: 1,
-      first_name: 'Test',
-      last_name: 'Legislator',
-      chamber: 'House',
-      state: 'MD',
-      district: '01',
-      is_senior: false
-    }]);
-    
+    API.getCampaigns = jest.fn().mockResolvedValue([
+      {
+        id: 1,
+        title: 'Test Campaign',
+        slug: 'test-campaign',
+        summary: 'This is a test campaign for integration testing',
+      },
+    ]);
+
+    API.getEndorsers = jest.fn().mockResolvedValue([
+      {
+        id: 1,
+        name: 'Test Endorser',
+        organization: 'Test Organization',
+        state: 'MD',
+        type: 'other',
+      },
+    ]);
+
+    API.getLegislators = jest.fn().mockResolvedValue([
+      {
+        id: 1,
+        first_name: 'Test',
+        last_name: 'Legislator',
+        chamber: 'House',
+        state: 'MD',
+        district: '01',
+        is_senior: false,
+      },
+    ]);
+
     // Store for cleanup
     API._originals = originalMethods;
-    
+
     console.log('API endpoint being tested:', process.env.REACT_APP_API_URL || 'mocked API');
   });
 
@@ -79,19 +85,19 @@ const shouldSkip = process.env.SKIP_E2E === 'true';
   test('Can fetch campaigns from the backend', async () => {
     // Get campaigns using the mocked API
     let campaigns;
-    
+
     // Wrap API call in act
     await act(async () => {
       campaigns = await API.getCampaigns();
     });
-    
+
     // Verify API method was called
     expect(API.getCampaigns).toHaveBeenCalled();
-    
+
     // Verify we got an array response
     expect(Array.isArray(campaigns)).toBe(true);
     expect(campaigns.length).toBeGreaterThan(0);
-    
+
     // Verify campaign structure
     const campaign = campaigns[0];
     expect(campaign).toHaveProperty('id');
@@ -103,19 +109,19 @@ const shouldSkip = process.env.SKIP_E2E === 'true';
   test('Can fetch endorsers from the backend', async () => {
     // Get endorsers using the mocked API
     let endorsers;
-    
+
     // Wrap API call in act
     await act(async () => {
       endorsers = await API.getEndorsers();
     });
-    
+
     // Verify API method was called
     expect(API.getEndorsers).toHaveBeenCalled();
-    
+
     // Verify we got an array response
     expect(Array.isArray(endorsers)).toBe(true);
     expect(endorsers.length).toBeGreaterThan(0);
-    
+
     // Verify endorser structure
     const endorser = endorsers[0];
     expect(endorser).toHaveProperty('id');
@@ -128,19 +134,19 @@ const shouldSkip = process.env.SKIP_E2E === 'true';
   test('Can fetch legislators from the backend', async () => {
     // Get legislators using the mocked API
     let legislators;
-    
+
     // Wrap API call in act
     await act(async () => {
       legislators = await API.getLegislators();
     });
-    
+
     // Verify API method was called
     expect(API.getLegislators).toHaveBeenCalled();
-    
+
     // Verify we got an array response
     expect(Array.isArray(legislators)).toBe(true);
     expect(legislators.length).toBeGreaterThan(0);
-    
+
     // Verify legislator structure
     const legislator = legislators[0];
     expect(legislator).toHaveProperty('id');

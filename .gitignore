@@ -36,6 +36,26 @@ docker-compose.override.yml
 # macOS
 .DS_Store
 
+# Terraform
+.terraform/
+terraform/.terraform/
+*.tfstate
+*.tfstate.*
+terraform/*.tfstate
+terraform/*.tfstate.*
+.terraform.lock.hcl
+terraform/.terraform.lock.hcl
+terraform/.terraformrc
+crash.log
+crash.*.log
+.terraform.tfstate.lock.info
+terraform/.terraform.tfstate.lock.info
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terragrunt-cache/
+
 # General
 .idea/
 *.iml

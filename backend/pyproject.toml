@@ -1,42 +1,50 @@
 [tool.poetry]
-name = "labs"
+name = "landandbay"
 version = "0.1.0"
-description = "Land and Bay Stewards"
+description = "Land and Bay (landandbay.org)"
 authors = ["Leila Hadj-Chikh <lhadjchikh@gmail.com>"]
 license = "n"
 readme = "README.md"
 packages = [
-    { include = "labs" }
+    { include = "landandbay" }
 ]
 
+[tool.poetry.scripts]
+lint = "scripts.lint:main"
+
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.13"
 django = "^5.2.1"
 django-ninja = "^1.4.2"
 dj-database-url = "^2.3.0"
 gdal = "3.10.3"
 whitenoise = "^6.9.0"
 psycopg = "^3.2.9"
+gunicorn = "^21.2.0"
 
 [tool.poetry.group.dev.dependencies]
-black = "^24.3.0"
-ruff = "^0.3.0"
+black = "^25.1.0"
+ruff = "^0.11.12"
 
 [tool.black]
 line-length = 88
-target-version = ["py312"]
+target-version = ["py313"]
 include = '\.pyi?$'
 
 [tool.ruff]
-target-version = "py312"
+target-version = "py313"
 line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "C90", "N", "B", "UP", "ANN", "A", "COM", "C4", "DTZ", "T10", "T20", "PT", "Q", "SIM", "ARG", "ERA"]
-ignore = ["ANN101", "ANN102", "ARG001"]
+ignore = ["ARG001"]
+
+# Disable specific rules for certain paths
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["T201"]  # Allow print statements in scripts directory
 
 [tool.ruff.lint.isort]
-known-first-party = ["labs_project", "campaigns", "endorsers", "legislators", "regions", "api"]
+known-first-party = ["landandbay", "campaigns", "endorsers", "legislators", "regions", "api"]
 
 [build-system]
 requires = ["poetry-core"]

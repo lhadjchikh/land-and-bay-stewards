@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /
+
+# Prevent search engines from indexing this site until it's ready for launch
