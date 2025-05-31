@@ -190,6 +190,8 @@ jobs:
           timeout 5m terraform init -input=false
 
       - name: Terraform Apply
+        # Only apply on main branch - push events include direct pushes and PR merges to main
+        # Also ensure plan was successful or manually overridden
         if: github.ref == 'refs/heads/main' && (needs.terraform_plan.outputs.plan_success == 'true' || needs.terraform_plan.outputs.plan_success == 'manual_override')
         run: |
           cd terraform
