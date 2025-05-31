@@ -2,6 +2,41 @@
 
 This directory contains the Terraform configuration for deploying the Land and Bay Stewards application to AWS. The infrastructure is designed to be secure, scalable, and SOC 2 compliant.
 
+## Architecture Overview
+
+The infrastructure architecture consists of the following components:
+
+- **Networking**: VPC, subnets, route tables, security groups
+- **Compute**: ECS Fargate for containerized application
+- **Database**: RDS PostgreSQL with PostGIS extension
+- **Load Balancing**: Application Load Balancer
+- **Secrets Management**: AWS Secrets Manager for secure credentials
+- **Monitoring**: CloudWatch for logs and metrics
+- **DNS**: Route53 for domain management
+
+## Flexible Deployment Options
+
+The infrastructure is designed to be flexible and adaptable to different deployment scenarios:
+
+### New Infrastructure Deployment
+
+By default, the Terraform configuration creates all required resources from scratch, including:
+
+- New VPC with public and private subnets
+- Security groups, route tables, and internet gateways
+- RDS database instance
+- ECS cluster and services
+
+### Using Existing VPC Resources
+
+The infrastructure can also be deployed into an existing VPC environment by setting the appropriate variables:
+
+- Use an existing VPC and create new subnets
+- Use an existing VPC with existing subnets
+- Mix and match by using some existing resources and creating others
+
+This flexibility makes it ideal for enterprise environments where network infrastructure may already be established.
+
 ## Security Features
 
 The infrastructure includes the following security features:
@@ -88,7 +123,28 @@ aws secretsmanager get-secret-value --secret-id landandbay/database-master --que
 aws secretsmanager get-secret-value --secret-id landandbay/database-app --query SecretString --output text | jq .
 ```
 
-## Variables
+## Core Variables
+
+| Variable Name | Description | Default | Required |
+|---------------|-------------|---------|----------|
+| `prefix` | Prefix to use for resource names | `landandbay` | No |
+| `aws_region` | AWS region to deploy to | `us-east-1` | No |
+| `tags` | Default tags to apply to all resources | `{ Project = "landandbay", Environment = "Production" }` | No |
+
+## Networking Variables
+
+| Variable Name | Description | Default | Required |
+|---------------|-------------|---------|----------|
+| `create_vpc` | Whether to create a new VPC | `true` | No |
+| `vpc_id` | ID of existing VPC (if `create_vpc` is false) | `""` | Yes, if `create_vpc` is false |
+| `create_public_subnets` | Whether to create new public subnets | `true` | No |
+| `public_subnet_ids` | IDs of existing public subnets (if `create_public_subnets` is false) | `[]` | Yes, if `create_public_subnets` is false |
+| `create_private_subnets` | Whether to create new private app subnets | `true` | No |
+| `private_subnet_ids` | IDs of existing private app subnets (if `create_private_subnets` is false) | `[]` | Yes, if `create_private_subnets` is false |
+| `create_db_subnets` | Whether to create new database subnets | `true` | No |
+| `db_subnet_ids` | IDs of existing database subnets (if `create_db_subnets` is false) | `[]` | Yes, if `create_db_subnets` is false |
+
+## Database Variables
 
 | Variable Name | Description | Default | Required |
 |---------------|-------------|---------|----------|
@@ -97,12 +153,96 @@ aws secretsmanager get-secret-value --secret-id landandbay/database-app --query 
 | `db_password` | Master database password (used only for initial setup) | n/a | Yes, for initial setup only |
 | `app_db_username` | Application database username | `app_user` | No |
 | `app_db_password` | Application database password (auto-generated if not provided) | n/a | No |
+| `db_name` | Database name | `landandbay` | No |
+
+## Usage Examples
+
+### Default Deployment (Create All Resources)
+
+```hcl
+# No special configuration needed - defaults create everything
+module "infrastructure" {
+  source = "./terraform"
+  
+  # Only required variables
+  db_password         = "your-secure-password"
+  route53_zone_id     = "Z1234567890ABC"
+  domain_name         = "landandbay.org"
+  acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
+  alert_email         = "alerts@example.com"
+}
+```
+
+### Using Existing VPC
+
+```hcl
+module "infrastructure" {
+  source = "./terraform"
+  
+  # VPC configuration
+  create_vpc = false
+  vpc_id     = "vpc-01234567890abcdef"
+  
+  # Create new subnets in the existing VPC
+  create_public_subnets  = true
+  create_private_subnets = true
+  create_db_subnets      = true
+  
+  # Required variables
+  db_password         = "your-secure-password"
+  route53_zone_id     = "Z1234567890ABC"
+  domain_name         = "landandbay.org"
+  acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
+  alert_email         = "alerts@example.com"
+}
+```
+
+### Using Existing VPC and Subnets
+
+```hcl
+module "infrastructure" {
+  source = "./terraform"
+  
+  # VPC configuration
+  create_vpc = false
+  vpc_id     = "vpc-01234567890abcdef"
+  
+  # Public subnet configuration
+  create_public_subnets = false
+  public_subnet_ids     = ["subnet-pub1", "subnet-pub2"]
+  
+  # Private subnet configuration
+  create_private_subnets = false
+  private_subnet_ids     = ["subnet-priv1", "subnet-priv2"]
+  
+  # DB subnet configuration
+  create_db_subnets = false
+  db_subnet_ids     = ["subnet-db1", "subnet-db2"]
+  
+  # Required variables
+  db_password         = "your-secure-password"
+  route53_zone_id     = "Z1234567890ABC"
+  domain_name         = "landandbay.org"
+  acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
+  alert_email         = "alerts@example.com"
+}
+```
 
 ## Best Practices
 
+### General
 1. **Never hardcode credentials** in Terraform files or environment variables
-2. **Use Secrets Manager** for all production deployments
-3. **Update credentials** manually through AWS Secrets Manager when needed
-4. **Limit access** to the secrets using IAM policies
-5. **Monitor access** to secrets through CloudTrail
-6. **Use encrypted communications** for all database connections
+2. **Use remote state storage** for production deployments
+3. **Use Terraform workspaces** for different environments
+
+### Security
+1. **Use Secrets Manager** for all production deployments
+2. **Update credentials** manually through AWS Secrets Manager when needed
+3. **Limit access** to the secrets using IAM policies
+4. **Monitor access** to secrets through CloudTrail
+5. **Use encrypted communications** for all database connections
+
+### Networking
+1. **Evaluate existing VPC** resources before creating new ones
+2. **Use private subnets** for applications where possible
+3. **Isolate database subnets** from direct internet access

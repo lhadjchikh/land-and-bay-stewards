@@ -19,6 +19,55 @@ variable "tags" {
   }
 }
 
+# Networking Variables - for using existing VPC/subnets
+variable "create_vpc" {
+  description = "Whether to create a new VPC (true) or use an existing one (false)"
+  type        = bool
+  default     = true
+}
+
+variable "vpc_id" {
+  description = "ID of an existing VPC to use (if create_vpc is false)"
+  type        = string
+  default     = ""
+}
+
+variable "create_public_subnets" {
+  description = "Whether to create new public subnets (true) or use existing ones (false)"
+  type        = bool
+  default     = true
+}
+
+variable "public_subnet_ids" {
+  description = "IDs of existing public subnets to use (if create_public_subnets is false)"
+  type        = list(string)
+  default     = []
+}
+
+variable "create_private_subnets" {
+  description = "Whether to create new private app subnets (true) or use existing ones (false)"
+  type        = bool
+  default     = true
+}
+
+variable "private_subnet_ids" {
+  description = "IDs of existing private app subnets to use (if create_private_subnets is false)"
+  type        = list(string)
+  default     = []
+}
+
+variable "create_db_subnets" {
+  description = "Whether to create new private database subnets (true) or use existing ones (false)"
+  type        = bool
+  default     = true
+}
+
+variable "db_subnet_ids" {
+  description = "IDs of existing private database subnets to use (if create_db_subnets is false)"
+  type        = list(string)
+  default     = []
+}
+
 # Database Variables
 variable "db_name" {
   description = "Database name"
