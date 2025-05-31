@@ -42,7 +42,7 @@ if ! aws s3api head-bucket --bucket $S3_BUCKET_NAME 2>/dev/null; then
       "BlockPublicPolicy": true,
       "RestrictPublicBuckets": true
     }'
-    
+
   echo "S3 bucket created and configured."
 else
   echo "S3 bucket already exists."
@@ -57,7 +57,7 @@ if ! aws dynamodb describe-table --table-name $DYNAMODB_TABLE_NAME 2>/dev/null; 
     --key-schema AttributeName=LockID,KeyType=HASH \
     --billing-mode PAY_PER_REQUEST \
     --region $REGION
-    
+
   echo "DynamoDB table created."
 else
   echo "DynamoDB table already exists."

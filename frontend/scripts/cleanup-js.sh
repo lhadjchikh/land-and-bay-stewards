@@ -9,14 +9,14 @@ ts_files=$(find src -name "*.ts" -o -name "*.tsx")
 for ts_file in $ts_files; do
   # Get the base path without extension
   base_path="${ts_file%.*}"
-  
+
   # Check if .js file exists
   js_file="${base_path}.js"
   if [ -f "$js_file" ]; then
     echo "Removing $js_file (replaced by TypeScript)"
     rm "$js_file"
   fi
-  
+
   # Check if .jsx file exists
   jsx_file="${base_path}.jsx"
   if [ -f "$jsx_file" ]; then
