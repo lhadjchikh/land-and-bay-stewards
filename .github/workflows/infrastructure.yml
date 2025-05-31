@@ -93,17 +93,17 @@ jobs:
             echo "::error::Terraform plan failed or timed out with exit code $PLAN_EXIT_CODE"
             echo "plan_success=false" >> $GITHUB_OUTPUT
             
-            # Output errors for debugging, but don't fail yet
+            # Output errors for debugging
             echo "::group::Plan output"
             cat plan_output.txt
             echo "::endgroup::"
             
-            echo "Waiting to see if other jobs can complete..."
+            # Fail the step explicitly
+            exit 1
           else
             echo "plan_success=true" >> $GITHUB_OUTPUT
             echo "::notice::Plan completed successfully"
           fi
-        continue-on-error: true
 
       - name: Skip Terraform Plan
         id: skip_plan
@@ -144,19 +144,6 @@ jobs:
             echo "No .terraform directory found"
           fi
           echo "::endgroup::"
-
-      - name: Check Terraform Plan Status
-        if: github.event.inputs.skip_plan != 'true' && steps.plan.outcome == 'failure'
-        run: |
-          echo "::error::Terraform plan step failed. Checking for error details..."
-          if [ -f terraform/plan_output.txt ]; then
-            echo "::group::Plan output"
-            cat terraform/plan_output.txt
-            echo "::endgroup::"
-          else
-            echo "::error::No plan output file found"
-          fi
-          exit 1
 
   terraform_apply:
     name: Terraform Apply
