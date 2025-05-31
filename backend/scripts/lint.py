@@ -169,16 +169,16 @@ def run_shell_linters(project_root: Path) -> bool:
 
         print(f"Checking {script.relative_to(project_root)}...")
         # Run shellcheck with -x to follow external sources
-        success &= run_command(["shellcheck", "-x", str(script)])
+        success &= run_command(["shellcheck", "-x", str(script)], cwd=project_root)
 
         # Auto-fix shell scripts if the shellcheck-fix command is available
         if which("shellcheck-fix"):
             print(f"Auto-fixing {script.relative_to(project_root)}...")
-            run_command(["shellcheck-fix", str(script)])
+            run_command(["shellcheck-fix", str(script)], cwd=project_root)
         elif which("shfmt"):
             # As an alternative, format the shell scripts with shfmt
             print(f"Formatting {script.relative_to(project_root)} with shfmt...")
-            run_command(["shfmt", "-w", "-i", "2", "-ci", str(script)])
+            run_command(["shfmt", "-w", "-i", "2", "-ci", str(script)], cwd=project_root)
 
     return success
 
