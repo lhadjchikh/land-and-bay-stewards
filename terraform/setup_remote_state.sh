@@ -9,20 +9,20 @@ DYNAMODB_TABLE_NAME="landandbay-terraform-locks"
 REGION="us-east-1"
 
 # Create S3 bucket for state if it doesn't exist
-if ! aws s3api head-bucket --bucket $S3_BUCKET_NAME 2>/dev/null; then
+if ! aws s3api head-bucket --bucket "$S3_BUCKET_NAME" --region "$REGION" 2>/dev/null; then
   echo "Creating S3 bucket for Terraform state..."
   aws s3api create-bucket \
-    --bucket $S3_BUCKET_NAME \
-    --region $REGION
+    --bucket "$S3_BUCKET_NAME" \
+    --region "$REGION"
 
   # Enable versioning
   aws s3api put-bucket-versioning \
-    --bucket $S3_BUCKET_NAME \
+    --bucket "$S3_BUCKET_NAME" \
     --versioning-configuration Status=Enabled
 
   # Enable encryption
   aws s3api put-bucket-encryption \
-    --bucket $S3_BUCKET_NAME \
+    --bucket "$S3_BUCKET_NAME" \
     --server-side-encryption-configuration '{
       "Rules": [
         {
