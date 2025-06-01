@@ -18,7 +18,7 @@ This module uses a split approach for managing database parameters:
 
 1. **Dynamic Parameters**: Parameters that can be changed immediately are defined in the `aws_db_parameter_group.postgres` resource (named `{prefix}-pg-{version}`) and associated with the RDS instance.
 
-2. **Static Parameters**: Parameters that require a restart (such as `shared_preload_libraries`) are defined in a separate `aws_db_parameter_group.postgres_static` resource (named `{prefix}-pg-{version}-static`) with `apply_method = "pending-reboot"`. 
+2. **Static Parameters**: Parameters that require a restart (such as `shared_preload_libraries`) are defined in a separate `aws_db_parameter_group.postgres_static` resource (named `{prefix}-pg-{version}-static`) with `apply_method = "pending-reboot"`.
 
 ### Important Note on Static Parameters
 
@@ -56,28 +56,28 @@ module "database" {
 
 ## Inputs
 
-| Name | Description | Type | Default |
-|------|-------------|------|---------|
-| prefix | Prefix to use for resource names | string | "landandbay" |
-| db_subnet_ids | List of subnet IDs for the DB subnet group | list(string) | |
-| db_security_group_id | ID of the security group for the database | string | |
-| db_allocated_storage | Allocated storage for the database in GB | number | 20 |
-| db_engine_version | Version of PostgreSQL to use | string | "16.9" |
-| db_instance_class | Instance class for the database | string | "db.t4g.micro" |
-| db_name | Name of the database | string | |
-| db_username | Master username for the database | string | |
-| db_password | Master password for the database | string | |
-| app_db_username | Application database username with restricted privileges | string | |
-| use_secrets_manager | Whether to use Secrets Manager for database passwords | bool | false |
-| db_backup_retention_period | Backup retention period in days | number | 14 |
+| Name                       | Description                                              | Type         | Default        |
+| -------------------------- | -------------------------------------------------------- | ------------ | -------------- |
+| prefix                     | Prefix to use for resource names                         | string       | "landandbay"   |
+| db_subnet_ids              | List of subnet IDs for the DB subnet group               | list(string) |                |
+| db_security_group_id       | ID of the security group for the database                | string       |                |
+| db_allocated_storage       | Allocated storage for the database in GB                 | number       | 20             |
+| db_engine_version          | Version of PostgreSQL to use                             | string       | "16.9"         |
+| db_instance_class          | Instance class for the database                          | string       | "db.t4g.micro" |
+| db_name                    | Name of the database                                     | string       |                |
+| db_username                | Master username for the database                         | string       |                |
+| db_password                | Master password for the database                         | string       |                |
+| app_db_username            | Application database username with restricted privileges | string       |                |
+| use_secrets_manager        | Whether to use Secrets Manager for database passwords    | bool         | false          |
+| db_backup_retention_period | Backup retention period in days                          | number       | 14             |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| db_instance_endpoint | The connection endpoint for the database |
-| db_instance_address | The hostname of the database instance |
-| db_instance_port | The port on which the database accepts connections |
-| db_name | The name of the database |
-| master_username | The master username for the database |
+| Name                        | Description                                                                   |
+| --------------------------- | ----------------------------------------------------------------------------- |
+| db_instance_endpoint        | The connection endpoint for the database                                      |
+| db_instance_address         | The hostname of the database instance                                         |
+| db_instance_port            | The port on which the database accepts connections                            |
+| db_name                     | The name of the database                                                      |
+| master_username             | The master username for the database                                          |
 | app_database_url_secret_arn | The ARN of the Secrets Manager secret containing the application database URL |

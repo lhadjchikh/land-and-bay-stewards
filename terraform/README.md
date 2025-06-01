@@ -56,6 +56,7 @@ The infrastructure includes the following security features:
 Database credentials are managed securely through AWS Secrets Manager:
 
 1. **Master Database User**: Administrative user with full database privileges
+
    - Credentials stored in AWS Secrets Manager
    - Used only for initial setup and maintenance
    - Not exposed to application code
@@ -68,14 +69,17 @@ Database credentials are managed securely through AWS Secrets Manager:
 ### Credential Lifecycle
 
 1. **Initial Setup**:
+
    - If secrets don't exist, they are created with secure passwords
    - If secrets exist, they are used for deployment
 
 2. **Manual Password Updates**:
+
    - Passwords can be updated manually through AWS Secrets Manager console
    - No need to update Terraform configuration
 
 3. **Future Enhancement**:
+
    - Automated password rotation is not currently configured
    - May be implemented in future releases using AWS Lambda and Secrets Manager rotation schedules
 
@@ -98,7 +102,7 @@ For the initial deployment, you have two options:
      --name landandbay/database-master \
      --description "PostgreSQL master database credentials" \
      --secret-string '{"username":"your_secure_username","password":"your_secure_password"}'
-   
+
    # Optional: Create application credentials secret
    aws secretsmanager create-secret \
      --name landandbay/database-app \
@@ -125,16 +129,19 @@ aws secretsmanager get-secret-value --secret-id landandbay/database-app --query 
 
 ## Bastion Host SSH Key Management
 
-A bastion host is provisioned to allow secure access to the database. You must provide an SSH key to access this host.
+A bastion host is provisioned to allow secure access to the database. You have several options for SSH key management.
 
 ### Option 1: Manual Key Pair Creation (Recommended for Production)
 
 1. Create an SSH key pair locally:
+
    ```bash
    ssh-keygen -t rsa -b 2048 -f ~/.ssh/landandbay-bastion -C "landandbay-bastion"
+   ```
 
 2. Store the public key as a GitHub secret with the name `TF_VAR_BASTION_PUBLIC_KEY`.
-   - Copy the contents of `~/.ssh/landandbay-bastion.pub` 
+
+   - Copy the contents of `~/.ssh/landandbay-bastion.pub`
    - Go to your GitHub repository → Settings → Secrets and Variables → Actions
    - Add new repository secret with name `TF_VAR_BASTION_PUBLIC_KEY` and paste the public key as value
 
@@ -145,22 +152,39 @@ A bastion host is provisioned to allow secure access to the database. You must p
    ssh -i ~/.ssh/landandbay-bastion ec2-user@<bastion-host-public-ip>
    ```
 
-### Option 2: Using Existing Key Pair
+### Option 2: Using an AWS-Managed Key Pair
 
-If you already have a key pair in AWS:
+Instead of providing your own public key, you can have AWS create and manage the key pair:
 
-1. Specify the key name in your Terraform configuration:
+1. Create a key pair in the AWS Console:
+
+   - Go to EC2 → Key Pairs → Create Key Pair
+   - Name it `landandbay-bastion` (or whatever name you prefer)
+   - Select RSA and .pem format
+   - Download and save the private key file securely
+
+2. In your Terraform configuration, set:
+
    ```hcl
-   bastion_key_name = "your-existing-key-name"
+   bastion_key_name = "landandbay-bastion"  # Must match the name you used in AWS Console
+   bastion_public_key = ""                  # Leave empty to use existing key
    ```
 
-2. Leave `bastion_public_key` empty to use the existing key.
+3. The infrastructure will automatically detect and use this existing key pair.
+
+4. Connect using the private key you downloaded:
+   ```bash
+   ssh -i /path/to/landandbay-bastion.pem ec2-user@<bastion-host-public-ip>
+   ```
+
+> **Note**: The key difference between Option 1 and Option 2 is who creates and manages the key pair. With Option 1, you create the key pair locally and provide the public key to Terraform. With Option 2, AWS creates and manages the key pair, and you only need to download the private key.
 
 ### SSH Tunnel for Database Access
 
 To access the RDS database through the bastion host:
 
 1. Create an SSH tunnel:
+
    ```bash
    ssh -i ~/.ssh/landandbay-bastion -L 5432:your-rds-endpoint:5432 ec2-user@<bastion-host-public-ip>
    ```
@@ -169,37 +193,37 @@ To access the RDS database through the bastion host:
 
 ## Core Variables
 
-| Variable Name | Description | Default | Required |
-|---------------|-------------|---------|----------|
-| `prefix` | Prefix to use for resource names | `landandbay` | No |
-| `aws_region` | AWS region to deploy to | `us-east-1` | No |
-| `tags` | Default tags to apply to all resources | `{ Project = "landandbay", Environment = "Production" }` | No |
-| `bastion_key_name` | SSH key name for bastion host | `landandbay-bastion` | No |
-| `bastion_public_key` | SSH public key for bastion host | `""` | Yes, for bastion access |
+| Variable Name        | Description                            | Default                                                  | Required                |
+| -------------------- | -------------------------------------- | -------------------------------------------------------- | ----------------------- |
+| `prefix`             | Prefix to use for resource names       | `landandbay`                                             | No                      |
+| `aws_region`         | AWS region to deploy to                | `us-east-1`                                              | No                      |
+| `tags`               | Default tags to apply to all resources | `{ Project = "landandbay", Environment = "Production" }` | No                      |
+| `bastion_key_name`   | SSH key name for bastion host          | `landandbay-bastion`                                     | No                      |
+| `bastion_public_key` | SSH public key for bastion host        | `""`                                                     | Yes, for bastion access |
 
 ## Networking Variables
 
-| Variable Name | Description | Default | Required |
-|---------------|-------------|---------|----------|
-| `create_vpc` | Whether to create a new VPC | `true` | No |
-| `vpc_id` | ID of existing VPC (if `create_vpc` is false) | `""` | Yes, if `create_vpc` is false |
-| `create_public_subnets` | Whether to create new public subnets | `true` | No |
-| `public_subnet_ids` | IDs of existing public subnets (if `create_public_subnets` is false) | `[]` | Yes, if `create_public_subnets` is false |
-| `create_private_subnets` | Whether to create new private app subnets | `true` | No |
-| `private_subnet_ids` | IDs of existing private app subnets (if `create_private_subnets` is false) | `[]` | Yes, if `create_private_subnets` is false |
-| `create_db_subnets` | Whether to create new database subnets | `true` | No |
-| `db_subnet_ids` | IDs of existing database subnets (if `create_db_subnets` is false) | `[]` | Yes, if `create_db_subnets` is false |
+| Variable Name            | Description                                                                | Default | Required                                  |
+| ------------------------ | -------------------------------------------------------------------------- | ------- | ----------------------------------------- |
+| `create_vpc`             | Whether to create a new VPC                                                | `true`  | No                                        |
+| `vpc_id`                 | ID of existing VPC (if `create_vpc` is false)                              | `""`    | Yes, if `create_vpc` is false             |
+| `create_public_subnets`  | Whether to create new public subnets                                       | `true`  | No                                        |
+| `public_subnet_ids`      | IDs of existing public subnets (if `create_public_subnets` is false)       | `[]`    | Yes, if `create_public_subnets` is false  |
+| `create_private_subnets` | Whether to create new private app subnets                                  | `true`  | No                                        |
+| `private_subnet_ids`     | IDs of existing private app subnets (if `create_private_subnets` is false) | `[]`    | Yes, if `create_private_subnets` is false |
+| `create_db_subnets`      | Whether to create new database subnets                                     | `true`  | No                                        |
+| `db_subnet_ids`          | IDs of existing database subnets (if `create_db_subnets` is false)         | `[]`    | Yes, if `create_db_subnets` is false      |
 
 ## Database Variables
 
-| Variable Name | Description | Default | Required |
-|---------------|-------------|---------|----------|
-| `use_secrets_manager` | Enable AWS Secrets Manager integration | `true` | No |
-| `db_username` | Master database username (used only for initial setup) | `postgres_admin` | No |
-| `db_password` | Master database password (used only for initial setup) | n/a | Yes, for initial setup only |
-| `app_db_username` | Application database username | `app_user` | No |
-| `app_db_password` | Application database password (auto-generated if empty) | `""` | No |
-| `db_name` | Database name | `landandbay` | No |
+| Variable Name         | Description                                             | Default          | Required                    |
+| --------------------- | ------------------------------------------------------- | ---------------- | --------------------------- |
+| `use_secrets_manager` | Enable AWS Secrets Manager integration                  | `true`           | No                          |
+| `db_username`         | Master database username (used only for initial setup)  | `postgres_admin` | No                          |
+| `db_password`         | Master database password (used only for initial setup)  | n/a              | Yes, for initial setup only |
+| `app_db_username`     | Application database username                           | `app_user`       | No                          |
+| `app_db_password`     | Application database password (auto-generated if empty) | `""`             | No                          |
+| `db_name`             | Database name                                           | `landandbay`     | No                          |
 
 ## Usage Examples
 
@@ -209,7 +233,7 @@ To access the RDS database through the bastion host:
 # No special configuration needed - defaults create everything
 module "infrastructure" {
   source = "./terraform"
-  
+
   # Only required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
@@ -224,20 +248,20 @@ module "infrastructure" {
 ```hcl
 module "infrastructure" {
   source = "./terraform"
-  
+
   # VPC configuration
   create_vpc = false
   vpc_id     = "vpc-01234567890abcdef"
-  
+
   # Create new subnets in the existing VPC
   create_public_subnets  = true
   create_private_subnets = true
   create_db_subnets      = true
-  
+
   # Bastion host configuration
   bastion_key_name    = "landandbay-bastion"
   bastion_public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAAD... landandbay-bastion-key" # Your actual public key
-  
+
   # Required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
@@ -252,23 +276,23 @@ module "infrastructure" {
 ```hcl
 module "infrastructure" {
   source = "./terraform"
-  
+
   # VPC configuration
   create_vpc = false
   vpc_id     = "vpc-01234567890abcdef"
-  
+
   # Public subnet configuration
   create_public_subnets = false
   public_subnet_ids     = ["subnet-pub1", "subnet-pub2"]
-  
+
   # Private subnet configuration
   create_private_subnets = false
   private_subnet_ids     = ["subnet-priv1", "subnet-priv2"]
-  
+
   # DB subnet configuration
   create_db_subnets = false
   db_subnet_ids     = ["subnet-db1", "subnet-db2"]
-  
+
   # Required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
@@ -281,11 +305,13 @@ module "infrastructure" {
 ## Best Practices
 
 ### General
+
 1. **Never hardcode credentials** in Terraform files or environment variables
 2. **Use remote state storage** for production deployments
 3. **Use Terraform workspaces** for different environments
 
 ### Security
+
 1. **Use Secrets Manager** for all production deployments
 2. **Update credentials** manually through AWS Secrets Manager when needed
 3. **Limit access** to the secrets using IAM policies
@@ -296,6 +322,7 @@ module "infrastructure" {
 8. **Rotate SSH keys periodically** for enhanced security
 
 ### Networking
+
 1. **Evaluate existing VPC** resources before creating new ones
 2. **Use private subnets** for applications where possible
 3. **Isolate database subnets** from direct internet access
