@@ -187,13 +187,11 @@ def main() -> int:
     Returns:
         0 if all linters succeeded, 1 otherwise
     """
-    # Get the project root directory
-    backend_dir = Path(__file__).parent.parent
-    project_root = backend_dir.parent
+    project_root = Path(__file__).parent.parent.parent
 
     # Define all linter functions to run
     linters: list[Callable[[Path], bool]] = [
-        lambda _: run_python_linters(backend_dir),
+        lambda _: run_python_linters(project_root),
         lambda root: run_frontend_formatters(root),
         lambda root: run_terraform_linters(root),
         lambda root: run_shell_linters(root),
