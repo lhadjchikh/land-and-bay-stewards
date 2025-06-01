@@ -263,6 +263,7 @@ module "infrastructure" {
   # Bastion host configuration
   bastion_key_name    = "landandbay-bastion"
   bastion_public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAAD... landandbay-bastion-key" # Your actual public key
+  create_new_key_pair = true  # Set to true to create a new key pair, false to use existing
 
   # Required variables
   db_password         = "your-secure-password"

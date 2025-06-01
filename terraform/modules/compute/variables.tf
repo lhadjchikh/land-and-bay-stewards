@@ -90,3 +90,9 @@ variable "bastion_public_key" {
     error_message = "The bastion_public_key exceeds AWS's limit of 2048 characters."
   }
 }
+
+variable "create_new_key_pair" {
+  description = "Whether to create a new key pair or use an existing one. Set to false if the key pair already exists in AWS."
+  type        = bool
+  default     = false
+}

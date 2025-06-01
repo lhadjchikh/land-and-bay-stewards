@@ -107,6 +107,7 @@ module "compute" {
   secrets_kms_key_arn       = module.secrets.secrets_kms_key_arn
   bastion_key_name          = var.bastion_key_name
   bastion_public_key        = var.bastion_public_key
+  create_new_key_pair       = var.create_new_key_pair
   container_port            = 8000
 
   # Make sure load balancer and secrets are created first
