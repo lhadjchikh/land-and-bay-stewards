@@ -68,6 +68,9 @@ locals {
 
   # Set a default value for app_username if not specified
   app_username = var.app_db_username == "" ? "app_user" : var.app_db_username
+  
+  # Extract PostgreSQL major version for parameter group naming
+  pg_version = split(".", var.db_engine_version)[0]
 }
 
 # RDS PostgreSQL Instance
@@ -109,11 +112,11 @@ resource "aws_db_instance" "postgres" {
 # - Static parameters (requiring restart) are defined in separate resources below
 # - After applying changes to static parameters, a manual DB restart is required
 resource "aws_db_parameter_group" "postgres" {
-  name   = "${var.prefix}-pg-${split(".", var.db_engine_version)[0]}"
-  family = "postgres${split(".", var.db_engine_version)[0]}"
+  name   = "${var.prefix}-pg-${local.pg_version}"
+  family = "postgres${local.pg_version}"
 
   tags = {
-    Name = "${var.prefix}-pg-${split(".", var.db_engine_version)[0]}"
+    Name = "${var.prefix}-pg-${local.pg_version}"
   }
 
   # Use a lifecycle configuration that maintains stability while allowing parameter changes
@@ -127,8 +130,8 @@ resource "aws_db_parameter_group" "postgres" {
 # IMPORTANT: Static parameters require a database restart to take effect!
 # After applying, you'll need to manually restart the RDS instance or wait for the next maintenance window
 resource "aws_db_parameter_group" "postgres_static" {
-  name   = "${var.prefix}-pg-${split(".", var.db_engine_version)[0]}-static"
-  family = "postgres${split(".", var.db_engine_version)[0]}"
+  name   = "${var.prefix}-pg-${local.pg_version}-static"
+  family = "postgres${local.pg_version}"
 
   # Include static parameters with pending-reboot apply method
   parameter {
@@ -138,7 +141,7 @@ resource "aws_db_parameter_group" "postgres_static" {
   }
 
   tags = {
-    Name = "${var.prefix}-pg-${split(".", var.db_engine_version)[0]}-static"
+    Name = "${var.prefix}-pg-${local.pg_version}-static"
   }
 
   depends_on = [
