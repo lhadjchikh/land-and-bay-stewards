@@ -15,12 +15,6 @@ variable "allowed_bastion_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
-variable "app_subnet_cidrs" {
-  description = "List of CIDR blocks for application subnets"
-  type        = list(string)
-  default     = []
-}
-
 variable "database_subnet_cidrs" {
   description = "List of CIDR blocks for database subnets"
   type        = list(string)
