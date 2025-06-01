@@ -41,11 +41,11 @@ def which(cmd: str) -> str | None:
     return shutil.which(cmd)
 
 
-def run_python_linters(backend_dir: Path) -> bool:
+def run_python_linters(project_root: Path) -> bool:
     """Run Python linters with auto-fix.
 
     Args:
-        backend_dir: Path to the backend directory
+        project_root: Path to the project root directory
 
     Returns:
         True if all linters succeeded, False otherwise
@@ -53,13 +53,13 @@ def run_python_linters(backend_dir: Path) -> bool:
     success = True
 
     print("Running black...")
-    success &= run_command(["poetry", "run", "black", "."], cwd=backend_dir)
+    success &= run_command(["poetry", "run", "black", "."], cwd=project_root)
 
     print("Running ruff...")
     # Run ruff with --fix to auto-fix issues
     success &= run_command(
         ["poetry", "run", "ruff", "check", "--fix", "."],
-        cwd=backend_dir,
+        cwd=project_root,
     )
 
     return success
@@ -76,8 +76,8 @@ def run_frontend_formatters(project_root: Path) -> bool:
     """
     success = True
 
-    # Skip if the frontend directory doesn't exist
-    if not project_root.joinpath("frontend").exists():
+    # Skip if the project_root doesn't exist
+    if not project_root.exists():
         return success
 
     # Format YAML files using Prettier
@@ -115,16 +115,11 @@ def run_terraform_linters(project_root: Path) -> bool:
         print("Terraform is not installed. Skipping terraform lint checks.")
         return success
 
-    # Skip if the terraform directory doesn't exist
-    terraform_dir = project_root / "terraform"
-    if not terraform_dir.exists():
-        return success
-
     # Run terraform fmt with -write=true to auto-fix formatting
     print("Running terraform fmt...")
     success &= run_command(
         ["terraform", "fmt", "-write=true", "-recursive"],
-        cwd=terraform_dir,
+        cwd=project_root,
     )
 
     # Check for tflint binary
@@ -132,8 +127,8 @@ def run_terraform_linters(project_root: Path) -> bool:
         print("TFLint is not installed. Skipping tflint checks.")
     else:
         print("Running tflint...")
-        success &= run_command(["tflint", "--init"], cwd=terraform_dir)
-        success &= run_command(["tflint", "--recursive"], cwd=terraform_dir)
+        success &= run_command(["tflint", "--init"], cwd=project_root)
+        success &= run_command(["tflint", "--recursive"], cwd=project_root)
 
     return success
 
@@ -178,7 +173,10 @@ def run_shell_linters(project_root: Path) -> bool:
         elif which("shfmt"):
             # As an alternative, format the shell scripts with shfmt
             print(f"Formatting {script.relative_to(project_root)} with shfmt...")
-            run_command(["shfmt", "-w", "-i", "2", "-ci", str(script)], cwd=project_root)
+            run_command(
+                ["shfmt", "-w", "-i", "2", "-ci", str(script)],
+                cwd=project_root,
+            )
 
     return success
 
