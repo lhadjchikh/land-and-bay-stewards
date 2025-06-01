@@ -102,18 +102,37 @@ resource "aws_db_instance" "postgres" {
 }
 
 # PostgreSQL Parameter Group
+# Note: This module separates dynamic and static parameters to prevent apply errors
+# - Dynamic parameters (those that can be applied immediately) are defined in this resource
+# - Static parameters (requiring restart) are defined in separate resources below
+# - After applying changes to static parameters, a manual DB restart is required
 resource "aws_db_parameter_group" "postgres" {
   name   = "${var.prefix}-pg${split(".", var.db_engine_version)[0]}"
   family = "postgres${split(".", var.db_engine_version)[0]}"
 
-  parameter {
-    name  = "shared_preload_libraries"
-    value = "pg_stat_statements" # Using a supported parameter value
-  }
-
   tags = {
     Name = "${var.prefix}-pg${split(".", var.db_engine_version)[0]}"
   }
+
+  # Use a lifecycle configuration that maintains stability while allowing parameter changes
+  lifecycle {
+    # Prevent destruction of parameter group that's in use
+    prevent_destroy = true
+  }
+}
+
+# Separate resource for the shared_preload_libraries parameter
+# IMPORTANT: This static parameter requires a database restart to take effect!
+# After applying, you'll need to manually restart the RDS instance or wait for the next maintenance window
+resource "aws_db_parameter_group_parameter" "shared_preload_libraries" {
+  parameter_group_name = aws_db_parameter_group.postgres.name
+  parameter_name       = "shared_preload_libraries"
+  value                = "pg_stat_statements"
+  apply_method         = "pending-reboot"
+
+  depends_on = [
+    aws_db_instance.postgres
+  ]
 }
 
 # DB Setup script (for PostGIS and app user)
