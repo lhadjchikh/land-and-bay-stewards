@@ -111,7 +111,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
-          container-name: landandbay
+          container-name: app
           image: ${{ needs.build_and_push.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
