@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths:
       - "frontend/**"
-      - ".github/workflows/frontend-tests.yml"
+      - ".github/workflows/test_frontend.yml"
   pull_request:
     branches: [main]
     paths:
       - "frontend/**"
-      - ".github/workflows/frontend-tests.yml"
+      - ".github/workflows/test_frontend.yml"
   # Allow manual triggers
   workflow_dispatch:
 

@@ -5,12 +5,12 @@ on:
     branches: [main]
     paths:
       - "terraform/**/*.tf"
-      - ".github/workflows/terraform-lint.yml"
+      - ".github/workflows/lint_terraform.yml"
   pull_request:
     branches: [main]
     paths:
       - "terraform/**/*.tf"
-      - ".github/workflows/terraform-lint.yml"
+      - ".github/workflows/lint_terraform.yml"
 
 jobs:
   terraform_lint:

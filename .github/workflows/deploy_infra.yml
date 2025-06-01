@@ -8,12 +8,12 @@ on:
     branches: [main]
     paths:
       - "terraform/**"
-      - ".github/workflows/infrastructure.yml"
+      - ".github/workflows/deploy_infra.yml"
   pull_request:
     branches: [main]
     paths:
       - "terraform/**"
-      - ".github/workflows/infrastructure.yml"
+      - ".github/workflows/deploy_infra.yml"
   workflow_dispatch:
     inputs:
       skip_plan:

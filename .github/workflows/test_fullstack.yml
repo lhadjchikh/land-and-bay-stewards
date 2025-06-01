@@ -8,7 +8,7 @@ on:
       - "backend/**"
       - "docker-compose.yml"
       - "Dockerfile"
-      - ".github/workflows/full-stack-tests.yml"
+      - ".github/workflows/test_fullstack.yml"
   pull_request:
     branches: [main]
     paths:
@@ -16,7 +16,7 @@ on:
       - "backend/**"
       - "docker-compose.yml"
       - "Dockerfile"
-      - ".github/workflows/full-stack-tests.yml"
+      - ".github/workflows/test_fullstack.yml"
   # Allow manual triggers
   workflow_dispatch:
 
