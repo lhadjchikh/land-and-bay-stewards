@@ -198,7 +198,7 @@ resource "aws_ecs_task_definition" "app" {
         },
         {
           name      = "DATABASE_URL",
-          valueFrom = "${var.db_url_secret_arn}:url::"
+          valueFrom = "${var.db_url_secret_arn}::url"
         }
       ]
       healthCheck = {
