@@ -286,10 +286,10 @@ data "aws_ami" "amazon_linux_2" {
   }
 }
 
-# A simpler approach - try to import the key pair with a conditional check
+# A simpler approach for key pair management
 locals {
   # Only create the key if a public key is provided 
-  # We'll use `for_each` for the instance to conditionally use the key
+  # If no public key is provided, we assume the key already exists in AWS
   create_key = var.bastion_public_key != ""
 }
 
@@ -305,6 +305,7 @@ resource "aws_instance" "bastion" {
   instance_type = "t4g.nano"
   # Use the key_name provided in the variable
   # This will refer to an existing key pair or one we're creating with the aws_key_pair resource
+  # When bastion_public_key is empty, it is assumed the key pair already exists in AWS
   key_name                    = var.bastion_key_name
   vpc_security_group_ids      = [var.bastion_security_group_id]
   subnet_id                   = var.public_subnet_id
