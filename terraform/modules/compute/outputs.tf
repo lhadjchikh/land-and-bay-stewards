@@ -20,7 +20,7 @@ output "ecs_task_definition_arn" {
 
 output "bastion_key_pair_created" {
   description = "Whether the bastion key pair was created"
-  value       = local.create_key
+  value       = var.create_new_key_pair && length(aws_key_pair.bastion) > 0
 }
 
 output "bastion_key_pair_name" {
