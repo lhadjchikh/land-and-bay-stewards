@@ -125,13 +125,14 @@ aws secretsmanager get-secret-value --secret-id landandbay/database-app --query 
 
 ## Bastion Host SSH Key Management
 
-A bastion host is provisioned to allow secure access to the database. You must provide an SSH key to access this host.
+A bastion host is provisioned to allow secure access to the database. You have several options for SSH key management.
 
 ### Option 1: Manual Key Pair Creation (Recommended for Production)
 
 1. Create an SSH key pair locally:
    ```bash
    ssh-keygen -t rsa -b 2048 -f ~/.ssh/landandbay-bastion -C "landandbay-bastion"
+   ```
 
 2. Store the public key as a GitHub secret with the name `TF_VAR_BASTION_PUBLIC_KEY`.
    - Copy the contents of `~/.ssh/landandbay-bastion.pub` 
@@ -145,16 +146,32 @@ A bastion host is provisioned to allow secure access to the database. You must p
    ssh -i ~/.ssh/landandbay-bastion ec2-user@<bastion-host-public-ip>
    ```
 
-### Option 2: Using Existing Key Pair
+### Option 2: Using AWS Console to Create a Key Pair
+
+1. Create a key pair in the AWS Console:
+   - Go to EC2 → Key Pairs → Create Key Pair
+   - Name it `landandbay-bastion` (or whatever matches your `bastion_key_name` variable)
+   - Download and save the private key file securely
+
+2. In your Terraform configuration, set:
+   ```hcl
+   bastion_key_name = "landandbay-bastion"  # Match the name you used in AWS
+   bastion_public_key = ""                  # Leave empty to use existing key
+   ```
+
+3. The infrastructure will automatically detect and use the existing key pair.
+
+### Option 3: Using an Existing Key Pair
 
 If you already have a key pair in AWS:
 
 1. Specify the key name in your Terraform configuration:
    ```hcl
    bastion_key_name = "your-existing-key-name"
+   bastion_public_key = ""                  # Leave empty to use existing key
    ```
 
-2. Leave `bastion_public_key` empty to use the existing key.
+2. The infrastructure will automatically detect and use the existing key pair.
 
 ### SSH Tunnel for Database Access
 

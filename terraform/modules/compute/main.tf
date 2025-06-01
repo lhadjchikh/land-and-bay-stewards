@@ -279,9 +279,25 @@ data "aws_ami" "amazon_linux_2" {
   }
 }
 
-# Create a key pair if public key is provided
+# Check if the key pair already exists
+data "aws_key_pair" "existing_key" {
+  key_name           = var.bastion_key_name
+  include_public_key = true
+  filter {
+    name   = "key-name"
+    values = [var.bastion_key_name]
+  }
+}
+
+locals {
+  # Determine if we need to create the key pair
+  key_exists = can(data.aws_key_pair.existing_key.id)
+  create_key = var.bastion_public_key != "" && !local.key_exists
+}
+
+# Create a key pair if public key is provided and it doesn't already exist
 resource "aws_key_pair" "bastion" {
-  count      = var.bastion_public_key != "" ? 1 : 0
+  count      = local.create_key ? 1 : 0
   key_name   = var.bastion_key_name
   public_key = var.bastion_public_key
 }
@@ -289,7 +305,7 @@ resource "aws_key_pair" "bastion" {
 resource "aws_instance" "bastion" {
   ami                         = data.aws_ami.amazon_linux_2.id
   instance_type               = "t4g.nano"
-  key_name                    = var.bastion_public_key != "" ? var.bastion_key_name : null
+  key_name                    = local.key_exists || local.create_key ? var.bastion_key_name : null
   vpc_security_group_ids      = [var.bastion_security_group_id]
   subnet_id                   = var.public_subnet_id
   associate_public_ip_address = true
