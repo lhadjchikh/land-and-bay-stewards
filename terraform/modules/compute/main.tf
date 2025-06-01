@@ -292,7 +292,7 @@ resource "aws_key_pair" "bastion" {
   count      = var.create_new_key_pair ? 1 : 0
   key_name   = var.bastion_key_name
   public_key = var.bastion_public_key
-  
+
   # Fail the apply if create_new_key_pair is true but no public key was provided
   lifecycle {
     precondition {
