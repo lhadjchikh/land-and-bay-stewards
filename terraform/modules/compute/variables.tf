@@ -79,4 +79,9 @@ variable "bastion_public_key" {
   type        = string
   default     = ""
   sensitive   = true
+
+  validation {
+    condition     = var.bastion_public_key == "" || length(var.bastion_public_key) <= 2048
+    error_message = "The bastion_public_key exceeds AWS's limit of 2048 characters."
+  }
 }
