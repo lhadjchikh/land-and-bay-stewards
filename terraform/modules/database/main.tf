@@ -119,7 +119,7 @@ resource "aws_db_parameter_group" "postgres" {
   # Use a lifecycle configuration that maintains stability while allowing parameter changes
   lifecycle {
     # Prevent destruction of parameter group that's in use
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
