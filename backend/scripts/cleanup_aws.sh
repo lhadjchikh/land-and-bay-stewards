@@ -2,7 +2,7 @@
 # This script deletes the AWS resources that are causing Terraform conflicts.
 # CAUTION: Only use this in development environments as it will delete resources!
 
-set -e
+set -o pipefail
 
 # Function to log messages with timestamps
 log() {
