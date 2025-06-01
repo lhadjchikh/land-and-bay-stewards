@@ -6,7 +6,8 @@ authors = ["Leila Hadj-Chikh <lhadjchikh@gmail.com>"]
 license = "n"
 readme = "README.md"
 packages = [
-    { include = "landandbay" }
+    { include = "landandbay" },
+    { include = "scripts" } 
 ]
 
 [tool.poetry.scripts]
