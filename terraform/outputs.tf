@@ -49,6 +49,30 @@ output "bastion_public_ip" {
   description = "Public IP address of the bastion host"
 }
 
+output "bastion_key_pair_status" {
+  value       = module.compute.bastion_key_pair_created
+  description = "Status of the bastion key pair creation"
+  sensitive   = true
+}
+
+output "bastion_key_pair_name" {
+  value       = module.compute.bastion_key_pair_name
+  description = "Name of the bastion key pair if created"
+  sensitive   = true
+}
+
+output "bastion_key_configured" {
+  value       = module.compute.bastion_key_configured
+  description = "Whether a public key was provided"
+  sensitive   = true
+}
+
+output "bastion_public_key_length" {
+  value       = module.compute.bastion_public_key_length
+  description = "Length of the public key provided (for debugging)"
+  sensitive   = true
+}
+
 output "ssh_tunnel_command" {
   value       = "ssh -i ${var.bastion_key_name}.pem ec2-user@${module.compute.bastion_public_ip} -L 5432:${module.database.db_instance_address}:5432"
   description = "Command to create SSH tunnel for database access"
