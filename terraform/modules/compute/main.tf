@@ -303,8 +303,8 @@ resource "aws_key_pair" "bastion" {
 }
 
 resource "aws_instance" "bastion" {
-  ami                         = data.aws_ami.amazon_linux_2.id
-  instance_type               = "t4g.nano"
+  ami           = data.aws_ami.amazon_linux_2.id
+  instance_type = "t4g.nano"
   # Set the key_name for the bastion instance:
   # - If the key already exists in AWS (local.key_exists), use it
   # - If we're creating a new key (local.create_key), use the name of the key being created
