@@ -150,6 +150,22 @@ resource "aws_budgets_budget" "monthly" {
   limit_unit        = "USD"
   time_unit         = "MONTHLY"
   time_period_start = formatdate("YYYY-MM-01_00:00", timestamp())
+  # Add a reasonable end date (5 years in the future)
+  time_period_end = formatdate("YYYY-MM-01_00:00", timeadd(timestamp(), "43800h")) # ~5 years
+
+  # Define cost types explicitly to avoid warnings
+  cost_types {
+    include_credit             = true
+    include_discount           = true
+    include_other_subscription = true
+    include_recurring          = true
+    include_refund             = false
+    include_subscription       = true
+    include_tax                = true
+    include_upfront            = true
+    use_amortized              = false
+    use_blended                = false
+  }
 
   # Add cost allocation tag to the budget
   cost_filter {
@@ -182,5 +198,9 @@ resource "aws_budgets_budget" "monthly" {
     threshold_type             = "PERCENTAGE"
     notification_type          = "FORECASTED"
     subscriber_email_addresses = [var.alert_email]
+  }
+
+  tags = {
+    Name = "${var.prefix}-monthly-budget"
   }
 }
