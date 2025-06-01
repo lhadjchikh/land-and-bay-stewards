@@ -4,12 +4,14 @@ on:
   push:
     branches: [main]
     paths:
+      - "*.{md,json,yml,yaml}"
       - "**/*.{js,jsx,ts,tsx,css,md,json,yml,yaml}"
       - ".github/workflows/lint_prettier.yml"
       - "!terraform/**/*.{yml,yaml}"
   pull_request:
     branches: [main]
     paths:
+      - "*.{md,json,yml,yaml}"
       - "**/*.{js,jsx,ts,tsx,css,md,json,yml,yaml}"
       - ".github/workflows/lint_prettier.yml"
       - "!terraform/**/*.{yml,yaml}"
@@ -50,4 +52,5 @@ jobs:
       - name: Check project-wide files
         run: |
           cd frontend
-          npx prettier --check "../**/*.{md,yml,yaml,json,css}" --ignore-path ../.prettierignore
+          # Check all relevant files including root directory files (like README.md)
+          npx prettier --check "../{,**/}*.{md,yml,yaml,json,css}" --ignore-path ../.prettierignore
