@@ -172,7 +172,12 @@ Instead of providing your own public key, you can have AWS create and manage the
 
 3. The infrastructure will use this key pair for the bastion host.
 
-> **Note**: If you provide a value for `bastion_public_key`, it will create a key pair with that name and public key. If you leave `bastion_public_key` empty, it will assume a key pair with the given name already exists in AWS.
+> **Note**: By default, the infrastructure assumes that key pairs already exist in AWS and won't try to create them. To create a new key pair, you must:
+>
+> 1. Set `create_new_key_pair = true`
+> 2. Provide a value for `bastion_public_key` (required when `create_new_key_pair = true`)
+>
+> If `create_new_key_pair = true` but no `bastion_public_key` is provided, the deployment will fail with an error message. This approach prevents conflicts when the key pair already exists in AWS.
 
 4. Connect using the private key you downloaded:
    ```bash

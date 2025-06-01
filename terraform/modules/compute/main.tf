@@ -286,17 +286,20 @@ data "aws_ami" "amazon_linux_2" {
   }
 }
 
-locals {
-  # We only create a key pair if explicitly instructed to do so via the variable
-  # This way we avoid conflicts with existing key pairs
-  create_key = var.create_new_key_pair && var.bastion_public_key != ""
-}
-
 # Create a key pair only if explicitly instructed to do so
+# This approach ensures we avoid conflicts with existing key pairs
 resource "aws_key_pair" "bastion" {
-  count      = local.create_key ? 1 : 0
+  count      = var.create_new_key_pair ? 1 : 0
   key_name   = var.bastion_key_name
   public_key = var.bastion_public_key
+  
+  # Fail the apply if create_new_key_pair is true but no public key was provided
+  lifecycle {
+    precondition {
+      condition     = var.bastion_public_key != ""
+      error_message = "When create_new_key_pair is set to true, you must provide a bastion_public_key value."
+    }
+  }
 }
 
 resource "aws_instance" "bastion" {
