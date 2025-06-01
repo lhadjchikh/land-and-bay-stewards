@@ -75,7 +75,7 @@ locals {
 
 # RDS PostgreSQL Instance
 resource "aws_db_instance" "postgres" {
-  identifier        = "${var.prefix}-db"  # Set a consistent identifier with the project prefix
+  identifier        = "${var.prefix}-db" # Set a consistent identifier with the project prefix
   allocated_storage = var.db_allocated_storage
   storage_type      = "gp3"
   engine            = "postgres"
