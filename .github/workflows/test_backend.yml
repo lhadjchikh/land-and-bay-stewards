@@ -16,10 +16,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    # Check if the workflow was triggered by a push to main without backend changes
-    # If so, we'll still run but with faster tests to save resources
-    env:
-      IS_RELEVANT_CHANGE: ${{ github.event_name != 'push' || github.event_name == 'push' && (contains(github.event.head_commit.modified, 'backend/') || contains(github.event.head_commit.added, 'backend/') || contains(github.event.head_commit.removed, 'backend/') || contains(github.event.head_commit.modified, 'Dockerfile') || contains(github.event.head_commit.modified, 'docker-compose.yml')) }}
+    # We'll run with simplified tests for non-backend changes to save resources
+    # but still ensure the deployment workflow is triggered
 
     steps:
       - uses: actions/checkout@v4
@@ -70,8 +68,12 @@ jobs:
       - name: Check if tests are necessary
         id: check_tests
         run: |
-          if [[ "${{ env.IS_RELEVANT_CHANGE }}" == "false" && "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "Running minimal tests for non-relevant changes to main branch"
+          # Use git to check if any backend files were changed
+          git fetch origin main
+          CHANGES=$(git diff --name-only HEAD origin/main | grep -E "^(backend/|docker-compose.yml|Dockerfile)" -c || echo 0)
+
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" && $CHANGES -eq 0 ]]; then
+            echo "Running minimal tests for non-backend changes to main branch"
             echo "skip_full_tests=true" >> $GITHUB_OUTPUT
           else
             echo "Running full test suite"
