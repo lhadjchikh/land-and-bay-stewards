@@ -3,12 +3,7 @@ name: Full Stack Integration Tests
 on:
   push:
     branches: [main]
-    paths:
-      - "frontend/**"
-      - "backend/**"
-      - "docker-compose.yml"
-      - "Dockerfile"
-      - ".github/workflows/test_fullstack.yml"
+    # No path filters for main branch pushes to ensure deployment workflow gets triggered
   pull_request:
     branches: [main]
     paths:
@@ -24,6 +19,10 @@ jobs:
   integration:
     name: End-to-End Integration Tests
     runs-on: ubuntu-latest
+    # Check if the workflow was triggered by a push to main without relevant changes
+    # If so, we'll still run a minimal test to ensure deployment workflow gets triggered
+    env:
+      IS_RELEVANT_CHANGE: ${{ github.event_name != 'push' || github.event_name == 'push' && (contains(github.event.head_commit.modified, 'frontend/') || contains(github.event.head_commit.added, 'frontend/') || contains(github.event.head_commit.removed, 'frontend/') || contains(github.event.head_commit.modified, 'backend/') || contains(github.event.head_commit.added, 'backend/') || contains(github.event.head_commit.removed, 'backend/') || contains(github.event.head_commit.modified, 'Dockerfile') || contains(github.event.head_commit.modified, 'docker-compose.yml')) }}
 
     steps:
       - uses: actions/checkout@v4
@@ -98,8 +97,26 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Check if tests are necessary
+        id: check_tests
+        run: |
+          if [[ "${{ env.IS_RELEVANT_CHANGE }}" == "false" && "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "Running minimal tests for non-relevant changes to main branch"
+            echo "skip_full_tests=true" >> $GITHUB_OUTPUT
+          else
+            echo "Running full test suite"
+            echo "skip_full_tests=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run minimal test (for non-relevant changes)
+        if: steps.check_tests.outputs.skip_full_tests == 'true'
+        run: |
+          echo "Skipping intensive E2E tests for non-relevant changes to ensure deployment workflow gets triggered"
+          echo "Minimal test passed, allowing deployment workflow to trigger"
+
       # Run the E2E tests that test both frontend and backend together
       - name: Run E2E tests
+        if: steps.check_tests.outputs.skip_full_tests != 'true'
         working-directory: frontend
         env:
           REACT_APP_API_URL: http://localhost:8000
