@@ -286,23 +286,14 @@ data "aws_ami" "amazon_linux_2" {
   }
 }
 
-# Check if the key pair already exists
-data "aws_key_pair" "existing_key" {
-  key_name           = var.bastion_key_name
-  include_public_key = true
-  filter {
-    name   = "key-name"
-    values = [var.bastion_key_name]
-  }
-}
-
+# A simpler approach for key pair management
 locals {
-  # Determine if we need to create the key pair
-  key_exists = can(data.aws_key_pair.existing_key.id)
-  create_key = var.bastion_public_key != "" && !local.key_exists
+  # Only create the key if a public key is provided 
+  # If no public key is provided, we assume the key already exists in AWS
+  create_key = var.bastion_public_key != ""
 }
 
-# Create a key pair if public key is provided and it doesn't already exist
+# Create a key pair if public key is provided
 resource "aws_key_pair" "bastion" {
   count      = local.create_key ? 1 : 0
   key_name   = var.bastion_key_name
@@ -312,11 +303,10 @@ resource "aws_key_pair" "bastion" {
 resource "aws_instance" "bastion" {
   ami           = data.aws_ami.amazon_linux_2.id
   instance_type = "t4g.nano"
-  # Set the key_name for the bastion instance:
-  # - If the key already exists in AWS (local.key_exists), use it
-  # - If we're creating a new key (local.create_key), use the name of the key being created
-  # - Otherwise, don't associate any key with this instance (null)
-  key_name                    = local.key_exists || local.create_key ? var.bastion_key_name : null
+  # Use the key_name provided in the variable
+  # This will refer to an existing key pair or one we're creating with the aws_key_pair resource
+  # When bastion_public_key is empty, it is assumed the key pair already exists in AWS
+  key_name                    = var.bastion_key_name
   vpc_security_group_ids      = [var.bastion_security_group_id]
   subnet_id                   = var.public_subnet_id
   associate_public_ip_address = true

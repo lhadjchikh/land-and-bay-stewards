@@ -18,6 +18,16 @@ output "ecs_task_definition_arn" {
   value       = aws_ecs_task_definition.app.arn
 }
 
+output "bastion_key_pair_created" {
+  description = "Whether the bastion key pair was created"
+  value       = local.create_key
+}
+
+output "bastion_key_pair_name" {
+  description = "Name of the bastion key pair"
+  value       = var.bastion_key_name
+}
+
 output "bastion_public_ip" {
   description = "Public IP address of the bastion host"
   value       = aws_instance.bastion.public_ip

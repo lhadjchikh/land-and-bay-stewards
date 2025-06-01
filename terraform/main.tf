@@ -35,7 +35,6 @@ module "security" {
   prefix                = var.prefix
   vpc_id                = module.networking.vpc_id
   allowed_bastion_cidrs = var.allowed_bastion_cidrs
-  app_subnet_cidrs      = module.networking.app_subnet_cidrs
   database_subnet_cidrs = module.networking.db_subnet_cidrs
 }
 
