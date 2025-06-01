@@ -102,8 +102,10 @@ jobs:
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-      # Set outputs for use in other jobs (matching the old format but using the new tag)
-      - run: |
+      # Set outputs for use in other jobs
+      - name: Set output image variables
+        id: build-image
+        run: |
           IMAGE_TAG="${{ github.sha }}-${{ github.run_number }}"
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
           echo "image=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
