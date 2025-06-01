@@ -290,7 +290,7 @@ data "aws_ami" "amazon_linux_2" {
 locals {
   # Only create the key if a public key is provided 
   # We'll use `for_each` for the instance to conditionally use the key
-  create_key = var.bastion_public_key != "" ? true : false
+  create_key = var.bastion_public_key != ""
 }
 
 # Create a key pair if public key is provided
