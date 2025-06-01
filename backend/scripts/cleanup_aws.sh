@@ -169,8 +169,17 @@ info "=== STEP 4: Deleting RDS Parameter Group ==="
 PG_NAME="${PREFIX}-pg16"
 info "Checking for RDS parameter group: $PG_NAME"
 if aws rds describe-db-parameter-groups --db-parameter-group-name "$PG_NAME" --region "$REGION" &>/dev/null; then
-  info "Deleting RDS parameter group: $PG_NAME"
-  aws rds delete-db-parameter-group --db-parameter-group-name "$PG_NAME" --region "$REGION" || true
+  # Check if the parameter group is being used by any instances
+  info "Checking if parameter group $PG_NAME is in use..."
+  USING_INSTANCES=$(aws rds describe-db-instances --region "$REGION" --query "DBInstances[?DBParameterGroups[?DBParameterGroupName=='$PG_NAME']].DBInstanceIdentifier" --output text)
+
+  if [ -n "$USING_INSTANCES" ]; then
+    info "Parameter group $PG_NAME is in use by: $USING_INSTANCES"
+    info "Cannot delete parameter group while in use. Skipping."
+  else
+    info "Deleting RDS parameter group: $PG_NAME"
+    aws rds delete-db-parameter-group --db-parameter-group-name "$PG_NAME" --region "$REGION" || true
+  fi
 else
   info "RDS parameter group $PG_NAME not found, skipping"
 fi
@@ -206,7 +215,57 @@ for SECRET in "${SECRETS[@]}"; do
   fi
 done
 
-info "=== STEP 7: Deleting WAF Web ACL ==="
+info "=== STEP 7: Deleting Route 53 Records ==="
+# Delete Route 53 records that are causing conflicts
+
+HOSTED_ZONE_ID="${TF_VAR_route53_zone_id:-}"
+DOMAIN="${TF_VAR_domain_name:-}"
+
+if [ -n "$HOSTED_ZONE_ID" ] && [ -n "$DOMAIN" ]; then
+  info "Checking for Route 53 records in hosted zone: $HOSTED_ZONE_ID"
+
+  # Check for wildcard record
+  WILDCARD_RECORD=$(aws route53 list-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" --query "ResourceRecordSets[?Name=='*.$DOMAIN.' && Type=='A']" --output json)
+
+  if [[ $WILDCARD_RECORD != "[]" ]]; then
+    info "Found wildcard record for *.$DOMAIN"
+    info "Deleting wildcard record..."
+
+    # Extract the alias target details
+    TARGET_DNS=$(echo "$WILDCARD_RECORD" | jq -r '.[0].AliasTarget.DNSName')
+    TARGET_ZONE=$(echo "$WILDCARD_RECORD" | jq -r '.[0].AliasTarget.HostedZoneId')
+
+    # Create a change batch file for deletion
+    cat >/tmp/delete_record.json <<EOF
+{
+  "Changes": [
+    {
+      "Action": "DELETE",
+      "ResourceRecordSet": {
+        "Name": "*.$DOMAIN.",
+        "Type": "A",
+        "AliasTarget": {
+          "HostedZoneId": "$TARGET_ZONE",
+          "DNSName": "$TARGET_DNS",
+          "EvaluateTargetHealth": false
+        }
+      }
+    }
+  ]
+}
+EOF
+
+    # Apply the change batch
+    aws route53 change-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" --change-batch file:///tmp/delete_record.json || true
+    rm -f /tmp/delete_record.json
+  else
+    info "No wildcard records found for *.$DOMAIN"
+  fi
+else
+  info "Route 53 zone ID or domain name not provided. Skipping record cleanup."
+fi
+
+info "=== STEP 8: Deleting WAF Web ACL ==="
 # WAF Web ACLs require special handling with lock tokens
 
 info "Checking for WAF Web ACL: ${PREFIX}-waf"
@@ -229,7 +288,37 @@ else
   info "WAF Web ACL not found, skipping"
 fi
 
-info "=== STEP 8: Deleting S3 Bucket for ALB Logs ==="
+info "=== STEP 9: Handling SSL Certificate Issues ==="
+# Try to detect and fix issues with ACM certificates
+
+# Check for certificate ARN from environment
+CERT_ARN="${TF_VAR_acm_certificate_arn:-}"
+
+if [ -n "$CERT_ARN" ]; then
+  info "Checking certificate: $CERT_ARN"
+
+  # Verify certificate status
+  CERT_STATUS=$(aws acm describe-certificate --certificate-arn "$CERT_ARN" --region "$REGION" --query "Certificate.Status" --output text 2>/dev/null || echo "UNKNOWN")
+
+  if [ "$CERT_STATUS" != "ISSUED" ]; then
+    info "Certificate status is $CERT_STATUS, which might be causing issues"
+    info "Certificate validation may be incomplete. Check ACM console."
+
+    # Get certificate details
+    DOMAIN_VALIDATION=$(aws acm describe-certificate --certificate-arn "$CERT_ARN" --region "$REGION" --query "Certificate.DomainValidationOptions" --output json 2>/dev/null || echo "[]")
+
+    info "Certificate validation details:"
+    echo "$DOMAIN_VALIDATION" | jq '.'
+
+    info "Certificate issues must be resolved manually in the ACM console."
+  else
+    info "Certificate appears to be valid with status: $CERT_STATUS"
+  fi
+else
+  info "No certificate ARN found in environment variables. Skipping certificate check."
+fi
+
+info "=== STEP 10: Deleting S3 Bucket for ALB Logs ==="
 # S3 bucket for ALB logs
 
 BUCKET_NAME="${PREFIX}-alb-logs"
@@ -244,7 +333,7 @@ else
   info "S3 bucket $BUCKET_NAME not found, skipping"
 fi
 
-info "=== STEP 9: Deleting CloudWatch Log Groups ==="
+info "=== STEP 11: Deleting CloudWatch Log Groups ==="
 # CloudWatch log groups
 
 LOG_GROUPS=(
@@ -262,7 +351,7 @@ for LOG_GROUP in "${LOG_GROUPS[@]}"; do
   fi
 done
 
-info "=== STEP 10: Deleting AWS Budget ==="
+info "=== STEP 12: Deleting AWS Budget ==="
 # AWS Budget
 
 BUDGET_NAME="${PREFIX}-monthly-budget"
