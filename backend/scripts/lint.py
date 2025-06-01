@@ -177,9 +177,9 @@ def run_terraform_linters(project_root: Path) -> bool:
                 print(
                     "Warning: GITHUB_TOKEN not found in environment. "
                     "TFLint plugin initialization may fail due to GitHub API "
-                    "rate limits.",
+                    "rate limits."
                 )
-                # Use --no-plugins if we don't have a token
+                # Use --no-plugins if we don't have a token 
                 # to avoid API rate limit errors
                 init_args = ["tflint", "--no-plugins"]
             else:
