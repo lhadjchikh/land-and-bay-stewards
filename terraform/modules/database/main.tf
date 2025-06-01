@@ -68,7 +68,7 @@ locals {
 
   # Set a default value for app_username if not specified
   app_username = var.app_db_username == "" ? "app_user" : var.app_db_username
-  
+
   # Extract PostgreSQL major version for parameter group naming
   pg_version = split(".", var.db_engine_version)[0]
 }
@@ -121,7 +121,6 @@ resource "aws_db_parameter_group" "postgres" {
 
   # Use a lifecycle configuration that maintains stability while allowing parameter changes
   lifecycle {
-    # Prevent destruction of parameter group that's in use
     prevent_destroy = false
   }
 }
@@ -142,6 +141,10 @@ resource "aws_db_parameter_group" "postgres_static" {
 
   tags = {
     Name = "${var.prefix}-pg-${local.pg_version}-static"
+  }
+
+  lifecycle {
+    prevent_destroy = false
   }
 
   depends_on = [
