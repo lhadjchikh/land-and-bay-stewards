@@ -235,8 +235,9 @@ if [ -n "$HOSTED_ZONE_ID" ] && [ -n "$DOMAIN" ]; then
     TARGET_DNS=$(echo "$WILDCARD_RECORD" | jq -r '.[0].AliasTarget.DNSName')
     TARGET_ZONE=$(echo "$WILDCARD_RECORD" | jq -r '.[0].AliasTarget.HostedZoneId')
 
-    # Create a change batch file for deletion
-    cat >/tmp/delete_record.json <<EOF
+    # Create a unique temporary file for the change batch
+    TEMP_FILE=$(mktemp /tmp/delete_record.XXXXXX.json)
+    cat >"$TEMP_FILE" <<EOF
 {
   "Changes": [
     {
@@ -256,8 +257,10 @@ if [ -n "$HOSTED_ZONE_ID" ] && [ -n "$DOMAIN" ]; then
 EOF
 
     # Apply the change batch
-    aws route53 change-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" --change-batch file:///tmp/delete_record.json || true
-    rm -f /tmp/delete_record.json
+    aws route53 change-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" --change-batch "file://$TEMP_FILE" || true
+
+    # Clean up temporary file
+    rm -f "$TEMP_FILE"
   else
     info "No wildcard records found for *.$DOMAIN"
   fi
