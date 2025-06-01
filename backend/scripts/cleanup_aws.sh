@@ -226,8 +226,11 @@ if [ -n "$HOSTED_ZONE_ID" ] && [ -n "$DOMAIN" ]; then
 
   # Check for wildcard record
   WILDCARD_RECORD=$(aws route53 list-resource-record-sets --hosted-zone-id "$HOSTED_ZONE_ID" --query "ResourceRecordSets[?Name=='*.$DOMAIN.' && Type=='A']" --output json)
-
-  if [[ $WILDCARD_RECORD != "[]" ]]; then
+  
+  # Use jq to count the number of records - more robust than string comparison
+  RECORD_COUNT=$(echo "$WILDCARD_RECORD" | jq '. | length')
+  
+  if [[ "$RECORD_COUNT" -gt 0 ]]; then
     info "Found wildcard record for *.$DOMAIN"
     info "Deleting wildcard record..."
 
