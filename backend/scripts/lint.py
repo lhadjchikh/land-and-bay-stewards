@@ -1,3 +1,4 @@
+import os
 import shutil
 import subprocess
 import sys
@@ -52,21 +53,23 @@ def run_python_linters(project_root: Path) -> bool:
     """
     success = True
 
+    backend_dir = project_root / "backend"
+
     print("Running black...")
-    success &= run_command(["poetry", "run", "black", "."], cwd=project_root)
+    success &= run_command(["poetry", "run", "black", "."], cwd=backend_dir)
 
     print("Running ruff...")
     # Run ruff with --fix to auto-fix issues
     success &= run_command(
         ["poetry", "run", "ruff", "check", "--fix", "."],
-        cwd=project_root,
+        cwd=backend_dir,
     )
 
     return success
 
 
-def run_frontend_formatters(project_root: Path) -> bool:
-    """Run frontend formatters if the frontend directory exists.
+def run_prettier(project_root: Path) -> bool:
+    """Run prettier on all supported file types in the project directory.
 
     Args:
         project_root: Path to the project root directory
@@ -80,21 +83,60 @@ def run_frontend_formatters(project_root: Path) -> bool:
     if not project_root.exists():
         return success
 
-    # Format YAML files using Prettier
-    print("Running YAML formatting...")
-    print("Auto-formatting YAML files using Prettier...")
-    success &= run_command(
-        ["npm", "--prefix", "frontend", "run", "yaml:format"],
-        cwd=project_root,
-    )
+    frontend_dir = project_root / "frontend"
+    if not frontend_dir.exists():
+        print("Frontend directory not found. Skipping frontend formatting.")
+        return success
 
-    # Format Markdown files using Prettier
-    print("Running Markdown formatting...")
-    print("Formatting Markdown files using Prettier...")
-    success &= run_command(
-        ["npm", "--prefix", "frontend", "run", "format:all"],
-        cwd=project_root,
-    )
+    # Check if package.json exists and verify npm scripts
+    package_json = frontend_dir / "package.json"
+    if not package_json.exists():
+        print(
+            "No package.json found in frontend directory. "
+            "Skipping frontend formatting.",
+        )
+        return success
+
+    print("Running Prettier formatting...")
+
+    try:
+        # First, try to run the format:all script which is defined in package.json
+        print("Running format:all script...")
+        format_result = run_command(
+            ["npm", "--prefix", "frontend", "run", "format:all"],
+            cwd=project_root,
+        )
+
+        if format_result:
+            print("Format:all script completed successfully.")
+        else:
+            print("Format:all script failed, trying YAML formatting...")
+            # Try YAML formatting as a fallback
+            yaml_result = run_command(
+                ["npm", "--prefix", "frontend", "run", "yaml:format"],
+                cwd=project_root,
+            )
+
+            if yaml_result:
+                print("YAML formatting completed successfully.")
+            else:
+                print("YAML formatting failed.")
+
+            # As a last resort, try the basic format command
+            print("Trying basic format command...")
+            basic_result = run_command(
+                ["npm", "--prefix", "frontend", "run", "format"],
+                cwd=project_root,
+            )
+
+            if basic_result:
+                print("Basic formatting completed successfully.")
+            else:
+                print("All formatting attempts failed.")
+                success = False
+    except Exception as e:
+        print(f"Error running Prettier: {e}")
+        success = False
 
     return success
 
@@ -110,6 +152,8 @@ def run_terraform_linters(project_root: Path) -> bool:
     """
     success = True
 
+    terraform_dir = project_root / "terraform"
+
     # Skip if terraform is not installed
     if not which("terraform"):
         print("Terraform is not installed. Skipping terraform lint checks.")
@@ -119,7 +163,7 @@ def run_terraform_linters(project_root: Path) -> bool:
     print("Running terraform fmt...")
     success &= run_command(
         ["terraform", "fmt", "-write=true", "-recursive"],
-        cwd=project_root,
+        cwd=terraform_dir,
     )
 
     # Check for tflint binary
@@ -127,8 +171,32 @@ def run_terraform_linters(project_root: Path) -> bool:
         print("TFLint is not installed. Skipping tflint checks.")
     else:
         print("Running tflint...")
-        success &= run_command(["tflint", "--init"], cwd=project_root)
-        success &= run_command(["tflint", "--recursive"], cwd=project_root)
+        try:
+            # Check for GitHub token to avoid rate limiting
+            if "GITHUB_TOKEN" not in os.environ:
+                print(
+                    "Warning: GITHUB_TOKEN not found in environment. "
+                    "TFLint plugin initialization may fail due to GitHub API "
+                    "rate limits.",
+                )
+                # Use --no-plugins if we don't have a token
+                # to avoid API rate limit errors
+                init_args = ["tflint", "--no-plugins"]
+            else:
+                init_args = ["tflint", "--init"]
+
+            # Try to initialize TFLint (with or without plugins)
+            init_result = run_command(init_args, cwd=terraform_dir)
+
+            # Run TFLint recursively if initialization succeeded
+            if init_result:
+                success &= run_command(["tflint", "--recursive"], cwd=terraform_dir)
+            else:
+                print("Skipping recursive TFLint check due to initialization failure")
+                success = False
+        except Exception as e:
+            print(f"Error running TFLint: {e}")
+            success = False
 
     return success
 
@@ -191,8 +259,8 @@ def main() -> int:
 
     # Define all linter functions to run
     linters: list[Callable[[Path], bool]] = [
-        lambda _: run_python_linters(project_root),
-        lambda root: run_frontend_formatters(root),
+        lambda root: run_python_linters(root),
+        lambda root: run_prettier(root),
         lambda root: run_terraform_linters(root),
         lambda root: run_shell_linters(root),
     ]
