@@ -68,6 +68,11 @@ variable "secret_key_secret_arn" {
   type        = string
 }
 
+variable "secrets_kms_key_arn" {
+  description = "ARN of the KMS key used for Secrets Manager"
+  type        = string
+}
+
 variable "bastion_key_name" {
   description = "SSH key pair name for the bastion host"
   type        = string
