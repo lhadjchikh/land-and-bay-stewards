@@ -286,14 +286,13 @@ data "aws_ami" "amazon_linux_2" {
   }
 }
 
-# A simpler approach for key pair management
 locals {
-  # Only create the key if a public key is provided 
-  # If no public key is provided, we assume the key already exists in AWS
-  create_key = var.bastion_public_key != ""
+  # We only create a key pair if explicitly instructed to do so via the variable
+  # This way we avoid conflicts with existing key pairs
+  create_key = var.create_new_key_pair && var.bastion_public_key != ""
 }
 
-# Create a key pair if public key is provided
+# Create a key pair only if explicitly instructed to do so
 resource "aws_key_pair" "bastion" {
   count      = local.create_key ? 1 : 0
   key_name   = var.bastion_key_name

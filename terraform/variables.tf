@@ -151,3 +151,9 @@ variable "bastion_public_key" {
   default     = ""
   sensitive   = true
 }
+
+variable "create_new_key_pair" {
+  description = "Whether to create a new key pair or use an existing one. Set to false if the key pair already exists in AWS."
+  type        = bool
+  default     = false
+}
