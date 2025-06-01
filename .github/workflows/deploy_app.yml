@@ -1,10 +1,12 @@
 name: Deploy to ECS
 
 on:
-  # This workflow will only run after the test workflows complete successfully
+  # This workflow will run after any of the test workflows complete successfully on main
   workflow_run:
     workflows:
-      ["Frontend Tests", "Backend Tests", "Full Stack Integration Tests"]
+      - "Frontend Tests"
+      - "Backend Tests"
+      - "Full Stack Integration Tests"
     types:
       - completed
     branches: [main]
@@ -25,12 +27,20 @@ jobs:
   check_tests:
     name: Check Test Status
     runs-on: ubuntu-latest
+    # When triggered by workflow_run, only proceed if the workflow succeeded
+    # For manual triggers, check if we should skip test requirement
     if: |
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'workflow_dispatch' && github.event.inputs.skip_tests == 'true')
+    outputs:
+      workflow_name: ${{ steps.set_output.outputs.workflow_name }}
     steps:
-      - name: Check Test Workflows
-        run: echo "Tests passed or skipped, proceeding with deployment"
+      - name: Set output values
+        id: set_output
+        run: |
+          echo "workflow_name=${{ github.event.workflow_run.name || 'Manual Trigger' }}" >> $GITHUB_OUTPUT
+          echo "Tests passed or skipped, proceeding with deployment"
+          echo "Triggered by: ${{ github.event.workflow_run.name || 'Manual Trigger' }}"
 
   build_and_push:
     name: Build and Push Docker Images

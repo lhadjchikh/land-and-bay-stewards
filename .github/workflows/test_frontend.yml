@@ -14,10 +14,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    # Check if the workflow was triggered by a push to main without frontend changes
-    # If so, we'll still run but with a simplified test to save resources
-    env:
-      IS_RELEVANT_CHANGE: ${{ github.event_name != 'push' || github.event_name == 'push' && contains(github.event.head_commit.modified, 'frontend/') || contains(github.event.head_commit.added, 'frontend/') || contains(github.event.head_commit.removed, 'frontend/') }}
+    # We'll run with simplified tests for non-frontend changes to save resources
+    # but still ensure the deployment workflow is triggered
 
     defaults:
       run:
@@ -25,9 +23,7 @@ jobs:
 
     strategy:
       matrix:
-        # Only use one Node version for non-relevant changes to main to save resources
-        node-version: ${{ (github.event_name == 'push' && env.IS_RELEVANT_CHANGE == 'false') && ['18.x'] || ['18.x', '20.x'] }}
-
+        node-version: ["18.x", "20.x"]
     steps:
       - uses: actions/checkout@v4
 
@@ -44,8 +40,12 @@ jobs:
       - name: Check if tests are necessary
         id: check_tests
         run: |
-          if [[ "${{ env.IS_RELEVANT_CHANGE }}" == "false" && "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            echo "Running minimal tests for non-relevant changes to main branch"
+          # Use git to check if any frontend files were changed
+          git fetch origin main
+          CHANGES=$(git diff --name-only HEAD origin/main | grep -c "^frontend/" || echo 0)
+
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" && $CHANGES -eq 0 ]]; then
+            echo "Running minimal tests for non-frontend changes to main branch"
             echo "skip_full_tests=true" >> $GITHUB_OUTPUT
           else
             echo "Running full test suite"
