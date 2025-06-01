@@ -1,0 +1,80 @@
+# Version control
+.git
+.github
+.gitignore
+.gitattributes
+
+# Terraform
+terraform
+.terraform
+*.tfstate
+*.tfstate.backup
+*.tfvars
+
+# Documentation and markdown files (except those needed)
+*.md
+!README.md
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose.yml
+docker-compose.*.yml
+
+# Node.js (except package files needed for build)
+node_modules
+npm-debug.log
+.npm
+.eslintcache
+coverage
+.next
+*.tsbuildinfo
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+.mypy_cache/
+.ruff_cache/
+
+# IDE files
+.idea
+.vscode
+*.swp
+*.swo
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# Local development
+.env
+.env.*
+venv
+.venv
+*.log
+.log/
+*.log.*
+
+# Keep these
+!frontend/package.json
+!frontend/package-lock.json
+!backend/poetry.lock
+!backend/pyproject.toml

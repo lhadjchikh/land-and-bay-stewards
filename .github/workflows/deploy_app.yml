@@ -66,24 +66,47 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      # Set up Docker Buildx for faster builds
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      # Cache Docker layers to speed up builds
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      
+      # Build and push the Docker image with layer caching
       - name: Build and push Docker image
         id: build-image
+        uses: docker/build-push-action@v5
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: landandbay
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}-${{ github.run_number }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+          platforms: linux/amd64
+      
+      # Move cache to prevent it from growing indefinitely
+      - name: Move cache
         run: |
-          # Generate a unique tag using commit SHA and timestamp to avoid immutable tag conflicts
-          TIMESTAMP=$(date +%Y%m%d%H%M%S)
-          IMAGE_TAG="${{ github.sha }}-${TIMESTAMP}"
-
-          echo "Building and pushing image with tag: $IMAGE_TAG"
-
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-
-          # Set outputs for use in other jobs
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      
+      # Set outputs for use in other jobs (matching the old format but using the new tag)
+      - run: |
+          IMAGE_TAG="${{ github.sha }}-${{ github.run_number }}"
           echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "image=${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
   deploy:
     name: Deploy to ECS
