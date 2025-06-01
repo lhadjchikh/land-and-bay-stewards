@@ -5,13 +5,13 @@ on:
     branches: [main]
     paths:
       - "**/*.{js,jsx,ts,tsx,css,md,json,yml,yaml}"
-      - ".github/workflows/prettier-lint.yml"
+      - ".github/workflows/lint_prettier.yml"
       - "!terraform/**/*.{yml,yaml}"
   pull_request:
     branches: [main]
     paths:
       - "**/*.{js,jsx,ts,tsx,css,md,json,yml,yaml}"
-      - ".github/workflows/prettier-lint.yml"
+      - ".github/workflows/lint_prettier.yml"
       - "!terraform/**/*.{yml,yaml}"
 
 jobs:

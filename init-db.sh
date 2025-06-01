@@ -2,7 +2,7 @@
 set -e
 
 # This script is executed when the PostgreSQL container starts
-# NOTE: This contains development-only credentials. In production, 
+# NOTE: This contains development-only credentials. In production,
 # credentials are managed through AWS Secrets Manager as described in DEPLOY_TO_ECS.md and terraform/README.md
 
 # Create the admin user

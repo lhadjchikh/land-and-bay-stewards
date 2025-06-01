@@ -9,7 +9,7 @@ on:
       - "frontend/tsconfig.json"
       - "frontend/package.json"
       - "frontend/package-lock.json"
-      - ".github/workflows/ts-typecheck.yml"
+      - ".github/workflows/lint_typescript.yml"
   pull_request:
     branches: [main]
     paths:
@@ -18,7 +18,7 @@ on:
       - "frontend/tsconfig.json"
       - "frontend/package.json"
       - "frontend/package-lock.json"
-      - ".github/workflows/ts-typecheck.yml"
+      - ".github/workflows/lint_typescript.yml"
   # Allow manual triggers
   workflow_dispatch:
 
