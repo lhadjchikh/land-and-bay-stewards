@@ -75,6 +75,7 @@ locals {
 
 # RDS PostgreSQL Instance
 resource "aws_db_instance" "postgres" {
+  identifier        = "${var.prefix}-db" # Set a consistent identifier with the project prefix
   allocated_storage = var.db_allocated_storage
   storage_type      = "gp3"
   engine            = "postgres"
@@ -121,7 +122,7 @@ resource "aws_db_parameter_group" "postgres" {
 
   # Use a lifecycle configuration that maintains stability while allowing parameter changes
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 }
 
@@ -144,7 +145,7 @@ resource "aws_db_parameter_group" "postgres_static" {
   }
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 
   depends_on = [
