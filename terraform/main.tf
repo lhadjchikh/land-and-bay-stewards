@@ -105,6 +105,7 @@ module "compute" {
   target_group_arn          = module.loadbalancer.target_group_arn
   db_url_secret_arn         = module.secrets.db_url_secret_arn
   secret_key_secret_arn     = module.secrets.secret_key_secret_arn
+  secrets_kms_key_arn       = module.secrets.secrets_kms_key_arn
   bastion_key_name          = var.bastion_key_name
   bastion_public_key        = var.bastion_public_key
   container_port            = 8000

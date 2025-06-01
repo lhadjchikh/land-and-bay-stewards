@@ -69,10 +69,9 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
-# Permissions to access Secrets Manager
 resource "aws_iam_policy" "secrets_access" {
   name        = "SecretsManagerAccess"
-  description = "Allow access to Secrets Manager for ECS tasks"
+  description = "Allow access to Secrets Manager and KMS for ECS tasks"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -86,6 +85,14 @@ resource "aws_iam_policy" "secrets_access" {
           var.db_url_secret_arn,
           var.secret_key_secret_arn
         ]
+      },
+      {
+        Effect = "Allow",
+        Action = [
+          "kms:Decrypt",
+          "kms:DescribeKey"
+        ],
+        Resource = var.secrets_kms_key_arn
       }
     ]
   })
