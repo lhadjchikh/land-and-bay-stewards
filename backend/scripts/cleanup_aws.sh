@@ -62,9 +62,9 @@ if [ -n "$LB_ARN" ]; then
   info "Deleting load balancer: ${PREFIX}-alb"
   aws elbv2 delete-load-balancer --load-balancer-arn "$LB_ARN" --region "$REGION" || true
 
-  # Wait for load balancer to be deleted
+  # Wait for load balancer to be deleted - use AWS CLI waiter for more reliability
   info "Waiting for load balancer to be fully deleted..."
-  sleep 20
+  aws elbv2 wait load-balancers-deleted --load-balancer-arns "$LB_ARN" --region "$REGION" || true
 else
   info "No load balancer found to delete"
 fi
