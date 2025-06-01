@@ -16,23 +16,26 @@ This module creates and configures an Amazon RDS PostgreSQL database with approp
 
 This module uses a split approach for managing database parameters:
 
-1. **Dynamic Parameters**: Parameters that can be changed immediately are defined directly in the `aws_db_parameter_group` resource.
+1. **Dynamic Parameters**: Parameters that can be changed immediately are defined in the `aws_db_parameter_group.postgres` resource (named `{prefix}-pg-{version}`) and associated with the RDS instance.
 
-2. **Static Parameters**: Parameters that require a restart (such as `shared_preload_libraries`) are defined in separate `aws_db_parameter_group_parameter` resources with `apply_method = "pending-reboot"`.
+2. **Static Parameters**: Parameters that require a restart (such as `shared_preload_libraries`) are defined in a separate `aws_db_parameter_group.postgres_static` resource (named `{prefix}-pg-{version}-static`) with `apply_method = "pending-reboot"`. 
 
 ### Important Note on Static Parameters
 
-After applying changes to static parameters, you'll need to either:
-- Manually restart the RDS instance
-- Wait for the next scheduled maintenance window
+The static parameters are defined in a separate parameter group for documentation and tracking purposes, but **are not currently associated with the RDS instance**. This is because:
 
-Without a restart, changes to static parameters will not take effect.
+1. AWS doesn't allow modifying static parameters with the immediate apply method
+2. Changing a parameter group on a running instance can cause issues
 
-Note that this module allows Terraform to directly manage all parameters, both static and dynamic. The only difference is in how they are applied:
-- Dynamic parameters are applied immediately
-- Static parameters are applied with the "pending-reboot" method
+To apply these static parameters:
 
-This ensures that Terraform maintains full control over the parameter values while respecting AWS constraints on parameter modification.
+1. Note the values defined in the `postgres_static` parameter group
+2. Manually apply them in the AWS console with apply method "pending-reboot"
+3. Schedule a restart during a maintenance window
+
+Without these steps, static parameter changes will not take effect.
+
+We've separated the parameters this way to ensure Terraform can successfully apply without errors while still documenting the intended static parameter configuration.
 
 ## Usage
 

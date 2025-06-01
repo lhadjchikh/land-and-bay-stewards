@@ -72,14 +72,16 @@ locals {
 
 # RDS PostgreSQL Instance
 resource "aws_db_instance" "postgres" {
-  allocated_storage            = var.db_allocated_storage
-  storage_type                 = "gp3"
-  engine                       = "postgres"
-  engine_version               = var.db_engine_version
-  instance_class               = var.db_instance_class
-  db_name                      = var.db_name
-  username                     = local.master_username
-  password                     = local.master_password
+  allocated_storage = var.db_allocated_storage
+  storage_type      = "gp3"
+  engine            = "postgres"
+  engine_version    = var.db_engine_version
+  instance_class    = var.db_instance_class
+  db_name           = var.db_name
+  username          = local.master_username
+  password          = local.master_password
+  # Use the regular parameter group for basic parameters
+  # Note: Static parameters are defined in postgres_static but not associated with the instance
   parameter_group_name         = aws_db_parameter_group.postgres.name
   db_subnet_group_name         = aws_db_subnet_group.main.name
   vpc_security_group_ids       = [var.db_security_group_id]
@@ -107,11 +109,11 @@ resource "aws_db_instance" "postgres" {
 # - Static parameters (requiring restart) are defined in separate resources below
 # - After applying changes to static parameters, a manual DB restart is required
 resource "aws_db_parameter_group" "postgres" {
-  name   = "${var.prefix}-pg${split(".", var.db_engine_version)[0]}"
+  name   = "${var.prefix}-pg-${split(".", var.db_engine_version)[0]}"
   family = "postgres${split(".", var.db_engine_version)[0]}"
 
   tags = {
-    Name = "${var.prefix}-pg${split(".", var.db_engine_version)[0]}"
+    Name = "${var.prefix}-pg-${split(".", var.db_engine_version)[0]}"
   }
 
   # Use a lifecycle configuration that maintains stability while allowing parameter changes
@@ -121,14 +123,23 @@ resource "aws_db_parameter_group" "postgres" {
   }
 }
 
-# Separate resource for the shared_preload_libraries parameter
-# IMPORTANT: This static parameter requires a database restart to take effect!
+# Include static parameters directly in the parameter group, but with apply_method="pending-reboot"
+# IMPORTANT: Static parameters require a database restart to take effect!
 # After applying, you'll need to manually restart the RDS instance or wait for the next maintenance window
-resource "aws_db_parameter_group_parameter" "shared_preload_libraries" {
-  parameter_group_name = aws_db_parameter_group.postgres.name
-  parameter_name       = "shared_preload_libraries"
-  value                = "pg_stat_statements"
-  apply_method         = "pending-reboot"
+resource "aws_db_parameter_group" "postgres_static" {
+  name   = "${var.prefix}-pg-${split(".", var.db_engine_version)[0]}-static"
+  family = "postgres${split(".", var.db_engine_version)[0]}"
+
+  # Include static parameters with pending-reboot apply method
+  parameter {
+    name         = "shared_preload_libraries"
+    value        = "pg_stat_statements"
+    apply_method = "pending-reboot" # This is the key setting that makes this work
+  }
+
+  tags = {
+    Name = "${var.prefix}-pg-${split(".", var.db_engine_version)[0]}-static"
+  }
 
   depends_on = [
     aws_db_instance.postgres
