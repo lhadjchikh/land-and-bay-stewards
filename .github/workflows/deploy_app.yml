@@ -48,6 +48,8 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: prod
+    outputs:
+      image: ${{ steps.build-image.outputs.image }}
 
     steps:
       - name: Checkout
@@ -65,6 +67,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build and push Docker image
+        id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: landandbay
@@ -72,17 +75,19 @@ jobs:
           # Generate a unique tag using commit SHA and timestamp to avoid immutable tag conflicts
           TIMESTAMP=$(date +%Y%m%d%H%M%S)
           IMAGE_TAG="${{ github.sha }}-${TIMESTAMP}"
-          
+
           echo "Building and pushing image with tag: $IMAGE_TAG"
-          
+
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          
+
           # Also tag the image as latest (if needed)
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+
+          # Set outputs for use in other jobs
+          echo "image_tag=$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
   deploy:
     name: Deploy to ECS
@@ -111,7 +116,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: landandbay
-          image: ${{ env.image }}
+          image: ${{ needs.build_and_push.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
