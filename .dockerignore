@@ -15,12 +15,6 @@ terraform
 *.md
 !README.md
 
-# Docker
-Dockerfile
-.dockerignore
-docker-compose.yml
-docker-compose.*.yml
-
 # Node.js (except package files needed for build)
 node_modules
 npm-debug.log
