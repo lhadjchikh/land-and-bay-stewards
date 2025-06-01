@@ -121,7 +121,7 @@ resource "aws_db_parameter_group" "postgres" {
 
   # Use a lifecycle configuration that maintains stability while allowing parameter changes
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 }
 
@@ -144,7 +144,7 @@ resource "aws_db_parameter_group" "postgres_static" {
   }
 
   lifecycle {
-    prevent_destroy = false
+    prevent_destroy = true
   }
 
   depends_on = [
