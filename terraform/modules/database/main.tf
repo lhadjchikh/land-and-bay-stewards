@@ -154,7 +154,7 @@ resource "aws_db_parameter_group" "postgres_static" {
 }
 
 # DB Setup script (for PostGIS and app user)
-resource "null_resource" "db_setup_auto" {
+resource "null_resource" "db_setup" {
   count = var.auto_setup_database ? 1 : 0
 
   depends_on = [aws_db_instance.postgres]
