@@ -6,6 +6,7 @@ resource "aws_security_group" "app_sg" {
   description = "Allow inbound traffic for Land and Bay application"
   vpc_id      = var.vpc_id
 
+  # Ingress rules that don't reference other security groups
   ingress {
     from_port   = 80
     to_port     = 80
@@ -22,15 +23,7 @@ resource "aws_security_group" "app_sg" {
     description = "HTTPS from internet via load balancer"
   }
 
-  ingress {
-    from_port       = 8000
-    to_port         = 8000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb_sg.id]
-    description     = "Container port access from load balancer only"
-  }
-
-  # Restricted egress rules
+  # Egress rules that don't reference other security groups
   egress {
     from_port   = 443
     to_port     = 443
@@ -60,11 +53,13 @@ resource "aws_security_group" "app_sg" {
   }
 }
 
+# ALB Security Group
 resource "aws_security_group" "alb_sg" {
   name        = "${var.prefix}-alb-sg"
   description = "Security group for Application Load Balancer"
   vpc_id      = var.vpc_id
 
+  # Ingress rules that don't reference other security groups
   ingress {
     from_port   = 80
     to_port     = 80
@@ -81,14 +76,7 @@ resource "aws_security_group" "alb_sg" {
     description = "HTTPS from internet"
   }
 
-  egress {
-    from_port       = 8000
-    to_port         = 8000
-    protocol        = "tcp"
-    security_groups = [aws_security_group.app_sg.id]
-    description     = "Access to application containers"
-  }
-
+  # Egress rules that don't reference other security groups
   egress {
     from_port   = 80
     to_port     = 80
@@ -132,6 +120,30 @@ resource "aws_security_group" "alb_sg" {
   tags = {
     Name = "${var.prefix}-alb-sg"
   }
+}
+
+# Add cross-references separately to avoid circular dependencies
+
+# Allow ALB to send traffic to App containers
+resource "aws_security_group_rule" "alb_to_app" {
+  type                     = "egress"
+  from_port                = 8000
+  to_port                  = 8000
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.app_sg.id
+  security_group_id        = aws_security_group.alb_sg.id
+  description              = "ALB to application containers on port 8000"
+}
+
+# Allow App containers to receive traffic from ALB
+resource "aws_security_group_rule" "app_from_alb" {
+  type                     = "ingress"
+  from_port                = 8000
+  to_port                  = 8000
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.alb_sg.id
+  security_group_id        = aws_security_group.app_sg.id
+  description              = "Accept traffic from ALB on port 8000"
 }
 
 # Database Security Group
