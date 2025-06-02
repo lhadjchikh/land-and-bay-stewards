@@ -70,6 +70,7 @@ COPY backend/ /app/
 
 # Copy the built frontend static files to the backend static directory
 COPY --from=frontend-builder /app/build/static /app/static/frontend
+COPY --from=frontend-builder /app/build/asset-manifest.json /app/static/frontend/asset-manifest.json
 
 # Copy entrypoint script
 COPY entrypoint.sh /app/entrypoint.sh
