@@ -1,5 +1,7 @@
 # Database Module
 
+data "aws_region" "current" {}
+
 # KMS key for RDS encryption
 resource "aws_kms_key" "rds" {
   description             = "KMS key for RDS encryption"
@@ -157,181 +159,62 @@ resource "aws_db_parameter_group" "postgres_static" {
 resource "null_resource" "db_setup" {
   depends_on = [aws_db_instance.postgres]
 
-  # This will run every time the RDS endpoint changes or when explicitly triggered
   triggers = {
     db_instance_endpoint = aws_db_instance.postgres.endpoint
+    script_hash          = filesha256("${path.root}/db_setup.sh")
   }
 
   provisioner "local-exec" {
     command = <<-EOT
-      set -e  # Exit on any error
+      # Ensure script is executable
+      chmod +x ${path.root}/db_setup.sh
       
-      echo "Starting database setup for ${aws_db_instance.postgres.endpoint}"
-      
-      command_exists() {
-        command -v "$1" >/dev/null 2>&1
-      }
-      
-      # Install PostgreSQL client based on the system
-      if ! command_exists psql; then
-        echo "Installing PostgreSQL client..."
-        if command_exists apt-get; then
-          sudo apt-get update && sudo apt-get install -y postgresql-client
-        elif command_exists yum; then
-          sudo yum install -y postgresql
-        elif command_exists dnf; then
-          sudo dnf install -y postgresql
-        elif command_exists brew; then
-          brew install postgresql
-        else
-          echo "ERROR: Cannot install PostgreSQL client. Please install psql manually."
-          exit 1
-        fi
-      else
-        echo "PostgreSQL client already available"
-      fi
-      
-      # Check if AWS CLI is available and configured
-      if ! command_exists aws; then
-        echo "ERROR: AWS CLI is not installed or not in PATH"
+      # Check if script exists
+      if [ ! -f "${path.root}/db_setup.sh" ]; then
+        echo "ERROR: db_setup.sh not found in ${path.root}"
+        echo "Please ensure the script is in the same directory as your main.tf"
         exit 1
       fi
       
-      # Test AWS CLI access
-      if ! aws sts get-caller-identity >/dev/null 2>&1; then
-        echo "ERROR: AWS CLI is not properly configured or lacks permissions"
-        exit 1
-      fi
-      
-      echo "Waiting for RDS instance to be fully ready..."
-      
-      # Wait for RDS to be available with retries
-      max_attempts=20
-      attempt=1
-      while [ $attempt -le $max_attempts ]; do
-        echo "Attempt $attempt/$max_attempts: Checking RDS availability..."
-        
-        # Check if we can connect to the database
-        if PGPASSWORD='${local.master_password}' psql -h ${aws_db_instance.postgres.address} -U ${local.master_username} -d ${var.db_name} -c "SELECT 1;" >/dev/null 2>&1; then
-          echo "Database is ready!"
-          break
-        fi
-        
-        if [ $attempt -eq $max_attempts ]; then
-          echo "ERROR: Database did not become available after $max_attempts attempts"
-          exit 1
-        fi
-        
-        echo "Database not ready yet, waiting 30 seconds..."
-        sleep 30
-        attempt=$((attempt + 1))
-      done
-      
-      # Generate a strong random password for the app user
-      echo "Generating application user password..."
-      app_password=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9!@*()_+~.-' | head -c 32)
-      
-      if [ -z "$app_password" ]; then
-        echo "ERROR: Failed to generate password"
-        exit 1
-      fi
-      
-      # Create a SQL script file for better escaping and readability
-      cat > /tmp/db_setup.sql << 'SQLEOF'
-      -- Enable PostGIS extension
-      CREATE EXTENSION IF NOT EXISTS postgis;
+      echo "Database setup script found and made executable"
+    EOT
+  }
 
-      -- Create or update application user with the generated password
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${local.app_username}') THEN
-          -- Create the user if it doesn't exist
-          CREATE USER ${local.app_username} WITH PASSWORD 'PLACEHOLDER_PASSWORD';
-        ELSE
-          -- Update the password if user already exists
-          ALTER USER ${local.app_username} WITH PASSWORD 'PLACEHOLDER_PASSWORD';
-        END IF;
-      END
-      $$;
+  # Run the database setup script
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "Starting automated database setup..."
       
-      -- Grant basic connect privileges
-      GRANT CONNECT ON DATABASE ${var.db_name} TO ${local.app_username};
-      
-      -- Grant schema usage
-      GRANT USAGE ON SCHEMA public TO ${local.app_username};
-      
-      -- Grant table privileges
-      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${local.app_username};
-      
-      -- Grant sequence privileges
-      GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO ${local.app_username};
-      
-      -- Set default privileges for future tables and sequences
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${local.app_username};
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO ${local.app_username};
-SQLEOF
-      
-      # Substitute the password in the SQL file (safer than shell variable substitution)
-      sed -i "s/PLACEHOLDER_PASSWORD/$app_password/g" /tmp/db_setup.sql
-      
-      echo "Executing database setup SQL..."
-      # Execute the SQL script
-      if ! PGPASSWORD='${local.master_password}' psql -h ${aws_db_instance.postgres.address} -U ${local.master_username} -d ${var.db_name} -f /tmp/db_setup.sql; then
-        echo "ERROR: Failed to execute database setup SQL"
-        rm -f /tmp/db_setup.sql
+      # Run the script with proper error handling
+      if ! ${path.root}/db_setup.sh \
+        --endpoint "${aws_db_instance.postgres.endpoint}" \
+        --database "${var.db_name}" \
+        --master-user "${local.master_username}" \
+        --app-user "${local.app_username}" \
+        --prefix "${var.prefix}" \
+        --region "${data.aws_region.current.name}"; then
+        
+        echo "❌ Database setup failed!"
+        echo "You can run the setup manually later with:"
+        echo "${path.root}/db_setup.sh --endpoint ${aws_db_instance.postgres.endpoint} --database ${var.db_name} --master-user ${local.master_username} --app-user ${local.app_username} --prefix ${var.prefix}"
         exit 1
       fi
       
-      echo "Database setup SQL executed successfully"
-      
-      # Properly URL-encode the password for the connection string
-      encoded_password=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$app_password', safe=''))" 2>/dev/null || echo "$app_password")
-      
-      # Update the App DB Secret in AWS Secrets Manager
-      echo "Updating application database secret..."
-      if ! aws secretsmanager update-secret \
-        --secret-id "${var.prefix}/database-url" \
-        --secret-string "{\"url\":\"postgresql://${local.app_username}:$encoded_password@${aws_db_instance.postgres.endpoint}/${var.db_name}\",\"username\":\"${local.app_username}\",\"password\":\"$app_password\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}" >/dev/null; then
-        echo "ERROR: Failed to update application database secret"
-        rm -f /tmp/db_setup.sql
-        exit 1
-      fi
-      
-      echo "Updated app user password in database and synced with Secrets Manager"
-      
-      # Update the Master DB Secret in AWS Secrets Manager
-      echo "Updating master database secret..."
-      if aws secretsmanager describe-secret --secret-id "${var.prefix}/database-master" >/dev/null 2>&1; then
-        echo "Updating existing master secret..."
-        aws secretsmanager update-secret \
-          --secret-id "${var.prefix}/database-master" \
-          --secret-string "{\"username\":\"${local.master_username}\",\"password\":\"${local.master_password}\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}" >/dev/null
-      else
-        echo "Creating new master secret..."
-        aws secretsmanager create-secret \
-          --name "${var.prefix}/database-master" \
-          --secret-string "{\"username\":\"${local.master_username}\",\"password\":\"${local.master_password}\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}" >/dev/null
-      fi
-      
-      # Clean up
-      rm -f /tmp/db_setup.sql
-      unset app_password
-      
-      echo "Database setup completed successfully!"
+      echo "✅ Database setup completed successfully!"
     EOT
 
-    # Set working directory and environment
-    working_dir = path.module
+    # Set working directory
+    working_dir = path.root
 
-    # Environment variables for the script
     environment = {
-      PGCONNECT_TIMEOUT = "10"
+      AWS_DEFAULT_REGION = data.aws_region.current.name
+      PGCONNECT_TIMEOUT  = "30"
     }
   }
 
-  # Add a local-exec provisioner for cleanup on destroy
+  # Cleanup on destroy
   provisioner "local-exec" {
     when    = destroy
-    command = "echo 'Database setup resource destroyed - manual cleanup of database users may be required'"
+    command = "echo 'Database setup resource destroyed - manual cleanup may be required'"
   }
 }
