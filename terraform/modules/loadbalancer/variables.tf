@@ -14,8 +14,8 @@ variable "public_subnet_ids" {
   type        = list(string)
 }
 
-variable "app_security_group_id" {
-  description = "ID of the application security group"
+variable "alb_security_group_id" {
+  description = "ID of the load balancer security group"
   type        = string
 }
 

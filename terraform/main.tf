@@ -55,7 +55,7 @@ module "loadbalancer" {
   prefix                = var.prefix
   vpc_id                = module.networking.vpc_id
   public_subnet_ids     = module.networking.public_subnet_ids
-  app_security_group_id = module.security.app_security_group_id
+  alb_security_group_id = module.security.alb_security_group_id
   alb_logs_bucket       = module.monitoring.alb_logs_bucket
   acm_certificate_arn   = var.acm_certificate_arn
   waf_web_acl_arn       = module.security.waf_web_acl_arn
@@ -67,6 +67,7 @@ module "database" {
   source = "./modules/database"
 
   prefix                     = var.prefix
+  aws_region                 = var.aws_region
   db_subnet_ids              = module.networking.private_db_subnet_ids
   db_security_group_id       = module.security.db_security_group_id
   db_allocated_storage       = 20
@@ -78,6 +79,7 @@ module "database" {
   app_db_username            = var.app_db_username
   use_secrets_manager        = true
   db_backup_retention_period = 14
+  auto_setup_database        = var.auto_setup_database
 }
 
 # Secrets Module

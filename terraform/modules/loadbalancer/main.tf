@@ -1,11 +1,9 @@
-# Load Balancer Module
-
 # Application Load Balancer
 resource "aws_lb" "main" {
   name               = "${var.prefix}-alb"
   internal           = false
   load_balancer_type = "application"
-  security_groups    = [var.app_security_group_id]
+  security_groups    = [var.alb_security_group_id]
   subnets            = var.public_subnet_ids
 
   access_logs {
@@ -19,7 +17,6 @@ resource "aws_lb" "main" {
   }
 }
 
-# Target Group for HTTP/HTTPS Traffic
 resource "aws_lb_target_group" "app" {
   name        = "${var.prefix}-tg"
   port        = var.target_group_port
@@ -43,7 +40,6 @@ resource "aws_lb_target_group" "app" {
   }
 }
 
-# HTTP Listener (redirect to HTTPS)
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = 80
@@ -59,7 +55,6 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# HTTPS Listener
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = 443
@@ -73,7 +68,6 @@ resource "aws_lb_listener" "https" {
   }
 }
 
-# WAF Association
 resource "aws_wafv2_web_acl_association" "main" {
   resource_arn = aws_lb.main.arn
   web_acl_arn  = var.waf_web_acl_arn

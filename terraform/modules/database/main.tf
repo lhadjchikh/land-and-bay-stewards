@@ -155,95 +155,128 @@ resource "aws_db_parameter_group" "postgres_static" {
 
 # DB Setup script (for PostGIS and app user)
 resource "null_resource" "db_setup" {
+  count = var.auto_setup_database ? 1 : 0
+
   depends_on = [aws_db_instance.postgres]
 
-  # This will run every time the RDS endpoint changes or when explicitly triggered
   triggers = {
+    # ✅ ESSENTIAL: Re-run when RDS instance endpoint changes
     db_instance_endpoint = aws_db_instance.postgres.endpoint
 
-    # Add a timestamp to ensure this runs on every apply
-    # This ensures credentials are kept in sync even without endpoint changes
-    run_always = timestamp()
+    # ✅ USEFUL: Re-run when setup script is modified
+    script_hash = filesha256("${path.root}/db_setup.sh")
+
+    # ✅ FUNCTIONAL: Re-run when key database parameters change
+    db_name      = var.db_name
+    app_username = local.app_username
+
+    # ✅ SECURE: Manual trigger for credential rotation
+    # Change this value to force re-run after password changes
+    credential_rotation_trigger = var.credential_rotation_trigger
+  }
+
+  # Prerequisites and validation check
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "🔧 Preparing database setup..."
+      
+      # ✅ ADDED: Check if script exists
+      if [ ! -f "${path.root}/db_setup.sh" ]; then
+        echo "❌ ERROR: db_setup.sh script not found in ${path.root}"
+        echo "Please ensure the db_setup.sh script is in the same directory as your main Terraform files"
+        echo "Expected location: ${path.root}/db_setup.sh"
+        exit 1
+      fi
+      
+      # Check script is readable
+      if [ ! -r "${path.root}/db_setup.sh" ]; then
+        echo "❌ ERROR: db_setup.sh script is not readable"
+        echo "Please check file permissions for ${path.root}/db_setup.sh"
+        exit 1
+      fi
+      
+      # Make script executable
+      chmod +x "${path.root}/db_setup.sh"
+      
+      # Verify script is now executable
+      if [ ! -x "${path.root}/db_setup.sh" ]; then
+        echo "❌ ERROR: Failed to make db_setup.sh executable"
+        echo "Please check file permissions and try manually: chmod +x \"${path.root}/db_setup.sh\""
+        exit 1
+      fi
+      
+      # Check for Python3 (required by the improved script)
+      if ! command -v python3 >/dev/null 2>&1; then
+        echo "❌ ERROR: Python3 is required by db_setup.sh but not found"
+        echo "Please install Python3 before running Terraform"
+        exit 1
+      fi
+      
+      # Check for AWS CLI
+      if ! command -v aws >/dev/null 2>&1; then
+        echo "❌ ERROR: AWS CLI is required but not found"
+        echo "Please install and configure AWS CLI"
+        exit 1
+      fi
+      
+      # Check for PostgreSQL client
+      if ! command -v psql >/dev/null 2>&1; then
+        echo "❌ ERROR: PostgreSQL client (psql) is required but not found"
+        echo "Please install PostgreSQL client"
+        exit 1
+      fi
+      
+      echo "✅ All prerequisites check passed"
+      echo "✅ Script found and made executable: ${path.root}/db_setup.sh"
+    EOT
+  }
+
+  # Run the database setup script
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "🚀 Database setup triggered by:"
+      echo "  - Endpoint: ${aws_db_instance.postgres.endpoint}"
+      echo "  - Script hash: ${filesha256("${path.root}/db_setup.sh")}"
+      echo "  - Script location: ${path.root}/db_setup.sh"
+      echo "  - Rotation trigger: ${var.credential_rotation_trigger}"
+      echo ""
+      
+      # Run the script with comprehensive error handling
+      if ! "${path.root}/db_setup.sh" \
+        --endpoint "${aws_db_instance.postgres.endpoint}" \
+        --database "${var.db_name}" \
+        --master-user "${local.master_username}" \
+        --app-user "${local.app_username}" \
+        --prefix "${var.prefix}" \
+        --region "${var.aws_region}"; then
+        
+        echo ""
+        echo "❌ Database setup failed!"
+        echo ""
+        echo "🔧 TROUBLESHOOTING:"
+        echo "1. Verify script exists: ls -la \"${path.root}/db_setup.sh\""
+        echo "2. Check script permissions: chmod +x \"${path.root}/db_setup.sh\""
+        echo "3. Test script manually:"
+        echo "   \"${path.root}/db_setup.sh\" --endpoint ${aws_db_instance.postgres.endpoint} --database ${var.db_name} --master-user ${local.master_username} --app-user ${local.app_username} --prefix ${var.prefix}"
+        echo ""
+        exit 1
+      fi
+      
+      echo "✅ Database setup completed successfully via Terraform!"
+    EOT
+
+    working_dir = path.root
+    environment = {
+      AWS_DEFAULT_REGION = var.aws_region
+      PGCONNECT_TIMEOUT  = "30"
+    }
   }
 
   provisioner "local-exec" {
+    when    = destroy
     command = <<-EOT
-      # Install PostgreSQL client if not already available
-      which psql || (apt-get update && apt-get install -y postgresql-client awscli)
-      
-      # Sleep to allow RDS to fully initialize
-      sleep 30
-      
-      # Get credentials securely from environment or assume role
-      # The AWS CLI should be configured with appropriate permissions
-      
-      # Create a SQL script file for better escaping and readability
-      cat > /tmp/db_setup.sql << 'SQLEOF'
-      -- Enable PostGIS extension
-      CREATE EXTENSION IF NOT EXISTS postgis;
-
-      -- Create or update application user with the generated password
-      DO $$
-      BEGIN
-        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${local.app_username}') THEN
-          -- Create the user if it doesn't exist
-          CREATE USER ${local.app_username} WITH PASSWORD '$${app_password}';
-        ELSE
-          -- Update the password if user already exists
-          ALTER USER ${local.app_username} WITH PASSWORD '$${app_password}';
-        END IF;
-      END
-      $$;
-      
-      -- Grant basic connect privileges
-      GRANT CONNECT ON DATABASE ${var.db_name} TO ${local.app_username};
-      
-      -- Grant schema usage
-      GRANT USAGE ON SCHEMA public TO ${local.app_username};
-      
-      -- Grant table privileges
-      GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO ${local.app_username};
-      
-      -- Grant sequence privileges
-      GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO ${local.app_username};
-      
-      -- Set default privileges for future tables and sequences
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO ${local.app_username};
-      ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO ${local.app_username};
-      SQLEOF
-      
-      # Generate a strong random password for the app user with good complexity
-      # Select characters that are safe in connection strings but still provide good entropy
-      # Avoid problematic characters like %, $, #, etc. that cause URL parsing issues
-      app_password=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9!@*()_+~.-' | head -c 32)
-      
-      # Substitute the password in the SQL file
-      sed -i "s/\$${app_password}/$app_password/g" /tmp/db_setup.sql
-      
-      # Get master password and username - either from our local variables or from Secrets Manager
-      PGPASSWORD='${local.master_password}' psql -h ${aws_db_instance.postgres.address} -U ${local.master_username} -d ${var.db_name} -f /tmp/db_setup.sql
-      
-      # Properly URL-encode the password for the connection string
-      encoded_password=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$app_password', safe=''))")
-      
-      # Update the App DB Secret in AWS Secrets Manager with the properly encoded password
-      aws secretsmanager update-secret --secret-id "${var.prefix}/database-url" --secret-string "{\"url\":\"postgresql://${local.app_username}:$encoded_password@${aws_db_instance.postgres.endpoint}/${var.db_name}\",\"username\":\"${local.app_username}\",\"password\":\"$app_password\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
-      
-      # Log the action for visibility (without exposing the password)
-      echo "Updated app user password in database and synced with Secrets Manager"
-      
-      # Update the Master DB Secret in AWS Secrets Manager (for rotation purposes)
-      if aws secretsmanager describe-secret --secret-id "${var.prefix}/database-master" > /dev/null 2>&1; then
-        echo "Updating existing master secret..."
-        aws secretsmanager update-secret --secret-id "${var.prefix}/database-master" --secret-string "{\"username\":\"${local.master_username}\",\"password\":\"${local.master_password}\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
-      else
-        echo "Creating new master secret..."
-        aws secretsmanager create-secret --name "${var.prefix}/database-master" --secret-string "{\"username\":\"${local.master_username}\",\"password\":\"${local.master_password}\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
-      fi
-      
-      # Remove the temporary SQL file and unset the password variable
-      rm /tmp/db_setup.sql
-      unset app_password
+      echo "🗑️  Database setup resource destroyed"
+      echo "Note: Database and users still exist - manual cleanup may be required"
     EOT
   }
 }

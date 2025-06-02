@@ -1,7 +1,18 @@
+variable "credential_rotation_trigger" {
+  description = "Change this value to trigger credential rotation (e.g., use timestamp or version)"
+  type        = string
+  default     = "initial-v1"
+}
+
 variable "prefix" {
   description = "Prefix to use for resource names"
   type        = string
   default     = "landandbay"
+}
+
+variable "aws_region" {
+  description = "The AWS region to deploy to"
+  type        = string
 }
 
 variable "db_subnet_ids" {
@@ -63,4 +74,10 @@ variable "db_backup_retention_period" {
   description = "Backup retention period in days"
   type        = number
   default     = 14
+}
+
+variable "auto_setup_database" {
+  description = "Whether to automatically run database setup"
+  type        = bool
+  default     = false
 }
