@@ -1,5 +1,9 @@
 # Security Module
 
+data "aws_vpc" "current" {
+  id = var.vpc_id
+}
+
 # Application Security Group
 resource "aws_security_group" "app_sg" {
   name        = "${var.prefix}-sg"
@@ -97,16 +101,16 @@ resource "aws_security_group" "alb_sg" {
     from_port   = 53
     to_port     = 53
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "DNS resolution (TCP)"
+    cidr_blocks = [data.aws_vpc.current.cidr_block]
+    description = "DNS resolution within VPC only"
   }
 
   egress {
     from_port   = 53
     to_port     = 53
     protocol    = "udp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "DNS resolution (UDP)"
+    cidr_blocks = [data.aws_vpc.current.cidr_block]
+    description = "DNS resolution within VPC only"
   }
 
   egress {
