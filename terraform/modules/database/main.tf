@@ -157,9 +157,13 @@ resource "aws_db_parameter_group" "postgres_static" {
 resource "null_resource" "db_setup" {
   depends_on = [aws_db_instance.postgres]
 
-  # This will run every time the RDS endpoint changes (e.g., after creation)
+  # This will run every time the RDS endpoint changes or when explicitly triggered
   triggers = {
     db_instance_endpoint = aws_db_instance.postgres.endpoint
+
+    # Add a timestamp to ensure this runs on every apply
+    # This ensures credentials are kept in sync even without endpoint changes
+    run_always = timestamp()
   }
 
   provisioner "local-exec" {
@@ -208,8 +212,10 @@ resource "null_resource" "db_setup" {
       ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO ${local.app_username};
       SQLEOF
       
-      # Generate a strong random password for the app user
-      app_password=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9!@#$%^&*()_+?><~' | head -c 32)
+      # Generate a strong random password for the app user with good complexity
+      # Select characters that are safe in connection strings but still provide good entropy
+      # Avoid problematic characters like %, $, #, etc. that cause URL parsing issues
+      app_password=$(openssl rand -base64 48 | tr -dc 'a-zA-Z0-9!@*()_+~.-' | head -c 32)
       
       # Substitute the password in the SQL file
       sed -i "s/\$${app_password}/$app_password/g" /tmp/db_setup.sql
@@ -217,9 +223,14 @@ resource "null_resource" "db_setup" {
       # Get master password and username - either from our local variables or from Secrets Manager
       PGPASSWORD='${local.master_password}' psql -h ${aws_db_instance.postgres.address} -U ${local.master_username} -d ${var.db_name} -f /tmp/db_setup.sql
       
-      # Update the App DB Secret in AWS Secrets Manager with the new password
-      # Adding sslmode=prefer and application_name for better security and tracking
-      aws secretsmanager update-secret --secret-id "${var.prefix}/database-url" --secret-string "{\"url\":\"postgis://${local.app_username}:$app_password@${aws_db_instance.postgres.endpoint}/${var.db_name}?sslmode=prefer&application_name=landandbay_app\",\"username\":\"${local.app_username}\",\"password\":\"$app_password\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
+      # Properly URL-encode the password for the connection string
+      encoded_password=$(python3 -c "import urllib.parse; print(urllib.parse.quote('$app_password', safe=''))")
+      
+      # Update the App DB Secret in AWS Secrets Manager with the properly encoded password
+      aws secretsmanager update-secret --secret-id "${var.prefix}/database-url" --secret-string "{\"url\":\"postgresql://${local.app_username}:$encoded_password@${aws_db_instance.postgres.endpoint}/${var.db_name}\",\"username\":\"${local.app_username}\",\"password\":\"$app_password\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
+      
+      # Log the action for visibility (without exposing the password)
+      echo "Updated app user password in database and synced with Secrets Manager"
       
       # Update the Master DB Secret in AWS Secrets Manager (for rotation purposes)
       if aws secretsmanager describe-secret --secret-id "${var.prefix}/database-master" > /dev/null 2>&1; then
