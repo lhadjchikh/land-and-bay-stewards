@@ -160,38 +160,118 @@ resource "null_resource" "db_setup_auto" {
   depends_on = [aws_db_instance.postgres]
 
   triggers = {
+    # ✅ ESSENTIAL: Re-run when RDS instance endpoint changes
     db_instance_endpoint = aws_db_instance.postgres.endpoint
-    script_hash          = filesha256("${path.root}/db_setup.sh")
+
+    # ✅ USEFUL: Re-run when setup script is modified
+    script_hash = filesha256("${path.root}/db_setup.sh")
+
+    # ✅ OPTIONAL: Re-run when key database parameters change
+    db_name      = var.db_name
+    app_username = local.app_username
   }
 
+  # Prerequisites and validation check
   provisioner "local-exec" {
     command = <<-EOT
-      echo "🤖 AUTOMATED DATABASE SETUP"
-      echo "Running database setup automatically..."
+      echo "🔧 Preparing database setup..."
       
-      # Check prerequisites
-      for cmd in python3 aws psql; do
-        if ! command -v $cmd >/dev/null 2>&1; then
-          echo "❌ ERROR: $cmd is required but not found"
-          exit 1
-        fi
-      done
+      # ✅ ADDED: Check if script exists
+      if [ ! -f "${path.root}/db_setup.sh" ]; then
+        echo "❌ ERROR: db_setup.sh script not found in ${path.root}"
+        echo "Please ensure the db_setup.sh script is in the same directory as your main Terraform files"
+        echo "Expected location: ${path.root}/db_setup.sh"
+        exit 1
+      fi
       
-      # Make script executable and run it
+      # Check script is readable
+      if [ ! -r "${path.root}/db_setup.sh" ]; then
+        echo "❌ ERROR: db_setup.sh script is not readable"
+        echo "Please check file permissions for ${path.root}/db_setup.sh"
+        exit 1
+      fi
+      
+      # Make script executable
       chmod +x ${path.root}/db_setup.sh
       
-      ${path.root}/db_setup.sh \
+      # Verify script is now executable
+      if [ ! -x "${path.root}/db_setup.sh" ]; then
+        echo "❌ ERROR: Failed to make db_setup.sh executable"
+        echo "Please check file permissions and try manually: chmod +x ${path.root}/db_setup.sh"
+        exit 1
+      fi
+      
+      # Check for Python3 (required by the improved script)
+      if ! command -v python3 >/dev/null 2>&1; then
+        echo "❌ ERROR: Python3 is required by db_setup.sh but not found"
+        echo "Please install Python3 before running Terraform"
+        exit 1
+      fi
+      
+      # Check for AWS CLI
+      if ! command -v aws >/dev/null 2>&1; then
+        echo "❌ ERROR: AWS CLI is required but not found"
+        echo "Please install and configure AWS CLI"
+        exit 1
+      fi
+      
+      # Check for PostgreSQL client
+      if ! command -v psql >/dev/null 2>&1; then
+        echo "❌ ERROR: PostgreSQL client (psql) is required but not found"
+        echo "Please install PostgreSQL client"
+        exit 1
+      fi
+      
+      echo "✅ All prerequisites check passed"
+      echo "✅ Script found and made executable: ${path.root}/db_setup.sh"
+    EOT
+  }
+
+  # Run the database setup script
+  provisioner "local-exec" {
+    command = <<-EOT
+      echo "🚀 Database setup triggered by:"
+      echo "  - Endpoint: ${aws_db_instance.postgres.endpoint}"
+      echo "  - Script hash: ${filesha256("${path.root}/db_setup.sh")}"
+      echo "  - Script location: ${path.root}/db_setup.sh"
+      echo ""
+      
+      # Run the script with comprehensive error handling
+      if ! ${path.root}/db_setup.sh \
         --endpoint "${aws_db_instance.postgres.endpoint}" \
         --database "${var.db_name}" \
         --master-user "${local.master_username}" \
         --app-user "${local.app_username}" \
         --prefix "${var.prefix}" \
-        --region "${var.aws_region}"
+        --region "${var.aws_region}"; then
+        
+        echo ""
+        echo "❌ Database setup failed!"
+        echo ""
+        echo "🔧 TROUBLESHOOTING:"
+        echo "1. Verify script exists: ls -la ${path.root}/db_setup.sh"
+        echo "2. Check script permissions: chmod +x ${path.root}/db_setup.sh"
+        echo "3. Test script manually:"
+        echo "   ${path.root}/db_setup.sh --endpoint ${aws_db_instance.postgres.endpoint} --database ${var.db_name} --master-user ${local.master_username} --app-user ${local.app_username} --prefix ${var.prefix}"
+        echo ""
+        exit 1
+      fi
+      
+      echo "✅ Database setup completed successfully via Terraform!"
     EOT
 
     working_dir = path.root
     environment = {
       AWS_DEFAULT_REGION = var.aws_region
+      PGCONNECT_TIMEOUT  = "30"
     }
+  }
+
+  provisioner "local-exec" {
+    when    = destroy
+    command = <<-EOT
+      echo "🗑️  Database setup resource destroyed"
+      echo "Note: Database and users still exist - manual cleanup may be required"
+    EOT
   }
 }
