@@ -405,11 +405,21 @@ module "infrastructure" {
 ### Automated Deployment (Recommended for Development)
 
 ```bash
-# 1. Set up automated database setup
-echo 'auto_setup_database = true' >> terraform.tfvars
+# Option 1: Use terraform.tfvars file
+# Create or update terraform.tfvars (safely)
+if [ -f terraform.tfvars ] && grep -q "^auto_setup_database" terraform.tfvars; then
+  # Update existing variable
+  sed -i.bak 's/^auto_setup_database.*/auto_setup_database = true/' terraform.tfvars
+else
+  # Add new variable (safe append)
+  echo 'auto_setup_database = true' >> terraform.tfvars
+fi
 
-# 2. Deploy everything at once
+# Deploy everything at once
 terraform apply
+
+# Option 2: Use command-line variable (recommended for CI/CD)
+terraform apply -var="auto_setup_database=true"
 
 # Database setup runs automatically
 # ✅ Done!
@@ -418,10 +428,21 @@ terraform apply
 ### Manual Deployment (Recommended for Production)
 
 ```bash
-# 1. Deploy infrastructure first
+# Option 1: Use terraform.tfvars
+# Ensure manual setup in terraform.tfvars
+if grep -q "^auto_setup_database" terraform.tfvars; then
+  sed -i.bak 's/^auto_setup_database.*/auto_setup_database = false/' terraform.tfvars
+else
+  echo 'auto_setup_database = false' >> terraform.tfvars
+fi
+
+# Deploy infrastructure first
 terraform apply
 
-# 2. Run database setup manually with full control
+# Option 2: Use command-line variable
+terraform apply -var="auto_setup_database=false"
+
+# Run database setup manually with full control
 ./db_setup.sh --endpoint $(terraform output -raw database_endpoint)
 
 # You'll be prompted for the master password
@@ -431,13 +452,27 @@ terraform apply
 ### CI/CD Pipeline Deployment
 
 ```bash
-# 1. Deploy infrastructure
-terraform apply -var="auto_setup_database=false"
+# Method 1: Environment-specific tfvars files
+# dev.tfvars
+auto_setup_database = true
 
-# 2. Run database setup in controlled environment
-./db_setup.sh --endpoint $(terraform output -raw database_endpoint) \
-              --database $(terraform output -raw database_name) \
-              --prefix myapp
+# prod.tfvars
+auto_setup_database = false
+
+# Deploy with specific file
+terraform apply -var-file="dev.tfvars"
+terraform apply -var-file="prod.tfvars"
+
+# Method 2: Command-line overrides (safest)
+# Development
+terraform apply -var="auto_setup_database=true"
+
+# Production
+terraform apply -var="auto_setup_database=false"
+if [ $? -eq 0 ]; then
+  # Run database setup in controlled environment
+  $(terraform output -raw database_setup_command)
+fi
 
 # ✅ Done with full logging and error handling
 ```
