@@ -292,7 +292,11 @@ EOF
   # FALLBACK: File-based approach with safe substitution
   log_warning "Direct execution failed, falling back to file-based approach with safe substitution"
 
-  local sql_file=$(mktemp /tmp/db_setup_XXXXXX.sql)
+  local sql_file
+  if ! sql_file=$(mktemp /tmp/db_setup_XXXXXX.sql); then
+    log_error "Failed to create temporary SQL file"
+    return 1
+  fi
 
   # Create SQL using Python for safe string handling
   if command_exists python3; then
@@ -374,11 +378,28 @@ EOF
       perl -i -pe "s/PLACEHOLDER_DB/\Q$database\E/g" "$sql_file"
     else
       log_info "Using sed with proper escaping..."
-      # Escape special characters for sed
-      local escaped_password=$(printf '%s\n' "$app_password" | sed 's/[\/&]/\\&/g')
-      local escaped_username=$(printf '%s\n' "$app_username" | sed 's/[\/&]/\\&/g')
-      local escaped_database=$(printf '%s\n' "$database" | sed 's/[\/&]/\\&/g')
 
+      # Escape special characters for sed
+      local escaped_password
+      if ! escaped_password=$(printf '%s\n' "$app_password" | sed 's/[\/&]/\\&/g'); then
+        log_error "Failed to escape password for sed"
+        rm -f "$sql_file"
+        return 1
+      fi
+
+      local escaped_username
+      if ! escaped_username=$(printf '%s\n' "$app_username" | sed 's/[\/&]/\\&/g'); then
+        log_error "Failed to escape username for sed"
+        rm -f "$sql_file"
+        return 1
+      fi
+
+      local escaped_database
+      if ! escaped_database=$(printf '%s\n' "$database" | sed 's/[\/&]/\\&/g'); then
+        log_error "Failed to escape database name for sed"
+        rm -f "$sql_file"
+        return 1
+      fi
       # Use | as delimiter instead of / to avoid conflicts
       sed -i "s|PLACEHOLDER_PASSWORD|$escaped_password|g" "$sql_file"
       sed -i "s|PLACEHOLDER_USER|$escaped_username|g" "$sql_file"
@@ -436,7 +457,10 @@ update_secrets() {
 
   # Update application database secret
   log_info "Updating application database secret..."
-  local app_secret_json=$(
+  local app_secret_json
+
+  # Declare and assign separately to avoid masking return values
+  app_secret_json=$(
     cat <<EOF
 {
     "url": "postgresql://$app_username:$encoded_password@$endpoint/$database",
@@ -449,6 +473,11 @@ update_secrets() {
 EOF
   )
 
+  if [ -z "$app_secret_json" ]; then
+    log_error "Failed to create application secret JSON"
+    return 1
+  fi
+
   if aws secretsmanager update-secret \
     --secret-id "$prefix/database-url" \
     --secret-string "$app_secret_json" >/dev/null 2>&1; then
@@ -460,7 +489,10 @@ EOF
 
   # Update or create master database secret
   log_info "Updating master database secret..."
-  local master_secret_json=$(
+  local master_secret_json
+
+  # Declare and assign separately to avoid masking return values
+  master_secret_json=$(
     cat <<EOF
 {
     "username": "$master_username",
@@ -471,6 +503,11 @@ EOF
 }
 EOF
   )
+
+  if [ -z "$master_secret_json" ]; then
+    log_error "Failed to create master secret JSON"
+    return 1
+  fi
 
   if aws secretsmanager describe-secret --secret-id "$prefix/database-master" >/dev/null 2>&1; then
     log_info "Updating existing master secret..."
@@ -595,7 +632,7 @@ main() {
   echo
   log_info "Enter the master database password:"
   echo -n "Password: "
-  read -s master_password
+  read -rs master_password
   echo
 
   if [ -z "$master_password" ]; then
