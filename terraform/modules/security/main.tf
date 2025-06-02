@@ -49,7 +49,7 @@ resource "aws_security_group" "app_sg" {
   }
 
   tags = {
-    Name = "${var.prefix}-sg"
+    Name = "${var.prefix}-app-sg"
   }
 }
 
