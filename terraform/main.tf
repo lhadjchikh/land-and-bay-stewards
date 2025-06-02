@@ -55,7 +55,7 @@ module "loadbalancer" {
   prefix                = var.prefix
   vpc_id                = module.networking.vpc_id
   public_subnet_ids     = module.networking.public_subnet_ids
-  alb_security_group_id = module.security.app_security_group_id
+  alb_security_group_id = module.security.alb_security_group_id
   alb_logs_bucket       = module.monitoring.alb_logs_bucket
   acm_certificate_arn   = var.acm_certificate_arn
   waf_web_acl_arn       = module.security.waf_web_acl_arn
