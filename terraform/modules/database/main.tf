@@ -178,12 +178,15 @@ resource "null_resource" "db_setup" {
       -- Enable PostGIS extension
       CREATE EXTENSION IF NOT EXISTS postgis;
 
-      -- Create application user if it doesn't exist
+      -- Create or update application user with the generated password
       DO $$
       BEGIN
         IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '${local.app_username}') THEN
-          -- Use a randomly generated strong password that will be stored in AWS Secrets Manager
+          -- Create the user if it doesn't exist
           CREATE USER ${local.app_username} WITH PASSWORD '$${app_password}';
+        ELSE
+          -- Update the password if user already exists
+          ALTER USER ${local.app_username} WITH PASSWORD '$${app_password}';
         END IF;
       END
       $$;
@@ -215,7 +218,8 @@ resource "null_resource" "db_setup" {
       PGPASSWORD='${local.master_password}' psql -h ${aws_db_instance.postgres.address} -U ${local.master_username} -d ${var.db_name} -f /tmp/db_setup.sql
       
       # Update the App DB Secret in AWS Secrets Manager with the new password
-      aws secretsmanager update-secret --secret-id "${var.prefix}/database-url" --secret-string "{\"url\":\"postgis://${local.app_username}:$app_password@${aws_db_instance.postgres.endpoint}/${var.db_name}\",\"username\":\"${local.app_username}\",\"password\":\"$app_password\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
+      # Adding sslmode=prefer and application_name for better security and tracking
+      aws secretsmanager update-secret --secret-id "${var.prefix}/database-url" --secret-string "{\"url\":\"postgis://${local.app_username}:$app_password@${aws_db_instance.postgres.endpoint}/${var.db_name}?sslmode=prefer&application_name=landandbay_app\",\"username\":\"${local.app_username}\",\"password\":\"$app_password\",\"host\":\"${aws_db_instance.postgres.address}\",\"port\":\"${aws_db_instance.postgres.port}\",\"dbname\":\"${var.db_name}\"}"
       
       # Update the Master DB Secret in AWS Secrets Manager (for rotation purposes)
       if aws secretsmanager describe-secret --secret-id "${var.prefix}/database-master" > /dev/null 2>&1; then
