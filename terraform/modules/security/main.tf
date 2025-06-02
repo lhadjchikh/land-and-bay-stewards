@@ -1,3 +1,5 @@
+# Security Module
+
 # Application Security Group
 resource "aws_security_group" "app_sg" {
   name        = "${var.prefix}-sg"
@@ -92,7 +94,7 @@ resource "aws_security_group" "alb_sg" {
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP outbound"
+    description = "HTTP outbound for health checks and redirects"
   }
 
   egress {
@@ -100,7 +102,31 @@ resource "aws_security_group" "alb_sg" {
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS outbound"
+    description = "HTTPS outbound for SSL validation and AWS APIs"
+  }
+
+  egress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "DNS resolution (TCP)"
+  }
+
+  egress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "DNS resolution (UDP)"
+  }
+
+  egress {
+    from_port   = 123
+    to_port     = 123
+    protocol    = "udp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "NTP time synchronization"
   }
 
   tags = {
