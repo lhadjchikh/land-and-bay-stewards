@@ -17,6 +17,55 @@ resource "aws_lb" "main" {
   }
 }
 
+# Target Group for Django API
+resource "aws_lb_target_group" "api" {
+  name        = "${var.prefix}-api-tg"
+  port        = 8000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    path                = "/api/campaigns/"
+    port                = "traffic-port"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = {
+    Name = "${var.prefix}-api-tg"
+  }
+}
+
+# Target Group for SSR Frontend
+resource "aws_lb_target_group" "ssr" {
+  name        = "${var.prefix}-ssr-tg"
+  port        = 3000
+  protocol    = "HTTP"
+  vpc_id      = var.vpc_id
+  target_type = "ip"
+
+  health_check {
+    enabled             = true
+    path                = "/health"
+    port                = "traffic-port"
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = {
+    Name = "${var.prefix}-ssr-tg"
+  }
+}
+
+# Keep the original target group for backward compatibility
 resource "aws_lb_target_group" "app" {
   name        = "${var.prefix}-tg"
   port        = var.target_group_port
@@ -40,6 +89,7 @@ resource "aws_lb_target_group" "app" {
   }
 }
 
+# HTTP Listener - Redirect to HTTPS (cost-free redirect)
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = 80
@@ -55,6 +105,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+# HTTPS Listener with intelligent routing rules
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = 443
@@ -62,12 +113,99 @@ resource "aws_lb_listener" "https" {
   ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
   certificate_arn   = var.acm_certificate_arn
 
+  # Default action - send ALL traffic to SSR (Next.js handles routing)
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.app.arn
+    target_group_arn = aws_lb_target_group.ssr.arn
   }
 }
 
+# High Priority: API traffic routing
+resource "aws_lb_listener_rule" "api" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.api.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/*"]
+    }
+  }
+}
+
+# High Priority: Django Admin routing
+resource "aws_lb_listener_rule" "admin" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 200
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.api.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/admin/*"]
+    }
+  }
+}
+
+# Medium Priority: Django static files routing
+resource "aws_lb_listener_rule" "static" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 300
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.api.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+}
+
+# Medium Priority: Django media files (if you have them)
+resource "aws_lb_listener_rule" "media" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 400
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.api.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/media/*"]
+    }
+  }
+}
+
+# Lower Priority: Health check routing (for monitoring tools)
+resource "aws_lb_listener_rule" "health" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 500
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.ssr.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/health"]
+    }
+  }
+}
+
+# Associate WAF with the single ALB
 resource "aws_wafv2_web_acl_association" "main" {
   resource_arn = aws_lb.main.arn
   web_acl_arn  = var.waf_web_acl_arn

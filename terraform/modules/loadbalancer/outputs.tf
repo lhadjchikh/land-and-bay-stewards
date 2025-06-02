@@ -9,8 +9,18 @@ output "alb_zone_id" {
 }
 
 output "target_group_arn" {
-  description = "ARN of the target group"
+  description = "ARN of the target group (for backward compatibility)"
   value       = aws_lb_target_group.app.arn
+}
+
+output "api_target_group_arn" {
+  description = "ARN of the API target group"
+  value       = aws_lb_target_group.api.arn
+}
+
+output "ssr_target_group_arn" {
+  description = "ARN of the SSR target group"
+  value       = aws_lb_target_group.ssr.arn
 }
 
 output "http_listener_arn" {

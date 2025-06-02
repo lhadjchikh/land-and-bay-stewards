@@ -9,6 +9,7 @@ on:
     paths:
       - "frontend/**"
       - "backend/**"
+      - "ssr/**"
       - "docker-compose.yml"
       - "Dockerfile"
       - ".github/workflows/test_fullstack.yml"
@@ -36,8 +37,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      # Build the Docker image with caching
-      - name: Build Docker image
+      # Build the Docker images with caching
+      - name: Build Docker images
         run: |
           docker buildx build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
@@ -45,6 +46,13 @@ jobs:
             --load \
             -t landandbay_app:latest \
             .
+
+          docker buildx build \
+            --cache-from=type=local,src=/tmp/.buildx-cache \
+            --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            --load \
+            -t landandbay_ssr:latest \
+            ./ssr
 
       - name: Start all containers
         run: docker compose up -d
@@ -72,10 +80,22 @@ jobs:
             # Continue anyway, as we'll see test failures if API isn't available
           fi
 
+          # Check if SSR is responding
+          timeout=60
+          until curl -s http://localhost:3000/health || [ $timeout -le 0 ]; do
+            echo "Waiting for SSR to be ready..."
+            sleep 5
+            timeout=$((timeout-5))
+          done
+          if [ $timeout -le 0 ]; then
+            echo "SSR service failed to start in time"
+            # Continue anyway, as we'll see test failures if SSR isn't available
+          fi
+
       - name: Create test data
         run: |
           # Run the test data creation script
-          docker compose exec -T app bash -c '
+          docker compose exec -T api bash -c '
           export PYTHONPATH="${PYTHONPATH}:/app/backend"
           python backend/scripts/create_test_data.py
           if [ $? -ne 0 ]; then
@@ -100,7 +120,7 @@ jobs:
         run: |
           # Use git to check if any app files were changed
           git fetch origin main
-          CHANGES=$(git diff --name-only HEAD origin/main | grep -E "^(frontend/|backend/|docker-compose.yml|Dockerfile)" -c || echo 0)
+          CHANGES=$(git diff --name-only HEAD origin/main | grep -E "^(frontend/|backend/|ssr/|docker-compose.yml|Dockerfile)" -c || echo 0)
 
           if [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" && $CHANGES -eq 0 ]]; then
             echo "Running minimal tests for non-app changes to main branch"
@@ -125,6 +145,15 @@ jobs:
           # Make sure we don't skip E2E tests
           SKIP_E2E: false
         run: npm run test:e2e
+
+      # Run the SSR integration tests
+      - name: Run SSR integration tests
+        if: steps.check_tests.outputs.skip_full_tests != 'true'
+        env:
+          SSR_URL: http://localhost:3000
+          API_URL: http://localhost:8000
+          NGINX_URL: http://localhost:80
+        run: node ssr/tests/test-ssr-integration-simple.js
 
       # Stop all containers when done
       - name: Stop containers

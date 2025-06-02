@@ -93,7 +93,6 @@ module "secrets" {
   db_name         = module.database.db_instance_name
 }
 
-# Compute Module
 module "compute" {
   source = "./modules/compute"
 
@@ -104,6 +103,8 @@ module "compute" {
   app_security_group_id     = module.security.app_security_group_id
   bastion_security_group_id = module.security.bastion_security_group_id
   target_group_arn          = module.loadbalancer.target_group_arn
+  api_target_group_arn      = module.loadbalancer.api_target_group_arn
+  ssr_target_group_arn      = module.loadbalancer.ssr_target_group_arn
   db_url_secret_arn         = module.secrets.db_url_secret_arn
   secret_key_secret_arn     = module.secrets.secret_key_secret_arn
   secrets_kms_key_arn       = module.secrets.secrets_kms_key_arn
@@ -111,6 +112,8 @@ module "compute" {
   bastion_public_key        = var.bastion_public_key
   create_new_key_pair       = var.create_new_key_pair
   container_port            = 8000
+  domain_name               = var.domain_name
+  enable_ssr                = var.enable_ssr
 
   # Make sure load balancer and secrets are created first
   depends_on = [
