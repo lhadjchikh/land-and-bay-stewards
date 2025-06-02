@@ -1,9 +1,66 @@
-# Security Module
-
 # Application Security Group
 resource "aws_security_group" "app_sg" {
   name        = "${var.prefix}-sg"
   description = "Allow inbound traffic for Land and Bay application"
+  vpc_id      = var.vpc_id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTP from internet via load balancer"
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTPS from internet via load balancer"
+  }
+
+  ingress {
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb_sg.id]
+    description     = "Container port access from load balancer only"
+  }
+
+  # Restricted egress rules
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTPS outbound traffic"
+  }
+
+  egress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "HTTP outbound traffic"
+  }
+
+  egress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = var.database_subnet_cidrs
+    description = "PostgreSQL access to database subnets"
+  }
+
+  tags = {
+    Name = "${var.prefix}-sg"
+  }
+}
+
+resource "aws_security_group" "alb_sg" {
+  name        = "${var.prefix}-alb-sg"
+  description = "Security group for Application Load Balancer"
   vpc_id      = var.vpc_id
 
   ingress {
@@ -22,21 +79,20 @@ resource "aws_security_group" "app_sg" {
     description = "HTTPS from internet"
   }
 
-  ingress {
-    from_port   = 8000
-    to_port     = 8000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow traffic to container port"
+  egress {
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app_sg.id]
+    description     = "Access to application containers"
   }
 
-  # Restricted egress rules
   egress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTP outbound traffic"
+    description = "HTTP outbound"
   }
 
   egress {
@@ -44,27 +100,11 @@ resource "aws_security_group" "app_sg" {
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-    description = "HTTPS outbound traffic"
-  }
-
-  egress {
-    from_port   = 8000
-    to_port     = 8000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Outbound traffic on container port"
-  }
-
-  egress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    cidr_blocks = var.database_subnet_cidrs
-    description = "PostgreSQL access to database subnets"
+    description = "HTTPS outbound"
   }
 
   tags = {
-    Name = "${var.prefix}-sg"
+    Name = "${var.prefix}-alb-sg"
   }
 }
 
@@ -82,7 +122,6 @@ resource "aws_security_group" "db_sg" {
     description     = "PostgreSQL from application security group"
   }
 
-  # Allow access from the bastion host
   ingress {
     from_port       = 5432
     to_port         = 5432
@@ -91,8 +130,6 @@ resource "aws_security_group" "db_sg" {
     description     = "PostgreSQL from bastion host"
   }
 
-  # Since database is in isolated subnet with no internet access,
-  # we need to be careful about what outbound traffic we allow
   egress {
     from_port       = 0
     to_port         = 0
@@ -101,7 +138,6 @@ resource "aws_security_group" "db_sg" {
     description     = "Allow return traffic to the application security group"
   }
 
-  # Allow return traffic to the bastion host
   egress {
     from_port       = 0
     to_port         = 0
@@ -152,7 +188,6 @@ resource "aws_wafv2_web_acl" "main" {
     allow {}
   }
 
-  # SQL Injection Protection
   rule {
     name     = "AWS-AWSManagedRulesSQLiRuleSet"
     priority = 1
