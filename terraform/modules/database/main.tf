@@ -196,12 +196,12 @@ resource "null_resource" "db_setup" {
       fi
       
       # Make script executable
-      chmod +x ${path.root}/db_setup.sh
+      chmod +x "${path.root}/db_setup.sh"
       
       # Verify script is now executable
       if [ ! -x "${path.root}/db_setup.sh" ]; then
         echo "❌ ERROR: Failed to make db_setup.sh executable"
-        echo "Please check file permissions and try manually: chmod +x ${path.root}/db_setup.sh"
+        echo "Please check file permissions and try manually: chmod +x \"${path.root}/db_setup.sh\""
         exit 1
       fi
       
@@ -242,7 +242,7 @@ resource "null_resource" "db_setup" {
       echo ""
       
       # Run the script with comprehensive error handling
-      if ! ${path.root}/db_setup.sh \
+      if ! "${path.root}/db_setup.sh" \
         --endpoint "${aws_db_instance.postgres.endpoint}" \
         --database "${var.db_name}" \
         --master-user "${local.master_username}" \
@@ -254,10 +254,10 @@ resource "null_resource" "db_setup" {
         echo "❌ Database setup failed!"
         echo ""
         echo "🔧 TROUBLESHOOTING:"
-        echo "1. Verify script exists: ls -la ${path.root}/db_setup.sh"
-        echo "2. Check script permissions: chmod +x ${path.root}/db_setup.sh"
+        echo "1. Verify script exists: ls -la \"${path.root}/db_setup.sh\""
+        echo "2. Check script permissions: chmod +x \"${path.root}/db_setup.sh\""
         echo "3. Test script manually:"
-        echo "   ${path.root}/db_setup.sh --endpoint ${aws_db_instance.postgres.endpoint} --database ${var.db_name} --master-user ${local.master_username} --app-user ${local.app_username} --prefix ${var.prefix}"
+        echo "   \"${path.root}/db_setup.sh\" --endpoint ${aws_db_instance.postgres.endpoint} --database ${var.db_name} --master-user ${local.master_username} --app-user ${local.app_username} --prefix ${var.prefix}"
         echo ""
         exit 1
       fi
