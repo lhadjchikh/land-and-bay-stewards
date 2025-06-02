@@ -14,22 +14,19 @@ def _get_manifest_paths() -> list[str]:
     """Get possible locations for the asset manifest file"""
     return [
         # Docker container path (copied from frontend build)
+        os.path.join(settings.STATIC_ROOT, "asset-manifest.json"),
         os.path.join(settings.STATIC_ROOT, "frontend", "asset-manifest.json"),
         # Local development path in static files
+        os.path.join(settings.BASE_DIR, "static", "asset-manifest.json"),
         os.path.join(settings.BASE_DIR, "static", "frontend", "asset-manifest.json"),
         # Frontend build directory (development)
         os.path.join(
-            settings.BASE_DIR.parent,
-            "frontend",
-            "build",
-            "asset-manifest.json",
+            settings.BASE_DIR.parent, "frontend", "build", "asset-manifest.json",
         ),
         # Alternative static location
+        os.path.join(settings.BASE_DIR, "staticfiles", "asset-manifest.json"),
         os.path.join(
-            settings.BASE_DIR,
-            "staticfiles",
-            "frontend",
-            "asset-manifest.json",
+            settings.BASE_DIR, "staticfiles", "frontend", "asset-manifest.json",
         ),
     ]
 
@@ -63,11 +60,8 @@ def _normalize_asset_paths(main_js: str, main_css: str) -> dict[str, str]:
     main_js = main_js.replace("/static/", "").replace("static/", "")
     main_css = main_css.replace("/static/", "").replace("static/", "")
 
-    # Ensure files are in the frontend subdirectory
-    if main_js and not main_js.startswith("frontend/"):
-        main_js = f"frontend/{main_js}"
-    if main_css and not main_css.startswith("frontend/"):
-        main_css = f"frontend/{main_css}"
+    # The files should already be in the correct structure from React build
+    # Don't add frontend/ prefix since we're copying directly to static root
 
     return {
         "main_js": main_js,
@@ -78,45 +72,44 @@ def _normalize_asset_paths(main_js: str, main_css: str) -> dict[str, str]:
 def _find_static_files_directly() -> dict[str, str]:
     """Find static files directly in directories when manifest is unavailable"""
     static_dirs = [
-        (
-            os.path.join(settings.STATIC_ROOT, "frontend")
-            if settings.STATIC_ROOT
-            else None
-        ),
-        os.path.join(settings.BASE_DIR, "static", "frontend"),
-        os.path.join(settings.BASE_DIR, "staticfiles", "frontend"),
+        os.path.join(settings.STATIC_ROOT, "js") if settings.STATIC_ROOT else None,
+        os.path.join(settings.STATIC_ROOT, "css") if settings.STATIC_ROOT else None,
+        os.path.join(settings.BASE_DIR, "static", "js"),
+        os.path.join(settings.BASE_DIR, "static", "css"),
+        os.path.join(settings.BASE_DIR, "staticfiles", "js"),
+        os.path.join(settings.BASE_DIR, "staticfiles", "css"),
     ]
+
+    js_file = ""
+    css_file = ""
 
     for static_dir in static_dirs:
         if static_dir and os.path.exists(static_dir):
             try:
-                # Look for JS and CSS files
-                js_files = [
-                    f
-                    for f in os.listdir(static_dir)
-                    if f.endswith(".js") and "main" in f
-                ]
-                css_files = [
-                    f
-                    for f in os.listdir(static_dir)
-                    if f.endswith(".css") and "main" in f
-                ]
-
-                if js_files or css_files:
-                    return {
-                        "main_js": (
-                            f"frontend/{js_files[0]}"
-                            if js_files
-                            else "frontend/js/main.js"
-                        ),
-                        "main_css": (
-                            f"frontend/{css_files[0]}"
-                            if css_files
-                            else "frontend/css/main.css"
-                        ),
-                    }
+                if "js" in static_dir:
+                    js_files = [
+                        f
+                        for f in os.listdir(static_dir)
+                        if f.endswith(".js") and "main" in f
+                    ]
+                    if js_files:
+                        js_file = f"js/{js_files[0]}"
+                elif "css" in static_dir:
+                    css_files = [
+                        f
+                        for f in os.listdir(static_dir)
+                        if f.endswith(".css") and "main" in f
+                    ]
+                    if css_files:
+                        css_file = f"css/{css_files[0]}"
             except (OSError, IndexError):
                 continue
+
+    if js_file or css_file:
+        return {
+            "main_js": js_file or "js/main.js",
+            "main_css": css_file or "css/main.css",
+        }
 
     return {}
 
@@ -145,8 +138,8 @@ def get_react_assets() -> dict[str, str]:
 
     # Final fallback for development
     return {
-        "main_js": "frontend/js/main.js",
-        "main_css": "frontend/css/main.css",
+        "main_js": "js/main.js",
+        "main_css": "css/main.css",
     }
 
 
