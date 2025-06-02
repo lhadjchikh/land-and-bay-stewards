@@ -156,7 +156,9 @@ resource "aws_db_parameter_group" "postgres_static" {
 }
 
 # DB Setup script (for PostGIS and app user)
-resource "null_resource" "db_setup" {
+resource "null_resource" "db_setup_auto" {
+  count = var.auto_setup_database ? 1 : 0
+
   depends_on = [aws_db_instance.postgres]
 
   triggers = {
@@ -166,55 +168,32 @@ resource "null_resource" "db_setup" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      # Ensure script is executable
+      echo "🤖 AUTOMATED DATABASE SETUP"
+      echo "Running database setup automatically..."
+      
+      # Check prerequisites
+      for cmd in python3 aws psql; do
+        if ! command -v $cmd >/dev/null 2>&1; then
+          echo "❌ ERROR: $cmd is required but not found"
+          exit 1
+        fi
+      done
+      
+      # Make script executable and run it
       chmod +x ${path.root}/db_setup.sh
       
-      # Check if script exists
-      if [ ! -f "${path.root}/db_setup.sh" ]; then
-        echo "ERROR: db_setup.sh not found in ${path.root}"
-        echo "Please ensure the script is in the same directory as your main.tf"
-        exit 1
-      fi
-      
-      echo "Database setup script found and made executable"
-    EOT
-  }
-
-  # Run the database setup script
-  provisioner "local-exec" {
-    command = <<-EOT
-      echo "Starting automated database setup..."
-      
-      # Run the script with proper error handling
-      if ! ${path.root}/db_setup.sh \
+      ${path.root}/db_setup.sh \
         --endpoint "${aws_db_instance.postgres.endpoint}" \
         --database "${var.db_name}" \
         --master-user "${local.master_username}" \
         --app-user "${local.app_username}" \
         --prefix "${var.prefix}" \
-        --region "${data.aws_region.current.name}"; then
-        
-        echo "❌ Database setup failed!"
-        echo "You can run the setup manually later with:"
-        echo "${path.root}/db_setup.sh --endpoint ${aws_db_instance.postgres.endpoint} --database ${var.db_name} --master-user ${local.master_username} --app-user ${local.app_username} --prefix ${var.prefix}"
-        exit 1
-      fi
-      
-      echo "✅ Database setup completed successfully!"
+        --region "${data.aws_region.current.name}"
     EOT
 
-    # Set working directory
     working_dir = path.root
-
     environment = {
       AWS_DEFAULT_REGION = data.aws_region.current.name
-      PGCONNECT_TIMEOUT  = "30"
     }
-  }
-
-  # Cleanup on destroy
-  provisioner "local-exec" {
-    when    = destroy
-    command = "echo 'Database setup resource destroyed - manual cleanup may be required'"
   }
 }

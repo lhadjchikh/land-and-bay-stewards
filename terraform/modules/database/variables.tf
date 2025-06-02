@@ -64,3 +64,9 @@ variable "db_backup_retention_period" {
   type        = number
   default     = 14
 }
+
+variable "auto_setup_database" {
+  description = "Whether to automatically run database setup"
+  type        = bool
+  default     = false
+}

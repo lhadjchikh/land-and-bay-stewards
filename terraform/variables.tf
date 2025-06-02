@@ -104,6 +104,12 @@ variable "app_db_password" {
   default     = "" # Will be auto-generated if empty
 }
 
+variable "auto_setup_database" {
+  description = "Whether to automatically run database setup after RDS creation"
+  type        = bool
+  default     = false # Default to manual for safety
+}
+
 # DNS and SSL Variables
 variable "route53_zone_id" {
   description = "The Route 53 zone ID to create records in"
