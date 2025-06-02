@@ -67,6 +67,7 @@ module "database" {
   source = "./modules/database"
 
   prefix                     = var.prefix
+  aws_region                 = var.aws_region
   db_subnet_ids              = module.networking.private_db_subnet_ids
   db_security_group_id       = module.security.db_security_group_id
   db_allocated_storage       = 20

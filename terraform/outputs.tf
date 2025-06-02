@@ -72,3 +72,62 @@ output "pgadmin_connection_info" {
 output "budget_info" {
   value = module.monitoring.budget_info
 }
+
+# Simple deployment status
+output "deployment_status" {
+  description = "Overall deployment status"
+  value       = "✅ Infrastructure deployment completed successfully!"
+}
+
+# Database setup status
+output "database_setup_status" {
+  description = "Database setup status"
+  value       = var.auto_setup_database ? "✅ Database setup completed automatically" : "⚠️  Manual database setup required"
+}
+
+# Manual setup instructions (only when needed)
+output "manual_database_setup" {
+  description = "Manual database setup instructions"
+  value       = var.auto_setup_database ? "No manual setup required" : <<-EOT
+📋 DATABASE SETUP REQUIRED
+
+Run this command:
+${module.database.manual_setup_command}
+
+You will be prompted for the master database password.
+EOT
+}
+
+# Application URLs
+output "application_urls" {
+  description = "Application access URLs"
+  value = {
+    website       = module.dns.website_url
+    load_balancer = "http://${module.loadbalancer.alb_dns_name}"
+  }
+}
+
+# Troubleshooting information
+output "troubleshooting_commands" {
+  description = "Useful commands for troubleshooting"
+  value = {
+    ssh_to_bastion    = "ssh -i ${var.bastion_key_name}.pem ec2-user@${module.compute.bastion_public_ip}"
+    check_ecs_service = "aws ecs describe-services --cluster ${module.compute.ecs_cluster_name} --services ${module.compute.ecs_service_name} --region ${var.aws_region}"
+    database_setup    = module.database.manual_setup_command
+    ssh_tunnel        = "ssh -i ${var.bastion_key_name}.pem ec2-user@${module.compute.bastion_public_ip} -L 5432:${module.database.db_instance_address}:5432"
+  }
+}
+
+# Summary output
+output "deployment_summary" {
+  description = "Complete deployment summary"
+  value       = <<-EOT
+🎉 DEPLOYMENT COMPLETE
+
+🌐 Website: ${module.dns.website_url}
+🗄️  Database: ${module.database.db_instance_endpoint}
+🖥️  Bastion: ${module.compute.bastion_public_ip}
+
+${var.auto_setup_database ? "✅ Database setup completed automatically" : "⚠️  Run: terraform output -raw manual_database_setup"}
+EOT
+}

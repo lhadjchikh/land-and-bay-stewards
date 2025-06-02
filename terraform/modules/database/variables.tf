@@ -4,6 +4,11 @@ variable "prefix" {
   default     = "landandbay"
 }
 
+variable "aws_region" {
+  description = "The AWS region to deploy to"
+  type        = string
+}
+
 variable "db_subnet_ids" {
   description = "List of subnet IDs for the DB subnet group"
   type        = list(string)
