@@ -1,3 +1,9 @@
+variable "credential_rotation_trigger" {
+  description = "Change this value to trigger credential rotation (e.g., use timestamp or version)"
+  type        = string
+  default     = "initial-v1"
+}
+
 variable "prefix" {
   description = "Prefix to use for resource names"
   type        = string

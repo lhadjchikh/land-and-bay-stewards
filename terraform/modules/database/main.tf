@@ -166,9 +166,13 @@ resource "null_resource" "db_setup" {
     # ✅ USEFUL: Re-run when setup script is modified
     script_hash = filesha256("${path.root}/db_setup.sh")
 
-    # ✅ OPTIONAL: Re-run when key database parameters change
+    # ✅ FUNCTIONAL: Re-run when key database parameters change
     db_name      = var.db_name
     app_username = local.app_username
+
+    # ✅ SECURE: Manual trigger for credential rotation
+    # Change this value to force re-run after password changes
+    credential_rotation_trigger = var.credential_rotation_trigger
   }
 
   # Prerequisites and validation check
@@ -234,6 +238,7 @@ resource "null_resource" "db_setup" {
       echo "  - Endpoint: ${aws_db_instance.postgres.endpoint}"
       echo "  - Script hash: ${filesha256("${path.root}/db_setup.sh")}"
       echo "  - Script location: ${path.root}/db_setup.sh"
+      echo "  - Rotation trigger: ${var.credential_rotation_trigger}"
       echo ""
       
       # Run the script with comprehensive error handling
