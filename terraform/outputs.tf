@@ -85,19 +85,6 @@ output "database_setup_status" {
   value       = var.auto_setup_database ? "✅ Database setup completed automatically" : "⚠️  Manual database setup required"
 }
 
-# Manual setup instructions (only when needed)
-output "manual_database_setup" {
-  description = "Manual database setup instructions"
-  value       = var.auto_setup_database ? "No manual setup required" : <<-EOT
-📋 DATABASE SETUP REQUIRED
-
-Run this command:
-${module.database.manual_setup_command}
-
-You will be prompted for the master database password.
-EOT
-}
-
 # Application URLs
 output "application_urls" {
   description = "Application access URLs"
@@ -113,7 +100,6 @@ output "troubleshooting_commands" {
   value = {
     ssh_to_bastion    = "ssh -i ${var.bastion_key_name}.pem ec2-user@${module.compute.bastion_public_ip}"
     check_ecs_service = "aws ecs describe-services --cluster ${module.compute.ecs_cluster_name} --services ${module.compute.ecs_service_name} --region ${var.aws_region}"
-    database_setup    = module.database.manual_setup_command
     ssh_tunnel        = "ssh -i ${var.bastion_key_name}.pem ec2-user@${module.compute.bastion_public_ip} -L 5432:${module.database.db_instance_address}:5432"
   }
 }
@@ -128,6 +114,5 @@ output "deployment_summary" {
 🗄️  Database: ${module.database.db_instance_endpoint}
 🖥️  Bastion: ${module.compute.bastion_public_ip}
 
-${var.auto_setup_database ? "✅ Database setup completed automatically" : "⚠️  Run: terraform output -raw manual_database_setup"}
 EOT
 }
