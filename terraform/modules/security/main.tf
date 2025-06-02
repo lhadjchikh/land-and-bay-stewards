@@ -39,7 +39,6 @@ resource "aws_security_group" "app_sg" {
     description = "HTTP outbound traffic"
   }
 
-  # Removed DB SG reference - now using CIDR blocks for the DB subnet
   egress {
     from_port   = 5432
     to_port     = 5432
