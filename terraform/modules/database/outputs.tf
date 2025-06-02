@@ -43,7 +43,7 @@ output "setup_instructions" {
                   --master-user ${local.master_username} \
                   --app-user ${local.app_username} \
                   --prefix ${var.prefix} \
-                  --region ${data.aws_region.current.name}
+                  --region ${var.aws_region}
     
     📝 WHAT THIS DOES:
     - Enables PostGIS extension
@@ -53,7 +53,7 @@ output "setup_instructions" {
     
     🔍 PREREQUISITES:
     - Python3 (for secure password URL encoding)
-    - AWS CLI (properly configured for region: ${data.aws_region.current.name})
+    - AWS CLI (properly configured for region: ${var.aws_region})
     - PostgreSQL client (psql)
     
   EOT
@@ -72,7 +72,7 @@ output "database_connection_info" {
     address     = aws_db_instance.postgres.address
     port        = aws_db_instance.postgres.port
     database    = aws_db_instance.postgres.db_name
-    region      = data.aws_region.current.name
+    region      = var.aws_region
     master_user = local.master_username
     app_user    = local.app_username
   }

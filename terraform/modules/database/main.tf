@@ -1,7 +1,5 @@
 # Database Module
 
-data "aws_region" "current" {}
-
 # KMS key for RDS encryption
 resource "aws_kms_key" "rds" {
   description             = "KMS key for RDS encryption"
@@ -188,12 +186,12 @@ resource "null_resource" "db_setup_auto" {
         --master-user "${local.master_username}" \
         --app-user "${local.app_username}" \
         --prefix "${var.prefix}" \
-        --region "${data.aws_region.current.name}"
+        --region "${var.aws_region}"
     EOT
 
     working_dir = path.root
     environment = {
-      AWS_DEFAULT_REGION = data.aws_region.current.name
+      AWS_DEFAULT_REGION = var.aws_region
     }
   }
 }
