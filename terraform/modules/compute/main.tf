@@ -405,11 +405,7 @@ resource "aws_ecs_service" "app" {
     rollback = true
   }
 
-  # Deployment configuration optimized for multi-container
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 50
-  }
+  # Using default deployment configuration
 
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution_role_policy,
