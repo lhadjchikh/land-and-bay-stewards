@@ -27,7 +27,7 @@ resource "aws_lb_target_group" "api" {
 
   health_check {
     enabled             = true
-    path                = "/api/campaigns/"
+    path                = "/api/health/"
     port                = "traffic-port"
     healthy_threshold   = 3
     unhealthy_threshold = 3
@@ -188,8 +188,8 @@ resource "aws_lb_listener_rule" "media" {
   }
 }
 
-# Lower Priority: Health check routing (for monitoring tools)
-resource "aws_lb_listener_rule" "health" {
+# Lower Priority: SSR Health check routing (for monitoring tools)
+resource "aws_lb_listener_rule" "ssr_health" {
   listener_arn = aws_lb_listener.https.arn
   priority     = 500
 
@@ -201,6 +201,23 @@ resource "aws_lb_listener_rule" "health" {
   condition {
     path_pattern {
       values = ["/health"]
+    }
+  }
+}
+
+# Lower Priority: API Health check routing (for monitoring tools)
+resource "aws_lb_listener_rule" "api_health" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 550
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.api.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/health/"]
     }
   }
 }

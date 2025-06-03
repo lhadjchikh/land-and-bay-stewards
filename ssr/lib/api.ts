@@ -58,7 +58,7 @@ class ApiClient {
 
   // Health check
   async healthCheck(): Promise<{ status: string }> {
-    return this.request<{ status: string }>("/api/campaigns/");
+    return this.request<{ status: string }>("/api/health/");
   }
 }
 

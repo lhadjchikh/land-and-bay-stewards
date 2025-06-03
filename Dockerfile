@@ -80,6 +80,13 @@ RUN mkdir -p /app/static/frontend && \
 COPY entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
+# Make the healthcheck script executable
+RUN chmod +x /app/healthcheck.py
+
+# Configure health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD python /app/healthcheck.py
+
 # Set entrypoint and default command
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["gunicorn", "landandbay.core.wsgi:application", "--bind", "0.0.0.0:8000"]

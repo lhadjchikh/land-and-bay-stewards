@@ -19,11 +19,12 @@ from django.contrib import admin
 from django.urls import path
 
 from landandbay.api.api import api
-from landandbay.core.views import home, robots_txt
+from landandbay.core.views import health_check, home, robots_txt
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", api.urls),
+    path("health/", health_check, name="health_check"),
     path("robots.txt", robots_txt, name="robots_txt"),
     path("", home, name="home"),
 ]
