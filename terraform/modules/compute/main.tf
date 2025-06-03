@@ -384,7 +384,7 @@ resource "aws_ecs_service" "app" {
 
   # Load balancer configuration for Django API
   load_balancer {
-    target_group_arn = var.api_target_group_arn != "" ? var.api_target_group_arn : var.target_group_arn
+    target_group_arn = var.api_target_group_arn
     container_name   = "app"
     container_port   = var.container_port
   }

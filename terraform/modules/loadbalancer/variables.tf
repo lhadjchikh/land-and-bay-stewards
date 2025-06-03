@@ -34,14 +34,9 @@ variable "waf_web_acl_arn" {
   type        = string
 }
 
-variable "target_group_port" {
-  description = "Port for the target group"
-  type        = number
-  default     = 80
+variable "health_check_path" {
+  description = "Path for API health checks"
+  type        = string
+  default     = "/api/health/"
 }
 
-variable "health_check_path" {
-  description = "Path for health checks"
-  type        = string
-  default     = "/api/campaigns/"
-}

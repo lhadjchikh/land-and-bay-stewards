@@ -102,7 +102,6 @@ module "compute" {
   public_subnet_id          = module.networking.public_subnet_ids[0]
   app_security_group_id     = module.security.app_security_group_id
   bastion_security_group_id = module.security.bastion_security_group_id
-  target_group_arn          = module.loadbalancer.target_group_arn
   api_target_group_arn      = module.loadbalancer.api_target_group_arn
   ssr_target_group_arn      = module.loadbalancer.ssr_target_group_arn
   db_url_secret_arn         = module.secrets.db_url_secret_arn
