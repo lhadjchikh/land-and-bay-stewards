@@ -63,9 +63,10 @@ export default async function HomePage() {
 
         <div className="mt-12 text-center">
           <Link
-            href="/api/campaigns/"
+            href="/api/"
             className="text-sm text-gray-500 hover:text-gray-700"
             target="_blank"
+            rel="noopener noreferrer"
           >
             View API Documentation
           </Link>
