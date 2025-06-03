@@ -222,6 +222,23 @@ resource "aws_lb_listener_rule" "api_health" {
   }
 }
 
+# Lower Priority: SSR Metrics routing (for monitoring tools)
+resource "aws_lb_listener_rule" "ssr_metrics" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 600
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.ssr.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/metrics"]
+    }
+  }
+}
+
 # Associate WAF with the single ALB
 resource "aws_wafv2_web_acl_association" "main" {
   resource_arn = aws_lb.main.arn

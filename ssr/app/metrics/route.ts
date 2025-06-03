@@ -3,25 +3,24 @@ import { NextResponse } from "next/server";
 import metrics from "@/lib/metrics";
 
 export async function GET() {
-  // Update request metrics
+  // Increment request counter
   metrics.incrementRequestCount();
-  
-  return NextResponse.json({
-    uptime: metrics.getUptime(),
-    memory: metrics.getMemoryUsage(),
-    requests: {
-      total: metrics.requestCount,
-      errors: metrics.errorCount,
+
+  // Return metrics data
+  return NextResponse.json(
+    {
+      requestCount: metrics.requestCount,
+      errorCount: metrics.errorCount,
+      uptime: metrics.getUptime(),
+      memory: metrics.getMemoryUsage(),
+      lastRequest: new Date(metrics.lastRequest).toISOString(),
+      timestamp: new Date().toISOString(),
     },
-    system: {
-      platform: process.platform,
-      nodeVersion: process.version,
-      env: process.env.NODE_ENV || "development",
-    },
-    timestamp: new Date().toISOString(),
-  }, {
-    headers: {
-      'Cache-Control': 'no-store, max-age=0',
+    {
+      status: 200,
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
     }
-  });
+  );
 }
