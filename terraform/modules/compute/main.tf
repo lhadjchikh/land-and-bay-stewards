@@ -231,10 +231,10 @@ resource "aws_ecs_task_definition" "app" {
         }
       }
     },
-    # SSR Container (only included when enable_ssr is true)
+    # SSR Container
     {
       name      = "ssr"
-      image     = "${var.enable_ssr ? aws_ecr_repository.ssr[0].repository_url : ""}:latest"
+      image     = "${aws_ecr_repository.ssr.repository_url}:latest"
       essential = true
       portMappings = [
         {
