@@ -13,33 +13,14 @@
 const { exec } = require("child_process");
 const { promisify } = require("util");
 const execAsync = promisify(exec);
-const http = require("http");
-const https = require("https");
-const { URL } = require("url");
 
-// Use the simpler approach from test-ssr-integration-simple.js
-// Import the makeRequest and waitForService functions
-const simpleIntegration = require('./test-ssr-integration-simple');
-const makeRequest = simpleIntegration.makeRequest;
-const waitForService = simpleIntegration.waitForService;
-
-// Simple fetch-like wrapper around makeRequest for backward compatibility
-const fetch = async (url, options = {}) => {
-  try {
-    const response = await makeRequest(url);
-    return {
-      ok: response.statusCode >= 200 && response.statusCode < 300,
-      status: response.statusCode,
-      statusText: response.statusCode === 200 ? 'OK' : 'Error',
-      headers: response.headers,
-      json: () => JSON.parse(response.data),
-      text: () => response.data
-    };
-  } catch (error) {
-    console.error(`Fetch error: ${error.message}`);
-    throw error;
-  }
-};
+// Import utilities for HTTP requests and service waiting
+const { 
+  makeRequest, 
+  waitForService, 
+  fetchCompatible: fetch, 
+  fetchWithRetry 
+} = require('./utils');
 
 // Test configuration
 const TEST_CONFIG = {
@@ -60,82 +41,7 @@ console.log("Test Configuration:", {
   ENVIRONMENT: TEST_CONFIG.CI_MODE ? "CI" : "Local"
 });
 
-// Helper function to wait for service to be ready with exponential backoff
-async function waitForService(url, timeoutMs = TEST_CONFIG.TIMEOUT) {
-  const startTime = Date.now();
-  let retryDelay = 1000; // Start with 1 second
-  const maxRetryDelay = 8000; // Cap at 8 seconds
-
-  while (Date.now() - startTime < timeoutMs) {
-    try {
-      const response = await fetch(url);
-      if (response.ok) {
-        console.log(`✅ Service at ${url} is ready`);
-        return true;
-      } else {
-        console.log(`⚠️ Service at ${url} returned status ${response.status}, waiting...`);
-      }
-    } catch (error) {
-      // Service not ready yet, continue waiting
-      console.log(`⚠️ Service at ${url} not ready: ${error.message}`);
-    }
-
-    // Apply exponential backoff with jitter
-    const jitter = Math.random() * 500;
-    retryDelay = Math.min(retryDelay * 1.5 + jitter, maxRetryDelay);
-    console.log(`Waiting ${Math.round(retryDelay)}ms before next attempt...`);
-    
-    // Wait before trying again
-    await new Promise((resolve) => setTimeout(resolve, retryDelay));
-  }
-
-  throw new Error(
-    `Service at ${url} did not become ready within ${timeoutMs}ms`
-  );
-}
-
-// Helper function to make HTTP requests with retries and exponential backoff
-async function fetchWithRetry(url, options = {}) {
-  let retryDelay = TEST_CONFIG.RETRY_DELAY;
-
-  for (let i = 0; i < TEST_CONFIG.RETRY_COUNT; i++) {
-    try {
-      // Remove non-standard timeout from fetch options
-      const { timeout, ...fetchOptions } = options;
-      
-      // Create AbortController for timeout (if needed)
-      let controller;
-      if (timeout) {
-        controller = new AbortController();
-        setTimeout(() => controller.abort(), timeout);
-        fetchOptions.signal = controller.signal;
-      }
-      
-      const response = await fetch(url, fetchOptions);
-      return response;
-    } catch (error) {
-      if (i === TEST_CONFIG.RETRY_COUNT - 1) {
-        throw error;
-      }
-      
-      console.log(
-        `Request failed (attempt ${i + 1}/${
-          TEST_CONFIG.RETRY_COUNT
-        }): ${error.message}, retrying...`
-      );
-      
-      // Exponential backoff with jitter
-      const jitter = Math.random() * 500;
-      retryDelay = Math.min(retryDelay * 1.5 + jitter, 10000);
-      
-      await new Promise((resolve) =>
-        setTimeout(resolve, retryDelay)
-      );
-    }
-  }
-  
-  throw new Error(`Failed after ${TEST_CONFIG.RETRY_COUNT} attempts`);
-}
+// The helper functions have been replaced by imports from the utils module
 
 // Test 1: Verify SSR Health Check
 async function testSSRHealth() {
@@ -446,8 +352,8 @@ async function runIntegrationTests() {
   console.log("⏳ Waiting for services to be ready...");
   try {
     await Promise.all([
-      waitForService(`${TEST_CONFIG.SSR_URL}/health`),
-      waitForService(`${TEST_CONFIG.API_URL}/api/health/`),
+      waitForService(`${TEST_CONFIG.SSR_URL}/health`, { timeout: TEST_CONFIG.TIMEOUT }),
+      waitForService(`${TEST_CONFIG.API_URL}/api/health/`, { timeout: TEST_CONFIG.TIMEOUT }),
     ]);
     console.log("✅ All services are ready\n");
   } catch (error) {

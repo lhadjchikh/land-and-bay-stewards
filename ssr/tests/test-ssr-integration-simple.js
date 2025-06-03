@@ -3,82 +3,14 @@
  * A minimal version that tests the core functionality
  */
 
-const http = require("http");
-const { URL } = require("url");
+// Import utilities
+const { makeRequest, waitForService } = require('./utils');
 
 // Configuration
 const SSR_URL = process.env.SSR_URL || "http://localhost:3000";
 const API_URL = process.env.API_URL || "http://localhost:8000";
 const NGINX_URL = process.env.NGINX_URL || "http://localhost:80";
 const MAX_TIMEOUT = 30000; // 30 seconds
-
-// Simple HTTP request helper with proper error handling
-function makeRequest(url) {
-  return new Promise((resolve, reject) => {
-    // Parse the URL to get the protocol
-    const parsedUrl = new URL(url);
-    
-    const request = http.get(url, (response) => {
-      let data = "";
-      response.on("data", (chunk) => {
-        data += chunk;
-      });
-      response.on("end", () => {
-        try {
-          resolve({
-            statusCode: response.statusCode,
-            data: data,
-            headers: response.headers,
-          });
-        } catch (error) {
-          reject(new Error(`Failed to process response: ${error.message}`));
-        }
-      });
-    });
-
-    request.on("error", (error) => {
-      console.error(`Request error for ${url}: ${error.message}`);
-      reject(error);
-    });
-
-    request.setTimeout(MAX_TIMEOUT, () => {
-      console.error(`Request timeout for ${url}`);
-      request.destroy();
-      reject(new Error(`Request timeout after ${MAX_TIMEOUT}ms`));
-    });
-  });
-}
-
-// Wait for service to be ready with exponential backoff
-async function waitForService(url, maxAttempts = 30) {
-  let retryDelay = 1000; // Start with 1 second
-  const maxRetryDelay = 8000; // Cap at 8 seconds
-  
-  for (let i = 0; i < maxAttempts; i++) {
-    try {
-      const response = await makeRequest(url);
-      if (response.statusCode === 200) {
-        console.log(`✅ Service at ${url} is ready`);
-        return true;
-      } else {
-        console.log(`⚠️ Service at ${url} returned status ${response.statusCode}, waiting...`);
-      }
-    } catch (error) {
-      // Log the error but continue waiting
-      console.log(`⚠️ Service at ${url} not ready: ${error.message}`);
-    }
-
-    console.log(`Waiting for ${url}... (${i + 1}/${maxAttempts})`);
-    
-    // Exponential backoff with jitter and max cap
-    const jitter = Math.random() * 500;
-    retryDelay = Math.min(retryDelay * 1.5 + jitter, maxRetryDelay);
-    
-    await new Promise((resolve) => setTimeout(resolve, retryDelay));
-  }
-
-  throw new Error(`Service at ${url} not ready after ${maxAttempts} attempts`);
-}
 
 // Main test function
 async function runTests() {
@@ -203,7 +135,5 @@ runTests().catch((error) => {
 
 // Export for potential use in other test files
 module.exports = {
-  makeRequest,
-  waitForService,
   runTests,
 };
