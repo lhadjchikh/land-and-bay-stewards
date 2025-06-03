@@ -1,4 +1,4 @@
-# Land and Bay Stewards (landandbay.org)
+# Land and Bay Stewards
 
 [![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/test_backend.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/test_backend.yml)
 [![Frontend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/test_frontend.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/test_frontend.yml)
@@ -9,187 +9,438 @@
 [![Terraform Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_terraform.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_terraform.yml)
 [![ShellCheck Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_shellcheck.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_shellcheck.yml)
 
-The Land and Bay Stewards (landandbay.org) project is a web application for managing and promoting policy campaigns,
-tracking legislative support, and organizing endorsers. The application consists of a Django backend with GeoDjango
-support and a React frontend with TypeScript.
+A comprehensive web application for managing policy campaigns, tracking legislative support, and organizing endorsers. Built with Django REST API backend, React TypeScript frontend, and optional Next.js Server-Side Rendering.
 
-## Project Overview
+## 🌟 Features
 
-This project is a full-stack web application with:
+- **Policy Campaign Management**: Create and manage advocacy campaigns with legislative tracking
+- **Endorser Organization**: Collect and display endorsements from farmers, watermen, businesses, and nonprofits
+- **Legislator Tracking**: Monitor representatives and senators with bill sponsorship data
+- **Geographic Data**: PostGIS integration for location-based features
+- **Server-Side Rendering**: Optional Next.js SSR for improved SEO and performance
+- **Production-Ready**: Secure AWS deployment with Terraform infrastructure as code
 
-- **Backend**: Django REST API with PostGIS for spatial data
-- **Frontend**: React with TypeScript
-- **Database**: PostgreSQL with PostGIS extension
-- **Deployment**: Docker containerization
+## 🏗️ Architecture
 
-## Repository Structure
+This project uses a modern, scalable architecture:
 
-The repository is organized into two main directories:
+### Backend (Django + PostGIS)
 
-- **[/backend](/backend)**: Django backend code
-- **[/frontend](/frontend)**: React frontend code
+- **Framework**: Django 5.2 with Django REST Framework
+- **API**: Django Ninja for fast, type-safe API endpoints
+- **Database**: PostgreSQL 16 with PostGIS extension for spatial data
+- **Authentication**: Django's built-in auth system
+- **Testing**: Comprehensive test suite with coverage
 
-## Getting Started
+### Frontend (React + TypeScript)
+
+- **Framework**: React 19 with TypeScript for type safety
+- **State Management**: React hooks and context
+- **HTTP Client**: Axios for API communication
+- **Testing**: Jest and React Testing Library
+- **Build Tool**: Create React App with TypeScript template
+
+### Optional SSR (Next.js)
+
+- **Framework**: Next.js 14 with App Router
+- **Rendering**: Server-side rendering for improved SEO
+- **API Integration**: Seamless connection to Django backend
+- **Health Monitoring**: Built-in health checks and metrics
+
+### Infrastructure (AWS + Terraform)
+
+- **Containerization**: Docker with multi-stage builds
+- **Orchestration**: Amazon ECS Fargate
+- **Load Balancing**: Application Load Balancer with intelligent routing
+- **Database**: Amazon RDS PostgreSQL with PostGIS
+- **Security**: AWS Secrets Manager, KMS encryption, WAF protection
+- **Monitoring**: CloudWatch logs, budget alerts, VPC flow logs
+
+## 📁 Project Structure
+
+```
+├── backend/                 # Django API server
+│   ├── landandbay/         # Main Django project
+│   │   ├── campaigns/      # Policy campaigns app
+│   │   ├── endorsers/      # Endorsers management app
+│   │   ├── legislators/    # Legislators tracking app
+│   │   ├── regions/        # Geographic regions app
+│   │   ├── api/           # API endpoints and schemas
+│   │   └── core/          # Core settings and configuration
+│   ├── manage.py          # Django management script
+│   └── pyproject.toml     # Python dependencies (Poetry)
+├── frontend/               # React TypeScript application
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── services/      # API service layer
+│   │   ├── types/         # TypeScript type definitions
+│   │   └── tests/         # Test files
+│   ├── package.json       # Node.js dependencies
+│   └── tsconfig.json      # TypeScript configuration
+├── ssr/                   # Next.js Server-Side Rendering (optional)
+│   ├── app/              # Next.js App Router pages
+│   ├── lib/              # Utility libraries
+│   ├── types/            # TypeScript types
+│   └── tests/            # Integration tests
+├── terraform/            # Infrastructure as Code
+│   ├── modules/          # Reusable Terraform modules
+│   ├── main.tf          # Main infrastructure configuration
+│   └── variables.tf     # Configuration variables
+├── .github/workflows/    # CI/CD pipelines
+└── docker-compose.yml   # Local development environment
+```
+
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Docker and Docker Compose (recommended)
-- Alternatively:
-  - Python 3.13+ with Poetry
-  - Node.js 18+ with npm
-  - PostgreSQL with PostGIS
-  - GDAL 3.10.3
+- **Docker & Docker Compose** (recommended for quickest setup)
+- **Python 3.13+** with Poetry (for backend development)
+- **Node.js 18+** with npm (for frontend development)
+- **PostgreSQL 16** with PostGIS (if running locally)
 
-### Quick Start with Docker
+### Option 1: Docker Development (Recommended)
 
-The easiest way to run the application is using Docker Compose:
+Get the entire stack running in minutes:
 
 ```bash
 # Clone the repository
 git clone https://github.com/lhadjchikh/landandbay.git
 cd landandbay
 
-# Start the application
+# Start all services (database, backend, frontend, SSR)
 docker-compose up
+
+# In another terminal, create test data
+docker-compose exec api python backend/scripts/create_test_data.py
 ```
 
-This will start:
+**Services will be available at:**
 
-- A PostgreSQL database with PostGIS at port 5432
-- The Django backend at http://localhost:8000
-- The React frontend at http://localhost:3000
+- Frontend (React): http://localhost:3000
+- Backend API: http://localhost:8000
+- Load Balancer: http://localhost:80
+- Database: localhost:5432
 
-### Manual Setup
+### Option 2: Local Development
 
-#### Backend
+#### Backend Setup
 
 ```bash
 cd backend
+
+# Install dependencies
 poetry install
+
+# Set up environment variables
+cp ../.env.example .env
+# Edit .env with your database settings
+
+# Run migrations
 poetry run python manage.py migrate
+
+# Create a superuser (optional)
+poetry run python manage.py createsuperuser
+
+# Start development server
 poetry run python manage.py runserver
 ```
 
-#### Frontend
+#### Frontend Setup
 
 ```bash
 cd frontend
+
+# Install dependencies
 npm install
+
+# Start development server
 npm start
 ```
 
-## Development Workflow
+#### SSR Setup (Optional)
 
-### Environment Variables
+```bash
+cd ssr
 
-A `.env.example` file is provided in the project root as a template. Copy it to create your own `.env` file:
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+## 🧪 Testing
+
+The project includes comprehensive testing at multiple levels:
+
+### Backend Tests
+
+```bash
+cd backend
+poetry run python manage.py test
+```
+
+### Frontend Tests
+
+```bash
+cd frontend
+
+# Unit and integration tests
+npm test
+
+# Type checking
+npm run typecheck
+
+# Linting
+npm run lint
+```
+
+### End-to-End Tests
+
+```bash
+# Start all services first
+docker-compose up -d
+
+# Run integration tests
+cd frontend
+npm run test:e2e
+```
+
+### SSR Integration Tests
+
+```bash
+cd ssr
+npm test
+```
+
+## 🔧 Development Tools
+
+### Code Quality
+
+The project enforces high code quality standards:
+
+- **Python**: Black formatting, Ruff linting, type hints
+- **TypeScript/JavaScript**: ESLint, Prettier formatting
+- **Shell Scripts**: ShellCheck validation
+- **Terraform**: TFLint validation and formatting
+
+Run all linters:
+
+```bash
+# Backend linting
+cd backend && poetry run black . && poetry run ruff check .
+
+# Frontend linting
+cd frontend && npm run lint:fix && npm run format
+
+# Or use the automated script
+cd backend && poetry run lint
+```
+
+### Environment Configuration
+
+Create a `.env` file from the example:
 
 ```bash
 cp .env.example .env
 ```
 
-For local development, the following variables are required:
-
-```
-# Django settings
-DEBUG=True
-SECRET_KEY=your-secret-key
-DATABASE_URL=postgis://landandbay_app:app_password@localhost:5432/landandbay
-ALLOWED_HOSTS=localhost,127.0.0.1
-```
-
-Note that the database uses two separate users for enhanced security:
-
-- An administrative user (`landandbay_admin`) with privileges to create databases and users
-- An application user (`landandbay_app`) with restricted privileges for security
-
-For production deployments, database credentials are securely managed through AWS Secrets Manager to meet SOC 2 compliance requirements, with secure password management. Future enhancements may include automated password rotation.
-
-For deployment to AWS, additional variables are required. See [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md) for details.
-
-### Testing
-
-The project includes comprehensive test suites for both backend and frontend:
+Key environment variables:
 
 ```bash
-# Backend tests
-cd backend
-poetry run python manage.py test
+# Django settings
+DEBUG=True
+SECRET_KEY=your-secret-key-here
+DATABASE_URL=postgis://user:password@localhost:5432/landandbay
+ALLOWED_HOSTS=localhost,127.0.0.1
 
-# Frontend tests
-cd frontend
-npm test
+# For production deployment (see DEPLOY_TO_ECS.md)
+AWS_ACCESS_KEY_ID=your-aws-access-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret-key
+# ... additional AWS and domain settings
 ```
 
-### Code Quality
+## 🚀 Production Deployment
 
-The project enforces code quality standards:
+This project includes a complete production deployment setup for AWS:
 
-#### Backend
+### Features
 
-- Black for code formatting
-- Ruff for linting
-- Type annotations
+- **Secure Infrastructure**: VPC, security groups, encrypted storage
+- **Auto-Scaling**: ECS Fargate with health checks and rolling deployments
+- **Load Balancing**: Application Load Balancer with SSL termination
+- **Database**: RDS PostgreSQL with automated backups
+- **Secrets Management**: AWS Secrets Manager for secure credential storage
+- **Monitoring**: CloudWatch logs, budget alerts, performance metrics
+- **CI/CD**: GitHub Actions with automated testing and deployment
 
-#### Frontend
+### Quick Deploy
 
-- ESLint for linting
-- TypeScript for type checking
+1. **Configure GitHub Secrets** (see [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md) for details):
 
-## Continuous Integration
+   ```
+   AWS_ACCESS_KEY_ID
+   AWS_SECRET_ACCESS_KEY
+   TF_VAR_db_password
+   TF_VAR_route53_zone_id
+   TF_VAR_domain_name
+   TF_VAR_acm_certificate_arn
+   ```
 
-GitHub Actions workflows run tests and linting on pull requests and pushes to the main branch:
+2. **Push to main branch** - GitHub Actions will automatically:
 
-- Backend tests
-- Frontend tests
-- Integration tests
-- Code quality checks (Black, Ruff, ESLint, TypeScript)
+   - Run all tests
+   - Build and push Docker images
+   - Deploy infrastructure with Terraform
+   - Deploy application to ECS
 
-## Deployment
+3. **Manual Setup** (alternative):
+   ```bash
+   cd terraform
+   terraform init
+   terraform apply
+   ```
 
-This project is set up for deployment to AWS ECS (Elastic Container Service) with Terraform infrastructure as code, following SOC 2 compliance best practices.
+### Configuration Options
 
-### Deploying to Amazon ECS
+The deployment is highly configurable:
 
-This project includes a comprehensive setup for deploying to AWS ECS with:
+- **SSR Toggle**: Enable/disable Next.js SSR with `enable_ssr` variable
+- **VPC Options**: Use existing VPC/subnets or create new ones
+- **Security**: Configure bastion host access and security groups
+- **Scaling**: Adjust task counts and instance sizes
+- **Database**: Configure backup retention and instance types
 
-1. **Terraform** for infrastructure provisioning
-2. **GitHub Actions** for CI/CD
-3. **Amazon ECS** for container orchestration
-4. **Amazon RDS** for PostgreSQL with PostGIS
-5. **AWS Secrets Manager** for secure credential management
+See [terraform/README.md](terraform/README.md) for comprehensive deployment documentation.
 
-To deploy:
+## 📚 API Documentation
 
-1. Set up your AWS account and create IAM credentials
-2. Configure GitHub repository secrets for AWS access
-3. Trigger the GitHub Actions workflow
-4. Follow the detailed steps in [DEPLOY_TO_ECS.md](DEPLOY_TO_ECS.md)
+The Django backend provides a comprehensive REST API:
 
-The deployment includes:
+### Endpoints
 
-- Containerized application running on ECS Fargate
-- RDS PostgreSQL database with PostGIS extension
-- Application Load Balancer for routing traffic
-- ECR for container registry
-- Automated CI/CD pipeline via GitHub Actions
-- Infrastructure as code with Terraform
+- **Campaigns**: `/api/campaigns/` - Policy campaign management
+- **Endorsers**: `/api/endorsers/` - Endorser information
+- **Legislators**: `/api/legislators/` - Representative and senator data
+- **Health**: `/api/health/` - Application health status
 
-## Cleanup
+### API Features
 
-To remove all AWS resources created by this project:
+- **Django Ninja**: Fast, type-safe API with automatic OpenAPI documentation
+- **Authentication**: Session-based authentication
+- **Pagination**: Efficient data pagination for large datasets
+- **Filtering**: Advanced filtering and search capabilities
+- **Validation**: Comprehensive input validation and error handling
 
-1. Navigate to the "Actions" tab in your GitHub repository
-2. Select the "Terraform Destroy" workflow
-3. Click "Run workflow"
-4. Confirm the action
+Access API documentation at: http://localhost:8000/api/docs (when running locally)
 
-This will clean up all AWS resources created for this project.
+## 🌍 Geographic Features
 
-## License
+This application includes sophisticated geographic data handling:
 
-This project is licensed under the terms of the license included in the repository.
+- **PostGIS Integration**: Full spatial database capabilities
+- **Region Management**: States, congressional districts, counties
+- **Spatial Queries**: Location-based filtering and analysis
+- **GDAL Support**: Advanced geospatial data processing
 
-## Contributing
+## 🔒 Security Features
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+- **Input Validation**: Comprehensive validation on all inputs
+- **SQL Injection Protection**: Parameterized queries and ORM protection
+- **XSS Prevention**: React's built-in XSS protection
+- **CSRF Protection**: Django CSRF middleware
+- **Secure Headers**: Security headers and HTTPS enforcement
+- **Database Security**: Encrypted connections and credential management
+- **AWS Security**: WAF, security groups, and encrypted storage
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our development workflow:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** and add tests
+4. **Run the test suite**: `npm test` and `poetry run python manage.py test`
+5. **Submit a pull request**
+
+### Development Guidelines
+
+- Follow existing code style (enforced by linters)
+- Add tests for new features
+- Update documentation as needed
+- Ensure all CI checks pass
+
+## 📖 Additional Documentation
+
+- **[Backend Documentation](backend/README.md)** - Django API details
+- **[Frontend Documentation](frontend/README.md)** - React TypeScript guide
+- **[SSR Documentation](ssr/README.md)** - Next.js server-side rendering
+- **[Deployment Guide](DEPLOY_TO_ECS.md)** - AWS deployment instructions
+- **[Infrastructure Docs](terraform/README.md)** - Terraform configuration
+- **[GitHub Workflows](.github/workflows/README.md)** - CI/CD pipeline details
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Docker services won't start:**
+
+```bash
+# Check for port conflicts
+docker-compose down
+docker-compose up --build
+```
+
+**Database connection errors:**
+
+```bash
+# Reset database
+docker-compose down -v
+docker-compose up
+```
+
+**TypeScript errors:**
+
+```bash
+cd frontend
+npm run typecheck
+```
+
+**Test failures:**
+
+```bash
+# Run specific test suites
+npm test -- --testPathPattern=integration
+poetry run python manage.py test campaigns
+```
+
+### Getting Help
+
+- Check existing [GitHub Issues](https://github.com/lhadjchikh/landandbay/issues)
+- Review documentation in the `docs/` directory
+- Check the application logs: `docker-compose logs [service-name]`
+
+## 📄 License
+
+This project is licensed under the GNU General Public License v3.0 - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+This project demonstrates the power of human-AI collaboration in modern software development. The codebase, infrastructure, and documentation were developed through a collaborative process utilizing:
+
+- [Claude](https://claude.ai/) by Anthropic - for code generation and documentation
+- [GitHub Copilot](https://github.com/features/copilot) - for automated code reviews
+- Human expertise in system design, testing, and deployment strategies
+
+We believe in transparency about our development process and the tools that help us build better software.
+
+## 🤝 Contributing
+
+This project was built through human-AI collaboration, and like all software, it's not perfect. Whether you spot bugs, have ideas for improvements, or want to add features, please don't hesitate to:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** and add tests
+4. **Run the test suite** (see [Testing](#-testing) section)
+5. **Submit a pull request**
