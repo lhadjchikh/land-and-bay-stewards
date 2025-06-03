@@ -27,7 +27,7 @@ resource "aws_lb_target_group" "api" {
 
   health_check {
     enabled             = true
-    path                = "/api/health/"
+    path                = var.health_check_path
     port                = "traffic-port"
     healthy_threshold   = 3
     unhealthy_threshold = 3
@@ -62,30 +62,6 @@ resource "aws_lb_target_group" "ssr" {
 
   tags = {
     Name = "${var.prefix}-ssr-tg"
-  }
-}
-
-# Keep the original target group for backward compatibility
-resource "aws_lb_target_group" "app" {
-  name        = "${var.prefix}-tg"
-  port        = var.target_group_port
-  protocol    = "HTTP"
-  vpc_id      = var.vpc_id
-  target_type = "ip"
-
-  health_check {
-    enabled             = true
-    path                = var.health_check_path
-    port                = "traffic-port"
-    healthy_threshold   = 3
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
-    matcher             = "200"
-  }
-
-  tags = {
-    Name = "${var.prefix}-tg"
   }
 }
 

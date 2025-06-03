@@ -53,11 +53,6 @@ variable "bastion_security_group_id" {
   type        = string
 }
 
-variable "target_group_arn" {
-  description = "ARN of the target group for the ECS service"
-  type        = string
-}
-
 variable "db_url_secret_arn" {
   description = "ARN of the database URL secret"
   type        = string
@@ -120,4 +115,10 @@ variable "enable_ssr" {
   description = "Enable Server-Side Rendering with Node.js"
   type        = bool
   default     = true
+}
+
+variable "health_check_path" {
+  description = "Path for API health checks"
+  type        = string
+  default     = "/api/health/"
 }

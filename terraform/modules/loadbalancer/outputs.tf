@@ -8,11 +8,6 @@ output "alb_zone_id" {
   value       = aws_lb.main.zone_id
 }
 
-output "target_group_arn" {
-  description = "ARN of the target group (for backward compatibility)"
-  value       = aws_lb_target_group.app.arn
-}
-
 output "api_target_group_arn" {
   description = "ARN of the API target group"
   value       = aws_lb_target_group.api.arn

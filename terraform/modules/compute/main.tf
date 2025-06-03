@@ -1,8 +1,8 @@
 # Compute Module
 
-# ECR Repository
-resource "aws_ecr_repository" "app" {
-  name                 = var.prefix
+# API ECR Repository
+resource "aws_ecr_repository" "api" {
+  name                 = "${var.prefix}-api"
   image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
@@ -14,7 +14,7 @@ resource "aws_ecr_repository" "app" {
   }
 
   tags = {
-    Name = var.prefix
+    Name = "${var.prefix}-api"
   }
 }
 
@@ -182,7 +182,7 @@ resource "aws_ecs_task_definition" "app" {
     # Django API Container
     {
       name      = "app"
-      image     = "${aws_ecr_repository.app.repository_url}:latest"
+      image     = "${aws_ecr_repository.api.repository_url}:latest"
       essential = true
       portMappings = [
         {
@@ -215,7 +215,7 @@ resource "aws_ecs_task_definition" "app" {
       healthCheck = {
         command = [
           "CMD-SHELL",
-          "curl -f http://localhost:${var.container_port}/api/campaigns/ || exit 1"
+          "curl -f http://localhost:${var.container_port}${var.health_check_path} || exit 1"
         ],
         interval    = 30,
         timeout     = 5,
@@ -231,10 +231,10 @@ resource "aws_ecs_task_definition" "app" {
         }
       }
     },
-    # SSR Container (only included when enable_ssr is true)
+    # SSR Container
     {
       name      = "ssr"
-      image     = "${var.enable_ssr ? aws_ecr_repository.ssr[0].repository_url : ""}:latest"
+      image     = "${aws_ecr_repository.ssr.repository_url}:latest"
       essential = true
       portMappings = [
         {
@@ -291,7 +291,7 @@ resource "aws_ecs_task_definition" "app" {
     # Django API Container only (when enable_ssr is false)
     {
       name      = "app"
-      image     = "${aws_ecr_repository.app.repository_url}:latest"
+      image     = "${aws_ecr_repository.api.repository_url}:latest"
       essential = true
       portMappings = [
         {
@@ -324,7 +324,7 @@ resource "aws_ecs_task_definition" "app" {
       healthCheck = {
         command = [
           "CMD-SHELL",
-          "curl -f http://localhost:${var.container_port}/api/campaigns/ || exit 1"
+          "curl -f http://localhost:${var.container_port}${var.health_check_path} || exit 1"
         ],
         interval    = 30,
         timeout     = 5,
@@ -347,9 +347,8 @@ resource "aws_ecs_task_definition" "app" {
   }
 }
 
-# Additional ECR repository for SSR container - only created if SSR is enabled
+# SSR ECR repository - always created regardless of SSR being enabled
 resource "aws_ecr_repository" "ssr" {
-  count                = var.enable_ssr ? 1 : 0
   name                 = "${var.prefix}-ssr"
   image_tag_mutability = "IMMUTABLE"
 
@@ -384,7 +383,7 @@ resource "aws_ecs_service" "app" {
 
   # Load balancer configuration for Django API
   load_balancer {
-    target_group_arn = var.api_target_group_arn != "" ? var.api_target_group_arn : var.target_group_arn
+    target_group_arn = var.api_target_group_arn
     container_name   = "app"
     container_port   = var.container_port
   }

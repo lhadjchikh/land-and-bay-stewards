@@ -59,7 +59,7 @@ module "loadbalancer" {
   alb_logs_bucket       = module.monitoring.alb_logs_bucket
   acm_certificate_arn   = var.acm_certificate_arn
   waf_web_acl_arn       = module.security.waf_web_acl_arn
-  health_check_path     = "/api/campaigns/"
+  health_check_path     = var.health_check_path
 }
 
 # Database Module
@@ -102,7 +102,6 @@ module "compute" {
   public_subnet_id          = module.networking.public_subnet_ids[0]
   app_security_group_id     = module.security.app_security_group_id
   bastion_security_group_id = module.security.bastion_security_group_id
-  target_group_arn          = module.loadbalancer.target_group_arn
   api_target_group_arn      = module.loadbalancer.api_target_group_arn
   ssr_target_group_arn      = module.loadbalancer.ssr_target_group_arn
   db_url_secret_arn         = module.secrets.db_url_secret_arn
@@ -114,6 +113,7 @@ module "compute" {
   container_port            = 8000
   domain_name               = var.domain_name
   enable_ssr                = var.enable_ssr
+  health_check_path         = var.health_check_path
 
   # Make sure load balancer and secrets are created first
   depends_on = [
