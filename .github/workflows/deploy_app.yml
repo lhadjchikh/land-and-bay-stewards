@@ -29,7 +29,7 @@ permissions:
   id-token: write # For AWS authentication
 
 env:
-  APP_ECR_REPOSITORY: landandbay
+  API_ECR_REPOSITORY: landandbay-api
   SSR_ECR_REPOSITORY: landandbay-ssr
 
 jobs:
@@ -58,7 +58,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     outputs:
-      app_image: ${{ steps.image-outputs.outputs.app_image }}
+      api_image: ${{ steps.image-outputs.outputs.api_image }}
       ssr_image: ${{ steps.image-outputs.outputs.ssr_image }}
 
     steps:
@@ -98,7 +98,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_ECR_REPOSITORY }}:${{ github.sha }}-${{ github.run_number }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.API_ECR_REPOSITORY }}:${{ github.sha }}-${{ github.run_number }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
           build-args: |
@@ -131,11 +131,11 @@ jobs:
       - name: Set output image variables
         id: image-outputs
         run: |
-          APP_IMAGE_TAG="${{ github.sha }}-${{ github.run_number }}"
-          APP_IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.APP_ECR_REPOSITORY }}:$APP_IMAGE_TAG"
+          API_IMAGE_TAG="${{ github.sha }}-${{ github.run_number }}"
+          API_IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.API_ECR_REPOSITORY }}:$API_IMAGE_TAG"
           SSR_IMAGE_TAG="${{ github.sha }}-${{ github.run_number }}"
           SSR_IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.SSR_ECR_REPOSITORY }}:$SSR_IMAGE_TAG"
-          echo "app_image=$APP_IMAGE" >> $GITHUB_OUTPUT
+          echo "api_image=$API_IMAGE" >> $GITHUB_OUTPUT
           echo "ssr_image=$SSR_IMAGE" >> $GITHUB_OUTPUT
 
   deploy:
@@ -165,7 +165,7 @@ jobs:
         with:
           task-definition: task-definition.json
           container-name: app
-          image: ${{ needs.build_and_push.outputs.app_image }}
+          image: ${{ needs.build_and_push.outputs.api_image }}
 
       # Check if SSR container exists in the task definition
       - name: Check for SSR container
