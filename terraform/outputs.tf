@@ -21,8 +21,9 @@ output "database_name" {
 }
 
 # Application Outputs
-output "ecr_repository_url" {
-  value = module.compute.ecr_repository_url
+output "api_ecr_repository_url" {
+  value = module.compute.api_ecr_repository_url
+}
 }
 
 output "ecs_cluster_name" {

@@ -1,8 +1,8 @@
 # Compute Module
 
-# ECR Repository
-resource "aws_ecr_repository" "app" {
-  name                 = var.prefix
+# API ECR Repository
+resource "aws_ecr_repository" "api" {
+  name                 = "${var.prefix}-api"
   image_tag_mutability = "IMMUTABLE"
 
   image_scanning_configuration {
@@ -14,7 +14,7 @@ resource "aws_ecr_repository" "app" {
   }
 
   tags = {
-    Name = var.prefix
+    Name = "${var.prefix}-api"
   }
 }
 
@@ -182,7 +182,7 @@ resource "aws_ecs_task_definition" "app" {
     # Django API Container
     {
       name      = "app"
-      image     = "${aws_ecr_repository.app.repository_url}:latest"
+      image     = "${aws_ecr_repository.api.repository_url}:latest"
       essential = true
       portMappings = [
         {
@@ -291,7 +291,7 @@ resource "aws_ecs_task_definition" "app" {
     # Django API Container only (when enable_ssr is false)
     {
       name      = "app"
-      image     = "${aws_ecr_repository.app.repository_url}:latest"
+      image     = "${aws_ecr_repository.api.repository_url}:latest"
       essential = true
       portMappings = [
         {
