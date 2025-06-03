@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from django.conf import settings
 from django.db import connection
@@ -227,16 +227,16 @@ def robots_txt(request: HttpRequest) -> HttpResponse:
 def health_check(request: HttpRequest) -> JsonResponse:
     """
     Dedicated health check endpoint for the Django backend.
-    
+
     This endpoint checks:
     1. Application status
     2. Database connectivity
     3. Available memory and system resources
-    
+
     Returns a JSON response with health status information.
     """
     start_time = time.time()
-    
+
     # Check database connection
     db_status = "healthy"
     db_response_time = 0
@@ -249,9 +249,10 @@ def health_check(request: HttpRequest) -> JsonResponse:
     except Exception as e:
         db_status = "unhealthy"
         logger.error("Health check database connection failed: %s", e)
-    
+
     # Get memory info
     import psutil
+
     try:
         process = psutil.Process(os.getpid())
         memory_info = process.memory_info()
@@ -264,11 +265,11 @@ def health_check(request: HttpRequest) -> JsonResponse:
         memory = {"status": "psutil not installed"}
     except Exception as e:
         memory = {"error": str(e)}
-    
+
     # Build response
     health_data = {
         "status": "healthy" if db_status == "healthy" else "unhealthy",
-        "timestamp": datetime.now().isoformat(),
+        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
         "application": {
             "name": "Land and Bay Stewards API",
             "environment": settings.ENVIRONMENT,
@@ -283,11 +284,11 @@ def health_check(request: HttpRequest) -> JsonResponse:
         "memory": memory,
         "responseTime": f"{round((time.time() - start_time) * 1000)}ms",
     }
-    
+
     status_code = 200 if health_data["status"] == "healthy" else 503
-    
+
     return JsonResponse(
         health_data,
         status=status_code,
-        headers={"Cache-Control": "no-store, max-age=0"}
+        headers={"Cache-Control": "no-store, max-age=0"},
     )
