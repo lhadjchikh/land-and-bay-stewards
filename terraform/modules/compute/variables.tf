@@ -109,3 +109,9 @@ variable "ssr_target_group_arn" {
   type        = string
   default     = ""
 }
+
+variable "enable_ssr" {
+  description = "Enable Server-Side Rendering with Node.js"
+  type        = bool
+  default     = true
+}

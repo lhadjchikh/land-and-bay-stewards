@@ -178,7 +178,8 @@ resource "aws_ecs_task_definition" "app" {
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
 
-  container_definitions = jsonencode([
+  container_definitions = var.enable_ssr ? jsonencode([
+    # Django API Container
     {
       name      = "app"
       image     = "${aws_ecr_repository.app.repository_url}:latest"
@@ -230,9 +231,10 @@ resource "aws_ecs_task_definition" "app" {
         }
       }
     },
+    # SSR Container (only included when enable_ssr is true)
     {
       name      = "ssr"
-      image     = "${aws_ecr_repository.ssr.repository_url}:latest"
+      image     = "${var.enable_ssr ? aws_ecr_repository.ssr[0].repository_url : ""}:latest"
       essential = true
       portMappings = [
         {
@@ -285,6 +287,59 @@ resource "aws_ecs_task_definition" "app" {
         }
       ]
     }
+    ]) : jsonencode([
+    # Django API Container only (when enable_ssr is false)
+    {
+      name      = "app"
+      image     = "${aws_ecr_repository.app.repository_url}:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = var.container_port
+          hostPort      = var.container_port
+          protocol      = "tcp"
+          name          = "django-api"
+        }
+      ]
+      environment = [
+        {
+          name  = "DEBUG"
+          value = "False"
+        },
+        {
+          name  = "ALLOWED_HOSTS"
+          value = "*"
+        }
+      ]
+      secrets = [
+        {
+          name      = "SECRET_KEY",
+          valueFrom = var.secret_key_secret_arn
+        },
+        {
+          name      = "DATABASE_URL",
+          valueFrom = "${var.db_url_secret_arn}:url::"
+        }
+      ]
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "curl -f http://localhost:${var.container_port}/api/campaigns/ || exit 1"
+        ],
+        interval    = 30,
+        timeout     = 5,
+        retries     = 3,
+        startPeriod = 60
+      }
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs_logs.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "django"
+        }
+      }
+    }
   ])
 
   tags = {
@@ -292,8 +347,9 @@ resource "aws_ecs_task_definition" "app" {
   }
 }
 
-# Additional ECR repository for SSR container
+# Additional ECR repository for SSR container - only created if SSR is enabled
 resource "aws_ecr_repository" "ssr" {
+  count                = var.enable_ssr ? 1 : 0
   name                 = "${var.prefix}-ssr"
   image_tag_mutability = "IMMUTABLE"
 
@@ -333,9 +389,9 @@ resource "aws_ecs_service" "app" {
     container_port   = var.container_port
   }
 
-  # Load balancer configuration for SSR (only if SSR target group is provided)
+  # Load balancer configuration for SSR (only if SSR is enabled and target group is provided)
   dynamic "load_balancer" {
-    for_each = var.ssr_target_group_arn != "" ? [1] : []
+    for_each = var.enable_ssr && var.ssr_target_group_arn != "" ? [1] : []
     content {
       target_group_arn = var.ssr_target_group_arn
       container_name   = "ssr"
