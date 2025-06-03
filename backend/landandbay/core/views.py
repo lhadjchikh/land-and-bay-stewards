@@ -273,7 +273,6 @@ def health_check(request: HttpRequest) -> JsonResponse:
         "timestamp": datetime.now(tz=UTC).isoformat(),
         "application": {
             "name": "Land and Bay Stewards API",
-            "environment": settings.ENVIRONMENT,
             "debug": settings.DEBUG,
         },
         "database": {
