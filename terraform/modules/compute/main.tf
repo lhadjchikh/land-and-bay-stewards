@@ -347,9 +347,8 @@ resource "aws_ecs_task_definition" "app" {
   }
 }
 
-# Additional ECR repository for SSR container - only created if SSR is enabled
+# SSR ECR repository - always created regardless of SSR being enabled
 resource "aws_ecr_repository" "ssr" {
-  count                = var.enable_ssr ? 1 : 0
   name                 = "${var.prefix}-ssr"
   image_tag_mutability = "IMMUTABLE"
 
