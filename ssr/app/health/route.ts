@@ -1,7 +1,7 @@
 // ssr/app/health/route.ts
 import { NextResponse } from "next/server";
-import { apiClient } from "../../lib/api";
-import metrics, { registerError } from "../../lib/metrics";
+import { apiClient } from "@/lib/api";
+import metrics, { registerError } from "@/lib/metrics";
 
 export async function GET() {
   const startTime = Date.now();
