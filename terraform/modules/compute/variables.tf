@@ -116,3 +116,9 @@ variable "enable_ssr" {
   type        = bool
   default     = true
 }
+
+variable "health_check_path" {
+  description = "Path for API health checks"
+  type        = string
+  default     = "/api/health/"
+}
