@@ -17,66 +17,29 @@ const http = require("http");
 const https = require("https");
 const { URL } = require("url");
 
-// Import fetch polyfill for Node.js environments
-let fetch;
-try {
-  fetch = require("node-fetch");
-} catch (e) {
-  // If node-fetch isn't available, try global fetch (Node 18+)
-  if (typeof global.fetch !== 'function') {
-    console.log('Using custom fetch implementation as node-fetch is not available');
-    // Simple fetch polyfill using http/https modules
-    fetch = function(url, options = {}) {
-      return new Promise((resolve, reject) => {
-        const parsedUrl = new URL(url);
-        const httpModule = parsedUrl.protocol === 'https:' ? https : http;
-        
-        const req = httpModule.request(url, options, (res) => {
-          const response = {
-            ok: res.statusCode >= 200 && res.statusCode < 300,
-            status: res.statusCode,
-            statusText: res.statusMessage,
-            headers: res.headers,
-            json: () => new Promise((resolve, reject) => {
-              let data = '';
-              res.on('data', chunk => { data += chunk; });
-              res.on('end', () => {
-                try {
-                  resolve(JSON.parse(data));
-                } catch (e) {
-                  reject(new Error(`Invalid JSON: ${e.message}`));
-                }
-              });
-            }),
-            text: () => new Promise((resolve) => {
-              let data = '';
-              res.on('data', chunk => { data += chunk; });
-              res.on('end', () => { resolve(data); });
-            })
-          };
-          resolve(response);
-        });
-        
-        req.on('error', reject);
-        
-        // Handle timeout if specified in options
-        if (options.timeout) {
-          req.setTimeout(options.timeout, () => {
-            req.destroy();
-            reject(new Error(`Request timeout after ${options.timeout}ms`));
-          });
-        }
-        
-        // Add request body if present
-        if (options.body) {
-          req.write(options.body);
-        }
-        
-        req.end();
-      });
+// Use the simpler approach from test-ssr-integration-simple.js
+// Import the makeRequest and waitForService functions
+const simpleIntegration = require('./test-ssr-integration-simple');
+const makeRequest = simpleIntegration.makeRequest;
+const waitForService = simpleIntegration.waitForService;
+
+// Simple fetch-like wrapper around makeRequest for backward compatibility
+const fetch = async (url, options = {}) => {
+  try {
+    const response = await makeRequest(url);
+    return {
+      ok: response.statusCode >= 200 && response.statusCode < 300,
+      status: response.statusCode,
+      statusText: response.statusCode === 200 ? 'OK' : 'Error',
+      headers: response.headers,
+      json: () => JSON.parse(response.data),
+      text: () => response.data
     };
+  } catch (error) {
+    console.error(`Fetch error: ${error.message}`);
+    throw error;
   }
-}
+};
 
 // Test configuration
 const TEST_CONFIG = {
@@ -198,21 +161,40 @@ async function testSSRHealth() {
   return data;
 }
 
-// Test 2: Verify Django API directly
+// Test 2: Verify Django API health
 async function testDjangoAPI() {
-  console.log("🔍 Testing Django API directly...");
+  console.log("🔍 Testing Django API health...");
 
   const response = await fetchWithRetry(
-    `${TEST_CONFIG.API_URL}/api/campaigns/`
+    `${TEST_CONFIG.API_URL}/api/health/`
   );
 
   if (!response.ok) {
     throw new Error(
-      `Django API test failed: ${response.status} ${response.statusText}`
+      `Django API health test failed: ${response.status} ${response.statusText}`
     );
   }
 
-  const campaigns = await response.json();
+  const healthData = await response.json();
+
+  if (healthData.status !== "healthy") {
+    throw new Error(
+      `Django API health check returned unhealthy status: ${JSON.stringify(healthData)}`
+    );
+  }
+
+  // Also test data endpoint
+  const dataResponse = await fetchWithRetry(
+    `${TEST_CONFIG.API_URL}/api/campaigns/`
+  );
+
+  if (!dataResponse.ok) {
+    throw new Error(
+      `Django API data endpoint failed: ${dataResponse.status} ${dataResponse.statusText}`
+    );
+  }
+
+  const campaigns = await dataResponse.json();
 
   if (!Array.isArray(campaigns)) {
     throw new Error(
@@ -221,7 +203,7 @@ async function testDjangoAPI() {
   }
 
   console.log(
-    `✅ Django API test passed (returned ${campaigns.length} campaigns)`
+    `✅ Django API tests passed (health check OK, returned ${campaigns.length} campaigns)`
   );
   return campaigns;
 }
@@ -465,7 +447,7 @@ async function runIntegrationTests() {
   try {
     await Promise.all([
       waitForService(`${TEST_CONFIG.SSR_URL}/health`),
-      waitForService(`${TEST_CONFIG.API_URL}/api/campaigns/`),
+      waitForService(`${TEST_CONFIG.API_URL}/api/health/`),
     ]);
     console.log("✅ All services are ready\n");
   } catch (error) {

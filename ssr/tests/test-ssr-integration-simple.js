@@ -90,22 +90,33 @@ async function runTests() {
   try {
     // Test 1: Wait for services
     console.log("⏳ Waiting for services to be ready...");
-    await waitForService(`${API_URL}/api/campaigns/`);
+    await waitForService(`${API_URL}/api/health/`);
     await waitForService(`${SSR_URL}/health`);
     console.log("✅ All services are ready\n");
 
     // Test 2: API Health
-    console.log("🔍 Testing API endpoint...");
-    const apiResponse = await makeRequest(`${API_URL}/api/campaigns/`);
+    console.log("🔍 Testing API health endpoint...");
+    const apiResponse = await makeRequest(`${API_URL}/api/health/`);
     if (apiResponse.statusCode === 200) {
-      console.log("✅ API endpoint working");
+      console.log("✅ API health endpoint working");
       passed++;
     } else {
-      console.log(`❌ API endpoint failed: ${apiResponse.statusCode}`);
+      console.log(`❌ API health endpoint failed: ${apiResponse.statusCode}`);
+      failed++;
+    }
+    
+    // Test 3: API Data Endpoint
+    console.log("🔍 Testing API data endpoint...");
+    const apiDataResponse = await makeRequest(`${API_URL}/api/campaigns/`);
+    if (apiDataResponse.statusCode === 200) {
+      console.log("✅ API data endpoint working");
+      passed++;
+    } else {
+      console.log(`❌ API data endpoint failed: ${apiDataResponse.statusCode}`);
       failed++;
     }
 
-    // Test 3: SSR Health
+    // Test 4: SSR Health
     console.log("🔍 Testing SSR health...");
     const ssrHealthResponse = await makeRequest(`${SSR_URL}/health`);
     if (ssrHealthResponse.statusCode === 200) {
@@ -116,7 +127,7 @@ async function runTests() {
       failed++;
     }
 
-    // Test 4: SSR Homepage
+    // Test 5: SSR Homepage
     console.log("🔍 Testing SSR homepage...");
     const homepageResponse = await makeRequest(SSR_URL);
     if (
@@ -130,7 +141,7 @@ async function runTests() {
       failed++;
     }
 
-    // Test 5: Load Balancer Routing (if available)
+    // Test 6: Load Balancer Routing (if available)
     console.log("🔍 Testing load balancer routing...");
     try {
       // First check if the load balancer is accessible
