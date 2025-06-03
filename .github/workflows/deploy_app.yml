@@ -23,6 +23,11 @@ on:
           - "true"
           - "false"
 
+# Permissions needed for deployment
+permissions:
+  contents: read # For checkout
+  id-token: write # For AWS authentication
+
 env:
   APP_ECR_REPOSITORY: landandbay
   SSR_ECR_REPOSITORY: landandbay-ssr

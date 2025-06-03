@@ -16,6 +16,10 @@ on:
   # Allow manual triggers
   workflow_dispatch:
 
+# Set explicit permissions for the GITHUB_TOKEN
+permissions:
+  contents: read # Only need read access to checkout the code
+
 jobs:
   integration:
     name: End-to-End Integration Tests
