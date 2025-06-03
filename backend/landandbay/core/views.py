@@ -264,7 +264,8 @@ def health_check(request: HttpRequest) -> JsonResponse:
         # psutil not available
         memory = {"status": "psutil not installed"}
     except Exception as e:
-        memory = {"error": str(e)}
+        logger.error("Error retrieving memory information: %s", e)
+        memory = {"error": "An error occurred while retrieving memory information"}
 
     # Build response
     health_data = {
