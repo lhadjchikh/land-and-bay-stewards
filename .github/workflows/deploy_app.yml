@@ -23,8 +23,14 @@ on:
           - "true"
           - "false"
 
+# Permissions needed for deployment
+permissions:
+  contents: read # For checkout
+  id-token: write # For AWS authentication
+
 env:
-  ECR_REPOSITORY: landandbay
+  APP_ECR_REPOSITORY: landandbay
+  SSR_ECR_REPOSITORY: landandbay-ssr
 
 jobs:
   check_tests:
@@ -52,7 +58,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: prod
     outputs:
-      image: ${{ steps.image-outputs.outputs.image }}
+      app_image: ${{ steps.image-outputs.outputs.app_image }}
+      ssr_image: ${{ steps.image-outputs.outputs.ssr_image }}
 
     steps:
       - name: Checkout
@@ -82,16 +89,32 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-buildx-
 
-      # Build and push the Docker image with layer caching
-      - name: Build and push Docker image
-        id: build-image
+      # Build and push the Django app Docker image with layer caching
+      - name: Build and push Django app image
+        id: build-app-image
         uses: docker/build-push-action@v5
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         with:
           context: .
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}-${{ github.run_number }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.APP_ECR_REPOSITORY }}:${{ github.sha }}-${{ github.run_number }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          build-args: |
+            BUILDKIT_INLINE_CACHE=1
+          platforms: linux/amd64
+
+      # Build and push the SSR Docker image with layer caching
+      - name: Build and push SSR image
+        id: build-ssr-image
+        uses: docker/build-push-action@v5
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        with:
+          context: ./ssr
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.SSR_ECR_REPOSITORY }}:${{ github.sha }}-${{ github.run_number }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
           build-args: |
@@ -108,9 +131,12 @@ jobs:
       - name: Set output image variables
         id: image-outputs
         run: |
-          IMAGE_TAG="${{ github.sha }}-${{ github.run_number }}"
-          IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:$IMAGE_TAG"
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          APP_IMAGE_TAG="${{ github.sha }}-${{ github.run_number }}"
+          APP_IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.APP_ECR_REPOSITORY }}:$APP_IMAGE_TAG"
+          SSR_IMAGE_TAG="${{ github.sha }}-${{ github.run_number }}"
+          SSR_IMAGE="${{ steps.login-ecr.outputs.registry }}/${{ env.SSR_ECR_REPOSITORY }}:$SSR_IMAGE_TAG"
+          echo "app_image=$APP_IMAGE" >> $GITHUB_OUTPUT
+          echo "ssr_image=$SSR_IMAGE" >> $GITHUB_OUTPUT
 
   deploy:
     name: Deploy to ECS
@@ -133,18 +159,26 @@ jobs:
         run: |
           aws ecs describe-task-definition --task-definition landandbay --query taskDefinition > task-definition.json
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
+      - name: Update Django app container image in ECS task definition
+        id: task-def-app
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
           container-name: app
-          image: ${{ needs.build_and_push.outputs.image }}
+          image: ${{ needs.build_and_push.outputs.app_image }}
+
+      - name: Update SSR container image in ECS task definition
+        id: task-def-ssr
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def-app.outputs.task-definition }}
+          container-name: ssr
+          image: ${{ needs.build-ssr-image.outputs.ssr_image }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          task-definition: ${{ steps.task-def-ssr.outputs.task-definition }}
           service: landandbay-service
           cluster: landandbay-cluster
           wait-for-service-stability: true

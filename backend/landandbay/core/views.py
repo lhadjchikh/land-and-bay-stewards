@@ -1,9 +1,12 @@
 import json
 import logging
 import os
+import time
+from datetime import UTC, datetime
 
 from django.conf import settings
-from django.http import HttpRequest, HttpResponse
+from django.db import connection
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_GET
 
@@ -218,3 +221,74 @@ def home(request: HttpRequest) -> HttpResponse:
 def robots_txt(request: HttpRequest) -> HttpResponse:
     """Serve the robots.txt file to prevent search engine indexing"""
     return HttpResponse("User-agent: *\nDisallow: /\n", content_type="text/plain")
+
+
+@require_GET
+def health_check(request: HttpRequest) -> JsonResponse:
+    """
+    Dedicated health check endpoint for the Django backend.
+
+    This endpoint checks:
+    1. Application status
+    2. Database connectivity
+    3. Available memory and system resources
+
+    Returns a JSON response with health status information.
+    """
+    start_time = time.time()
+
+    # Check database connection
+    db_status = "healthy"
+    db_response_time = 0
+    try:
+        db_check_start = time.time()
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
+        db_response_time = round((time.time() - db_check_start) * 1000)
+    except Exception as e:
+        db_status = "unhealthy"
+        logger.error("Health check database connection failed: %s", e)
+
+    # Get memory info
+    import psutil
+
+    try:
+        process = psutil.Process(os.getpid())
+        memory_info = process.memory_info()
+        memory = {
+            "rss": f"{memory_info.rss / (1024 * 1024):.2f}MB",
+            "vms": f"{memory_info.vms / (1024 * 1024):.2f}MB",
+        }
+    except ImportError:
+        # psutil not available
+        memory = {"status": "psutil not installed"}
+    except Exception as e:
+        logger.error("Error retrieving memory information: %s", e)
+        memory = {"error": "An error occurred while retrieving memory information"}
+
+    # Build response
+    health_data = {
+        "status": "healthy" if db_status == "healthy" else "unhealthy",
+        "timestamp": datetime.now(tz=UTC).isoformat(),
+        "application": {
+            "name": "Land and Bay Stewards API",
+            "debug": settings.DEBUG,
+        },
+        "database": {
+            "status": db_status,
+            "responseTime": f"{db_response_time}ms",
+            "engine": settings.DATABASES["default"]["ENGINE"],
+            "name": settings.DATABASES["default"]["NAME"],
+        },
+        "memory": memory,
+        "responseTime": f"{round((time.time() - start_time) * 1000)}ms",
+    }
+
+    status_code = 200 if health_data["status"] == "healthy" else 503
+
+    return JsonResponse(
+        health_data,
+        status=status_code,
+        headers={"Cache-Control": "no-store, max-age=0"},
+    )

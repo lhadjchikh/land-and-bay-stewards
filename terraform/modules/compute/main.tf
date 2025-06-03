@@ -140,11 +140,20 @@ resource "aws_iam_policy" "ecs_task_policy" {
       {
         Effect = "Allow",
         Action = [
-          "cloudwatch:PutMetricData",
+          "cloudwatch:PutMetricData"
+        ],
+        Resource = "*" # CloudWatch metrics only support * as resource
+      },
+      {
+        Effect = "Allow",
+        Action = [
           "logs:PutLogEvents",
           "logs:CreateLogStream"
         ],
-        Resource = "*"
+        Resource = [
+          "${aws_cloudwatch_log_group.ecs_logs.arn}:*",
+          aws_cloudwatch_log_group.ecs_logs.arn
+        ]
       }
     ]
   })
@@ -159,17 +168,18 @@ resource "aws_iam_role_policy_attachment" "ecs_task_policy_attachment" {
   policy_arn = aws_iam_policy.ecs_task_policy.arn
 }
 
-# ECS Task Definition
+# ECS Task Definition with both Django and Node.js SSR
 resource "aws_ecs_task_definition" "app" {
   family                   = var.prefix
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.task_cpu
-  memory                   = var.task_memory
+  memory                   = var.task_memory != null ? var.task_memory : (var.enable_ssr ? 512 : 256)
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
 
-  container_definitions = jsonencode([
+  container_definitions = var.enable_ssr ? jsonencode([
+    # Django API Container
     {
       name      = "app"
       image     = "${aws_ecr_repository.app.repository_url}:latest"
@@ -179,6 +189,7 @@ resource "aws_ecs_task_definition" "app" {
           containerPort = var.container_port
           hostPort      = var.container_port
           protocol      = "tcp"
+          name          = "django-api"
         }
       ]
       environment = [
@@ -216,7 +227,116 @@ resource "aws_ecs_task_definition" "app" {
         options = {
           "awslogs-group"         = aws_cloudwatch_log_group.ecs_logs.name
           "awslogs-region"        = var.aws_region
-          "awslogs-stream-prefix" = "ecs"
+          "awslogs-stream-prefix" = "django"
+        }
+      }
+    },
+    # SSR Container (only included when enable_ssr is true)
+    {
+      name      = "ssr"
+      image     = "${var.enable_ssr ? aws_ecr_repository.ssr[0].repository_url : ""}:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = 3000
+          hostPort      = 3000
+          protocol      = "tcp"
+          name          = "ssr-app"
+        }
+      ]
+      environment = [
+        {
+          name  = "NODE_ENV"
+          value = "production"
+        },
+        {
+          name  = "API_URL"
+          value = "http://localhost:${var.container_port}"
+        },
+        {
+          name  = "NEXT_PUBLIC_API_URL"
+          value = "https://${var.domain_name}"
+        },
+        {
+          name  = "PORT"
+          value = "3000"
+        }
+      ]
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "node /app/healthcheck.js"
+        ],
+        interval    = 30,
+        timeout     = 5,
+        retries     = 3,
+        startPeriod = 60
+      }
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs_logs.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "ssr"
+        }
+      }
+      dependsOn = [
+        {
+          containerName = "app"
+          condition     = "HEALTHY"
+        }
+      ]
+    }
+    ]) : jsonencode([
+    # Django API Container only (when enable_ssr is false)
+    {
+      name      = "app"
+      image     = "${aws_ecr_repository.app.repository_url}:latest"
+      essential = true
+      portMappings = [
+        {
+          containerPort = var.container_port
+          hostPort      = var.container_port
+          protocol      = "tcp"
+          name          = "django-api"
+        }
+      ]
+      environment = [
+        {
+          name  = "DEBUG"
+          value = "False"
+        },
+        {
+          name  = "ALLOWED_HOSTS"
+          value = "*"
+        }
+      ]
+      secrets = [
+        {
+          name      = "SECRET_KEY",
+          valueFrom = var.secret_key_secret_arn
+        },
+        {
+          name      = "DATABASE_URL",
+          valueFrom = "${var.db_url_secret_arn}:url::"
+        }
+      ]
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "curl -f http://localhost:${var.container_port}/api/campaigns/ || exit 1"
+        ],
+        interval    = 30,
+        timeout     = 5,
+        retries     = 3,
+        startPeriod = 60
+      }
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          "awslogs-group"         = aws_cloudwatch_log_group.ecs_logs.name
+          "awslogs-region"        = var.aws_region
+          "awslogs-stream-prefix" = "django"
         }
       }
     }
@@ -227,7 +347,28 @@ resource "aws_ecs_task_definition" "app" {
   }
 }
 
-# ECS Service
+# Additional ECR repository for SSR container - only created if SSR is enabled
+resource "aws_ecr_repository" "ssr" {
+  count                = var.enable_ssr ? 1 : 0
+  name                 = "${var.prefix}-ssr"
+  image_tag_mutability = "IMMUTABLE"
+
+  image_scanning_configuration {
+    scan_on_push = true
+  }
+
+  encryption_configuration {
+    encryption_type = "KMS"
+  }
+
+  tags = {
+    Name = "${var.prefix}-ssr"
+  }
+}
+
+# Load balancer configuration
+
+# ECS Service with both target groups registered to the same ALB
 resource "aws_ecs_service" "app" {
   name            = "${var.prefix}-service"
   cluster         = aws_ecs_cluster.main.id
@@ -238,13 +379,24 @@ resource "aws_ecs_service" "app" {
   network_configuration {
     subnets          = var.private_subnet_ids
     security_groups  = [var.app_security_group_id]
-    assign_public_ip = true
+    assign_public_ip = false # Changed from true to improve security
   }
 
+  # Load balancer configuration for Django API
   load_balancer {
-    target_group_arn = var.target_group_arn
+    target_group_arn = var.api_target_group_arn != "" ? var.api_target_group_arn : var.target_group_arn
     container_name   = "app"
     container_port   = var.container_port
+  }
+
+  # Load balancer configuration for SSR (only if SSR is enabled and target group is provided)
+  dynamic "load_balancer" {
+    for_each = var.enable_ssr && var.ssr_target_group_arn != "" ? [1] : []
+    content {
+      target_group_arn = var.ssr_target_group_arn
+      container_name   = "ssr"
+      container_port   = 3000
+    }
   }
 
   # Enable deployment circuit breaker for safe deployments
@@ -253,12 +405,8 @@ resource "aws_ecs_service" "app" {
     rollback = true
   }
 
-  # Simple deployment configuration
-  deployment_maximum_percent         = 200
-  deployment_minimum_healthy_percent = 0
+  # Using default deployment configuration
 
-  # Make sure the target group is properly associated with a load balancer
-  # and all IAM roles are attached before this service is created
   depends_on = [
     aws_iam_role_policy_attachment.ecs_task_execution_role_policy,
     aws_iam_role_policy_attachment.ecs_task_policy_attachment,

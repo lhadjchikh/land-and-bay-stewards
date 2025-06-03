@@ -7,12 +7,83 @@ This directory contains the Terraform configuration for deploying the Land and B
 The infrastructure architecture consists of the following components:
 
 - **Networking**: VPC, subnets, route tables, security groups
-- **Compute**: ECS Fargate for containerized application
+- **Compute**: ECS Fargate for containerized application (Django API and optional Next.js SSR)
 - **Database**: RDS PostgreSQL with PostGIS extension
 - **Load Balancing**: Application Load Balancer with dedicated security group
 - **Secrets Management**: AWS Secrets Manager for secure credentials with proper URL encoding
 - **Monitoring**: CloudWatch for logs and metrics
 - **DNS**: Route53 for domain management
+
+## Conditional Server-Side Rendering (SSR)
+
+This infrastructure includes optional Next.js Server-Side Rendering (SSR) capabilities that can be toggled on or off using a single Terraform variable.
+
+### What is SSR?
+
+Server-Side Rendering pre-renders pages on the server before sending them to the client, which can improve:
+
+- **Performance**: Faster initial page loads and time-to-interactive
+- **SEO**: Better search engine indexing for content
+- **Accessibility**: Content is available even with JavaScript disabled
+
+### Using the SSR Feature
+
+To control the SSR feature, use the `enable_ssr` variable:
+
+```hcl
+# Enable SSR (default)
+enable_ssr = true
+
+# Disable SSR
+enable_ssr = false
+```
+
+### Resource Impact
+
+When `enable_ssr = true` (default), the following additional resources are provisioned:
+
+- An additional ECR repository for the SSR container
+- Additional ECS task definition container for Next.js SSR
+- Additional target group for SSR traffic
+- Additional ALB listener rules for the SSR service
+
+When `enable_ssr = false`, these resources are not created, resulting in:
+
+- Lower AWS resource costs (fewer ECS tasks, no SSR container)
+- Simpler infrastructure (single-container task)
+- Reduced deployment complexity
+
+### When to Disable SSR
+
+Consider disabling SSR in these scenarios:
+
+- **Development/Testing**: When you're working on the backend API only
+- **Cost Optimization**: For non-production environments to reduce costs
+- **API-Only Mode**: When your application is being used primarily as an API
+- **Static Site Generation**: When using Next.js Export/Static Generation instead
+
+### Implementation Details
+
+The SSR implementation uses Terraform's conditional resource creation:
+
+```hcl
+# Example: Conditional ECR repository
+resource "aws_ecr_repository" "ssr" {
+  count = var.enable_ssr ? 1 : 0
+  name  = "${var.prefix}-ssr"
+  # ...other configuration
+}
+
+# Example: Conditional container in task definition
+dynamic "container_definitions" {
+  for_each = var.enable_ssr ? [1] : []
+  content {
+    name  = "ssr"
+    image = "${aws_ecr_repository.ssr[0].repository_url}:latest"
+    # ...other configuration
+  }
+}
+```
 
 ## Security Architecture
 
@@ -278,6 +349,7 @@ To access the RDS database through the bastion host:
 | `tags`               | Default tags to apply to all resources | `{ Project = "landandbay", Environment = "Production" }` | No                      |
 | `bastion_key_name`   | SSH key name for bastion host          | `landandbay-bastion`                                     | No                      |
 | `bastion_public_key` | SSH public key for bastion host        | `""`                                                     | Yes, for bastion access |
+| `enable_ssr`         | Enable Server-Side Rendering           | `true`                                                   | No                      |
 
 ## Networking Variables
 
@@ -314,6 +386,24 @@ module "infrastructure" {
   source = "./terraform"
 
   # Only required variables
+  db_password         = "your-secure-password"
+  route53_zone_id     = "Z1234567890ABC"
+  domain_name         = "landandbay.org"
+  acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
+  alert_email         = "alerts@example.com"
+}
+```
+
+### API-Only Deployment (Disable SSR)
+
+```hcl
+module "infrastructure" {
+  source = "./terraform"
+
+  # Disable Server-Side Rendering
+  enable_ssr = false
+
+  # Required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
   domain_name         = "landandbay.org"
@@ -400,6 +490,44 @@ module "infrastructure" {
 }
 ```
 
+### Complete Configuration with Environment-Specific Settings
+
+```hcl
+module "infrastructure" {
+  source = "./terraform"
+
+  # Resource naming
+  prefix = "landandbay-${var.environment}"
+
+  # Environment-specific settings
+  tags = {
+    Project     = "LandandBay"
+    Environment = var.environment
+    ManagedBy   = "Terraform"
+  }
+
+  # SSR configuration - enable in prod, disable in dev/staging
+  enable_ssr = var.environment == "prod" ? true : false
+
+  # Database configuration
+  db_name             = "landandbay_${var.environment}"
+  auto_setup_database = var.environment != "prod" # Auto setup except in production
+
+  # Security configuration
+  allowed_bastion_cidrs = var.environment == "prod" ? ["10.0.0.0/8"] : ["0.0.0.0/0"]
+
+  # Scaling configuration (adjust based on environment)
+  desired_count = var.environment == "prod" ? 2 : 1
+
+  # Required variables
+  db_password         = var.db_password
+  route53_zone_id     = var.route53_zone_id
+  domain_name         = "${var.environment == "prod" ? "" : "${var.environment}."}landandbay.org"
+  acm_certificate_arn = var.acm_certificate_arn
+  alert_email         = var.alert_email
+}
+```
+
 ## Deployment Workflows
 
 ### Automated Deployment (Recommended for Development)
@@ -455,20 +583,30 @@ terraform apply -var="auto_setup_database=false"
 # Method 1: Environment-specific tfvars files
 # dev.tfvars
 auto_setup_database = true
+enable_ssr = true  # Development with SSR enabled
+
+# staging.tfvars
+auto_setup_database = true
+enable_ssr = false  # Staging with SSR disabled for cost savings
 
 # prod.tfvars
 auto_setup_database = false
+enable_ssr = true  # Production with full SSR enabled
 
 # Deploy with specific file
 terraform apply -var-file="dev.tfvars"
+terraform apply -var-file="staging.tfvars"
 terraform apply -var-file="prod.tfvars"
 
 # Method 2: Command-line overrides (safest)
-# Development
-terraform apply -var="auto_setup_database=true"
+# Development with SSR
+terraform apply -var="auto_setup_database=true" -var="enable_ssr=true"
 
-# Production
-terraform apply -var="auto_setup_database=false"
+# Staging without SSR (API-only mode)
+terraform apply -var="auto_setup_database=true" -var="enable_ssr=false"
+
+# Production with SSR
+terraform apply -var="auto_setup_database=false" -var="enable_ssr=true"
 if [ $? -eq 0 ]; then
   # Run database setup in controlled environment
   $(terraform output -raw database_setup_command)
@@ -485,6 +623,14 @@ fi
 2. **Use remote state storage** for production deployments
 3. **Use Terraform workspaces** for different environments
 4. **Validate prerequisites** before running deployments
+
+### Server-Side Rendering (SSR)
+
+1. **Environment-specific SSR settings**: Enable SSR in production for SEO benefits, disable in development/testing for faster iterations
+2. **Resource optimization**: Disable SSR in environments where it's not needed to reduce costs
+3. **Feature parity testing**: Periodically test with both SSR enabled and disabled to ensure functionality works in both modes
+4. **Performance monitoring**: When using SSR, monitor Node.js performance metrics separately from API metrics
+5. **Automatic failover**: Consider implementing client-side fallback rendering for resilience
 
 ### Security
 
@@ -524,6 +670,50 @@ fi
 5. **Use manual database setup** for debugging complex issues
 
 ## Common Issues and Solutions
+
+### Server-Side Rendering (SSR) Issues
+
+**Problem**: Terraform error when updating from SSR-enabled to SSR-disabled
+
+```
+Error: cannot destroy a previously created resource
+```
+
+**Solution**:
+
+- First, remove the SSR containers from the task definition:
+  ```bash
+  aws ecs update-service --cluster landandbay-cluster --service landandbay-service --task-definition landandbay-task-definition:LATEST --force-new-deployment
+  ```
+- Wait for deployment to complete, then run Terraform again
+- Consider using separate environments for SSR and non-SSR deployments
+
+**Problem**: SSR container fails health checks
+
+```
+HealthCheckFailure: container health check failed
+```
+
+**Solution**:
+
+- Verify the healthcheck.js file exists and has correct permissions
+- Check container logs for startup errors:
+  ```bash
+  aws logs get-log-events --log-group-name /ecs/landandbay-task --log-stream-name ssr/latest
+  ```
+- Ensure the NEXT_PUBLIC_API_URL and API_URL environment variables are correctly set
+
+**Problem**: Load balancer not routing to SSR container
+
+```
+404 errors when accessing frontend routes
+```
+
+**Solution**:
+
+- Check that the SSR target group has the correct health check path (/health)
+- Verify the load balancer listener rules are routing frontend paths to the SSR target group
+- Ensure the SSR container is exposing port 3000
 
 ### Database Setup Issues
 

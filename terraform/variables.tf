@@ -163,3 +163,9 @@ variable "create_new_key_pair" {
   type        = bool
   default     = false
 }
+
+variable "enable_ssr" {
+  description = "Enable Server-Side Rendering with Node.js"
+  type        = bool
+  default     = true
+}

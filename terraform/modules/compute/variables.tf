@@ -10,15 +10,15 @@ variable "aws_region" {
 }
 
 variable "task_cpu" {
-  description = "CPU units for the task"
+  description = "CPU units for the task (increased for multi-container)"
   type        = number
-  default     = 256
+  default     = 512
 }
 
 variable "task_memory" {
-  description = "Memory for the task in MB"
+  description = "Memory for the task in MiB (adjusted based on SSR enablement if null)"
   type        = number
-  default     = 512
+  default     = null # When null, will be calculated based on enable_ssr
 }
 
 variable "container_port" {
@@ -95,4 +95,29 @@ variable "create_new_key_pair" {
   description = "Whether to create a new key pair or use an existing one. Set to false if the key pair already exists in AWS."
   type        = bool
   default     = false
+}
+
+variable "domain_name" {
+  description = "The domain name for the application (used in SSR environment variables)"
+  type        = string
+  default     = ""
+}
+
+# Variables for SSR target group
+variable "api_target_group_arn" {
+  description = "ARN of the API target group for the ECS service"
+  type        = string
+  default     = ""
+}
+
+variable "ssr_target_group_arn" {
+  description = "ARN of the SSR target group for the ECS service"
+  type        = string
+  default     = ""
+}
+
+variable "enable_ssr" {
+  description = "Enable Server-Side Rendering with Node.js"
+  type        = bool
+  default     = true
 }
