@@ -15,6 +15,12 @@ variable "task_cpu" {
   default     = 512
 }
 
+variable "task_memory" {
+  description = "Memory for the task in MiB (adjusted based on SSR enablement if null)"
+  type        = number
+  default     = null # When null, will be calculated based on enable_ssr
+}
+
 variable "container_port" {
   description = "Container port"
   type        = number

@@ -20,7 +20,7 @@ def perform_health_check() -> None:
     # Configure logging
     logging.basicConfig(format="%(message)s", level=logging.INFO)
     logger = logging.getLogger("healthcheck")
-    
+
     # Configuration
     hostname = "localhost"
     port = int(os.environ.get("PORT", 8000))
@@ -45,7 +45,7 @@ def perform_health_check() -> None:
             # Check if database is healthy
             db_status = data.get("database", {}).get("status")
             app_status = data.get("status")
-            
+
             if app_status == "healthy" and db_status == "healthy":
                 msg = f"✅ Health check passed in {response_time:.3f}s - DB connected"
                 logger.info(msg)

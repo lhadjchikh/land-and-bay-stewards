@@ -2,7 +2,7 @@ import json
 import logging
 import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from django.conf import settings
 from django.db import connection
@@ -269,7 +269,7 @@ def health_check(request: HttpRequest) -> JsonResponse:
     # Build response
     health_data = {
         "status": "healthy" if db_status == "healthy" else "unhealthy",
-        "timestamp": datetime.now(tz=timezone.utc).isoformat(),
+        "timestamp": datetime.now(tz=UTC).isoformat(),
         "application": {
             "name": "Land and Bay Stewards API",
             "environment": settings.ENVIRONMENT,
