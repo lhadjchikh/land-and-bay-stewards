@@ -167,18 +167,45 @@ jobs:
           container-name: app
           image: ${{ needs.build_and_push.outputs.app_image }}
 
+      # Check if SSR container exists in the task definition
+      - name: Check for SSR container
+        id: check-ssr
+        run: |
+          # Use jq to properly parse JSON and check for SSR container
+          if jq -e '.containerDefinitions[] | select(.name=="ssr")' task-definition.json > /dev/null 2>&1; then
+            echo "has_ssr=true" >> $GITHUB_OUTPUT
+            echo "SSR container found in task definition"
+          else
+            echo "has_ssr=false" >> $GITHUB_OUTPUT
+            echo "No SSR container found in task definition"
+          fi
+
+      # Only update the SSR container if it exists in the task definition
       - name: Update SSR container image in ECS task definition
         id: task-def-ssr
+        if: ${{ steps.check-ssr.outputs.has_ssr == 'true' }}
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ${{ steps.task-def-app.outputs.task-definition }}
           container-name: ssr
           image: ${{ needs.build_and_push.outputs.ssr_image }}
 
+      # Choose the right task definition based on whether SSR was updated
+      - name: Set final task definition
+        id: set-final-taskdef
+        run: |
+          if [[ "${{ steps.check-ssr.outputs.has_ssr }}" == "true" ]]; then
+            echo "final_taskdef=${{ steps.task-def-ssr.outputs.task-definition }}" >> $GITHUB_OUTPUT
+            echo "Using task definition with SSR container updated"
+          else
+            echo "final_taskdef=${{ steps.task-def-app.outputs.task-definition }}" >> $GITHUB_OUTPUT
+            echo "Using task definition with only app container updated (no SSR)"
+          fi
+
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
-          task-definition: ${{ steps.task-def-ssr.outputs.task-definition }}
+          task-definition: ${{ steps.set-final-taskdef.outputs.final_taskdef }}
           service: landandbay-service
           cluster: landandbay-cluster
           wait-for-service-stability: true
