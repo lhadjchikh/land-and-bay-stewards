@@ -298,10 +298,19 @@ resource "aws_security_group" "endpoints" {
   }
 
   egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 1024
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = [var.create_vpc ? var.vpc_cidr : local.existing_vpc_cidr]
+    description = "Restrict egress to VPC for return traffic"
+  }
+
+  egress {
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = [var.create_vpc ? var.vpc_cidr : local.existing_vpc_cidr]
+    description = "Allow DNS queries to VPC resolver"
   }
 
   tags = {
