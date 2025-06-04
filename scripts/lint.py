@@ -413,7 +413,7 @@ def main() -> int:
     Returns:
         0 if all linters succeeded, 1 otherwise
     """
-    project_root = Path(__file__).parent.parent.parent
+    project_root = Path(__file__).parent.parent
 
     print_section_header("STARTING LINT & FORMAT PROCESS")
     print(f"📁 Project root: {project_root}")

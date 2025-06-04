@@ -67,6 +67,7 @@ This project uses a modern, scalable architecture:
 │   │   ├── regions/        # Geographic regions app
 │   │   ├── api/           # API endpoints and schemas
 │   │   └── core/          # Core settings and configuration
+│   ├── scripts/           # Backend-specific utilities
 │   ├── manage.py          # Django management script
 │   └── pyproject.toml     # Python dependencies (Poetry)
 ├── frontend/               # React TypeScript application
@@ -84,8 +85,11 @@ This project uses a modern, scalable architecture:
 │   └── tests/            # Integration tests
 ├── terraform/            # Infrastructure as Code
 │   ├── modules/          # Reusable Terraform modules
+│   ├── tests/            # Terraform unit and integration tests
 │   ├── main.tf          # Main infrastructure configuration
 │   └── variables.tf     # Configuration variables
+├── scripts/              # Project-wide automation scripts
+│   └── lint.py          # Cross-language linting and formatting
 ├── .github/workflows/    # CI/CD pipelines
 └── docker-compose.yml   # Local development environment
 ```
@@ -264,14 +268,16 @@ The project enforces high code quality standards:
 Run all linters:
 
 ```bash
-# Backend linting
+# Comprehensive project-wide linting (recommended)
+python scripts/lint.py
+
+# Individual component linting
 cd backend && poetry run black . && poetry run ruff check .
-
-# Frontend linting
 cd frontend && npm run lint:fix && npm run format
+cd terraform/tests && make lint
 
-# Or use the automated script
-cd backend && poetry run lint
+# Legacy backend-only script
+cd backend && poetry run python ../scripts/lint.py
 ```
 
 ### Environment Configuration
