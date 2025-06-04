@@ -44,6 +44,7 @@ This project uses a structured CI/CD pipeline with the following key workflows:
 - Supports manual testing scenarios with configurable options
 
 **Test Types:**
+
 - **Unit Tests**: Fast tests without AWS resources (networking, compute, security, database modules)
 - **Integration Tests (Short)**: Module interaction tests without AWS resources
 - **Integration Tests (Full)**: Complete infrastructure deployment with real AWS resources

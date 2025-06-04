@@ -4,32 +4,32 @@ on:
   push:
     branches: [main]
     paths:
-      - 'terraform/**'
-      - '.github/workflows/test_terraform.yml'
+      - "terraform/**"
+      - ".github/workflows/test_terraform.yml"
   pull_request:
     branches: [main]
     paths:
-      - 'terraform/**'
-      - '.github/workflows/test_terraform.yml'
+      - "terraform/**"
+      - ".github/workflows/test_terraform.yml"
   workflow_dispatch:
     inputs:
       test_type:
-        description: 'Type of tests to run'
+        description: "Type of tests to run"
         required: true
-        default: 'unit'
+        default: "unit"
         type: choice
         options:
-          - 'unit'
-          - 'integration'
-          - 'all'
+          - "unit"
+          - "integration"
+          - "all"
       skip_aws_resources:
-        description: 'Skip AWS resource creation (faster, cheaper)'
+        description: "Skip AWS resource creation (faster, cheaper)"
         required: true
-        default: 'true'
+        default: "true"
         type: choice
         options:
-          - 'true'
-          - 'false'
+          - "true"
+          - "false"
 
 # Permissions needed for testing
 permissions:
@@ -38,7 +38,7 @@ permissions:
   pull-requests: write # For commenting on PRs
 
 env:
-  GO_VERSION: '1.21'
+  GO_VERSION: "1.21"
   AWS_DEFAULT_REGION: us-east-1
   TF_IN_AUTOMATION: true
 
@@ -231,11 +231,11 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            
+
             // Get test results
             const unitTestResult = '${{ needs.unit-tests.result }}';
             const integrationTestResult = '${{ needs.integration-tests-short.result }}';
-            
+
             const statusIcon = (result) => {
               switch(result) {
                 case 'success': return '✅';
@@ -244,36 +244,36 @@ jobs:
                 default: return '⚠️';
               }
             };
-            
+
             const body = `## 🧪 Terraform Test Results
-            
+
             | Test Type | Status | Details |
             |-----------|--------|---------|
             | Unit Tests | ${statusIcon(unitTestResult)} ${unitTestResult} | Tests individual modules without AWS resources |
             | Integration Tests (Short) | ${statusIcon(integrationTestResult)} ${integrationTestResult} | Tests module interactions without AWS resources |
-            
+
             ### 📝 Test Summary
-            
+
             - **Unit Tests**: Validate individual Terraform modules (networking, compute, security, database)
             - **Integration Tests (Short)**: Test module interactions and configurations without creating AWS resources
             - **AWS Integration Tests**: Only run on main branch pushes to avoid costs
-            
+
             ### 🚀 Manual Testing
-            
+
             To run full integration tests with AWS resources:
-            
+
             \`\`\`bash
             cd terraform/tests
             make test-integration
             \`\`\`
-            
+
             **Note**: Full integration tests create real AWS resources and incur costs.
-            
+
             ### 📊 Coverage
-            
+
             Test coverage report will be available in the workflow artifacts.
             `;
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -305,7 +305,7 @@ jobs:
       - name: Check for leftover test resources
         run: |
           echo "Checking for leftover test resources..."
-          
+
           # Check for test VPCs
           TEST_VPCS=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*" --query 'Vpcs[].VpcId' --output text)
           if [ -n "$TEST_VPCS" ]; then
@@ -314,7 +314,7 @@ jobs:
           else
             echo "✅ No leftover test VPCs found"
           fi
-          
+
           # Check for test ECS clusters
           TEST_CLUSTERS=$(aws ecs list-clusters --query 'clusterArns[?contains(@, `test`)]' --output text)
           if [ -n "$TEST_CLUSTERS" ]; then
@@ -359,11 +359,11 @@ jobs:
           validate_result="${{ needs.validate.result }}"
           unit_result="${{ needs.unit-tests.result }}"
           integration_result="${{ needs.integration-tests-short.result }}"
-          
+
           echo "Validate: $validate_result"
           echo "Unit Tests: $unit_result"
           echo "Integration Tests (Short): $integration_result"
-          
+
           if [[ "$validate_result" == "success" && "$unit_result" == "success" && "$integration_result" == "success" ]]; then
             echo "✅ All Terraform tests passed!"
             exit 0
