@@ -10,15 +10,47 @@ variable "aws_region" {
 }
 
 variable "task_cpu" {
-  description = "CPU units for the task (increased for multi-container)"
+  description = "CPU units for the task (256, 512, 1024, 2048, 4096)"
   type        = number
   default     = 512
+
+  validation {
+    condition     = contains([256, 512, 1024, 2048, 4096], var.task_cpu)
+    error_message = "Task CPU must be one of: 256, 512, 1024, 2048, 4096."
+  }
 }
 
 variable "task_memory" {
-  description = "Memory for the task in MiB (adjusted based on SSR enablement if null)"
+  description = "Memory for the task in MiB. Must be compatible with CPU value."
   type        = number
-  default     = null # When null, will be calculated based on enable_ssr
+  default     = null # When null, will be calculated based on enable_ssr and CPU
+
+  validation {
+    condition     = var.task_memory == null || var.task_memory >= 512
+    error_message = "Task memory must be at least 512 MiB."
+  }
+}
+
+# Add locals to calculate appropriate memory based on CPU and SSR settings
+locals {
+  # Calculate appropriate memory if not specified
+  calculated_memory = var.task_memory != null ? var.task_memory : (
+    var.enable_ssr ? (
+      # For SSR (dual container), use higher memory
+      var.task_cpu == 256 ? 1024 :  # 256 CPU -> 1GB
+      var.task_cpu == 512 ? 2048 :  # 512 CPU -> 2GB  
+      var.task_cpu == 1024 ? 4096 : # 1024 CPU -> 4GB
+      var.task_cpu == 2048 ? 8192 : # 2048 CPU -> 8GB
+      16384                         # 4096 CPU -> 16GB
+      ) : (
+      # For API-only (single container), use lower memory
+      var.task_cpu == 256 ? 512 :   # 256 CPU -> 512MB
+      var.task_cpu == 512 ? 1024 :  # 512 CPU -> 1GB
+      var.task_cpu == 1024 ? 2048 : # 1024 CPU -> 2GB
+      var.task_cpu == 2048 ? 4096 : # 2048 CPU -> 4GB
+      8192                          # 4096 CPU -> 8GB
+    )
+  )
 }
 
 variable "container_port" {

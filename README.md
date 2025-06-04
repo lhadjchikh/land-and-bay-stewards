@@ -354,23 +354,6 @@ This application includes sophisticated geographic data handling:
 - **Database Security**: Encrypted connections and credential management
 - **AWS Security**: WAF, security groups, and encrypted storage
 
-## 🤝 Contributing
-
-We welcome contributions! Please see our development workflow:
-
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Make your changes** and add tests
-4. **Run the test suite**: `npm test` and `poetry run python manage.py test`
-5. **Submit a pull request**
-
-### Development Guidelines
-
-- Follow existing code style (enforced by linters)
-- Add tests for new features
-- Update documentation as needed
-- Ensure all CI checks pass
-
 ## 📖 Additional Documentation
 
 - **[Backend Documentation](backend/README.md)** - Django API details
@@ -444,3 +427,10 @@ This project was built through human-AI collaboration, and like all software, it
 3. **Make your changes** and add tests
 4. **Run the test suite** (see [Testing](#-testing) section)
 5. **Submit a pull request**
+
+### Development Guidelines
+
+- Follow existing code style (enforced by linters)
+- Add tests for new features
+- Update documentation as needed
+- Ensure all CI checks pass

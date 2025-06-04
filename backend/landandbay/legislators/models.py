@@ -16,7 +16,7 @@ class Legislator(models.Model):
     url = models.URLField(blank=True)
 
     def __str__(self) -> str:
-        return f"{self.name} ({self.party}-{self.state})"
+        return f"{self.first_name} {self.last_name} ({self.party}-{self.state})"
 
     def display_name(self) -> str:
         suffix = ""

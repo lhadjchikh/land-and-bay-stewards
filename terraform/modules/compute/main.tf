@@ -174,7 +174,7 @@ resource "aws_ecs_task_definition" "app" {
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = var.task_cpu
-  memory                   = var.task_memory != null ? var.task_memory : (var.enable_ssr ? 512 : 256)
+  memory                   = local.calculated_memory
   execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn
   task_role_arn            = aws_iam_role.ecs_task_role.arn
 
@@ -184,6 +184,10 @@ resource "aws_ecs_task_definition" "app" {
       name      = "app"
       image     = "${aws_ecr_repository.api.repository_url}:latest"
       essential = true
+      # Allocate appropriate CPU for Django API container
+      cpu    = var.enable_ssr ? floor(var.task_cpu * 0.6) : var.task_cpu                       # 60% for API when SSR enabled, 100% when disabled
+      memory = var.enable_ssr ? floor(local.calculated_memory * 0.6) : local.calculated_memory # 60% for API when SSR enabled, 100% when disabled
+
       portMappings = [
         {
           containerPort = var.container_port
@@ -236,6 +240,10 @@ resource "aws_ecs_task_definition" "app" {
       name      = "ssr"
       image     = "${aws_ecr_repository.ssr.repository_url}:latest"
       essential = true
+      # Allocate remaining CPU and memory for SSR container
+      cpu    = floor(var.task_cpu * 0.4)            # 40% for SSR
+      memory = floor(local.calculated_memory * 0.4) # 40% for SSR
+
       portMappings = [
         {
           containerPort = 3000
@@ -293,6 +301,7 @@ resource "aws_ecs_task_definition" "app" {
       name      = "app"
       image     = "${aws_ecr_repository.api.repository_url}:latest"
       essential = true
+
       portMappings = [
         {
           containerPort = var.container_port
