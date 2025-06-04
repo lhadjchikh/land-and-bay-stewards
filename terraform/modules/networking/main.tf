@@ -274,12 +274,15 @@ resource "aws_route_table_association" "private_db_b" {
 
 # VPC Endpoint for S3 - allows private resources to access S3 without internet
 resource "aws_vpc_endpoint" "s3" {
-  count = var.create_db_subnets && var.create_vpc_endpoints ? 1 : 0
+  count = var.create_vpc_endpoints ? 1 : 0
 
   vpc_id            = local.vpc_id
   service_name      = "com.amazonaws.${var.aws_region}.s3"
   vpc_endpoint_type = "Gateway"
-  route_table_ids   = [aws_route_table.private_db[0].id]
+  route_table_ids = compact([
+    var.create_private_subnets ? aws_route_table.private_app[0].id : null,
+    var.create_db_subnets ? aws_route_table.private_db[0].id : null
+  ])
 
   tags = {
     Name = "${var.prefix}-s3-endpoint"
