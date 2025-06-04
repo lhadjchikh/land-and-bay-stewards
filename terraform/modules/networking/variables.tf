@@ -102,3 +102,16 @@ variable "private_db_subnet_b_cidr" {
   type        = string
   default     = "10.0.6.0/24"
 }
+
+# Variables for VPC Endpoints
+variable "create_vpc_endpoints" {
+  description = "Whether to create VPC endpoints for AWS services (S3, ECR, CloudWatch Logs, Secrets Manager)"
+  type        = bool
+  default     = true
+}
+
+variable "existing_endpoints_security_group_id" {
+  description = "ID of an existing security group to use for VPC endpoints (if not creating a new one)"
+  type        = string
+  default     = ""
+}
