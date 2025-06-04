@@ -262,6 +262,7 @@ defer common.CleanupResources(t, terraformOptions)
 ### AWS Permissions
 
 Tests require AWS permissions to create:
+
 - VPC and networking resources
 - ECS clusters and services
 - RDS databases
@@ -310,6 +311,7 @@ aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*"
 #### Permission Errors
 
 Ensure your AWS user/role has sufficient permissions:
+
 - EC2 full access
 - RDS full access
 - ECS full access
@@ -340,7 +342,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
-          go-version: '1.21'
+          go-version: "1.21"
       - name: Run short tests
         run: |
           cd terraform/tests
@@ -377,17 +379,17 @@ chmod +x .git/hooks/pre-commit
 ```go
 func TestNewFeature(t *testing.T) {
     common.SkipIfShortTest(t)
-    
+
     testConfig := common.NewTestConfig("../modules/mymodule")
     testVars := map[string]interface{}{
         "feature_enabled": true,
     }
-    
+
     terraformOptions := testConfig.GetModuleTerraformOptions("../modules/mymodule", testVars)
     defer common.CleanupResources(t, terraformOptions)
-    
+
     terraform.InitAndApply(t, terraformOptions)
-    
+
     // Validate outputs
     output := terraform.Output(t, terraformOptions, "feature_output")
     assert.NotEmpty(t, output)

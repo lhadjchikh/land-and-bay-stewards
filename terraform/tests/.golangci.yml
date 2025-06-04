@@ -14,33 +14,33 @@ output:
 linters-settings:
   gofmt:
     simplify: true
-  
+
   goimports:
     local-prefixes: terraform-tests
-  
+
   govet:
     check-shadowing: true
     enable-all: true
     disable:
       - fieldalignment # Too strict for test code
-  
+
   staticcheck:
     go: "1.21"
     checks: ["all"]
-  
+
   gosimple:
     go: "1.21"
     checks: ["all"]
-  
+
   unused:
     go: "1.21"
-  
+
   misspell:
     locale: US
-  
+
   lll:
     line-length: 120
-  
+
   gocritic:
     enabled-tags:
       - diagnostic
@@ -49,7 +49,7 @@ linters-settings:
     disabled-checks:
       - commentFormatting # Allow flexible comment formatting in tests
       - whyNoLint # Don't require explanations for nolint comments
-  
+
   gosec:
     severity: medium
     confidence: medium
@@ -75,7 +75,7 @@ linters:
     - deadcode
     - varcheck
     - structcheck
-  
+
   disable:
     - exhaustive # Too strict for test scenarios
     - exhaustivestruct # Too strict for test data
@@ -93,30 +93,30 @@ issues:
       linters:
         - lll
       text: "(// |/\\*)"
-    
+
     # Allow unused parameters in test helpers
     - path: test_helpers\.go
       linters:
         - unused
         - deadcode
-    
+
     # Allow complex test functions
     - path: _test\.go
       linters:
         - gocyclo
         - gocognit
         - funlen
-    
+
     # Allow deep nesting in test setup
     - path: _test\.go
       linters:
         - nestif
-  
+
   exclude:
     # Exclude some default rules that are too strict for tests
     - "Error return value of .* is not checked" # Common in cleanup code
     - "should have a package comment" # Not required for test packages
-  
+
   max-issues-per-linter: 0
   max-same-issues: 0
 
