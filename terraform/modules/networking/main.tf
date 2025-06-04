@@ -43,6 +43,8 @@ data "aws_vpc" "existing" {
 locals {
   # Use existing VPC information for outputs and validations
   existing_vpc_cidr = var.create_vpc ? "" : join("", data.aws_vpc.existing[*].cidr_block)
+
+  vpc_cidr_block = var.create_vpc ? var.vpc_cidr : local.existing_vpc_cidr
 }
 
 # Public subnets for ALB - only created if create_public_subnets is true
@@ -295,7 +297,7 @@ resource "aws_security_group" "ecs_endpoints" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.create_vpc ? var.vpc_cidr : local.existing_vpc_cidr]
+    cidr_blocks = [local.vpc_cidr_block]
     description = "Allow HTTPS from within VPC"
   }
 
@@ -303,7 +305,7 @@ resource "aws_security_group" "ecs_endpoints" {
     from_port   = 1024
     to_port     = 65535
     protocol    = "tcp"
-    cidr_blocks = [var.create_vpc ? var.vpc_cidr : local.existing_vpc_cidr]
+    cidr_blocks = [local.vpc_cidr_block]
     description = "Restrict egress to VPC for return traffic"
   }
 
@@ -311,7 +313,7 @@ resource "aws_security_group" "ecs_endpoints" {
     from_port   = 53
     to_port     = 53
     protocol    = "udp"
-    cidr_blocks = [var.create_vpc ? var.vpc_cidr : local.existing_vpc_cidr]
+    cidr_blocks = [local.vpc_cidr_block]
     description = "Allow DNS queries to VPC resolver"
   }
 
