@@ -325,12 +325,10 @@ resource "aws_security_group" "ecs_endpoints" {
   }
 }
 
-# Use a local for the security group ID, which could be either the created one or an existing one
 locals {
+  # Use a local for the security group ID, which could be either the created one or an existing one
   endpoints_security_group_id = var.existing_endpoints_security_group_id != "" ? var.existing_endpoints_security_group_id : (length(aws_security_group.ecs_endpoints) > 0 ? aws_security_group.ecs_endpoints[0].id : "")
-}
 
-locals {
   vpc_endpoints = {
     ecr_api = {
       service_name = "com.amazonaws.${var.aws_region}.ecr.api"
