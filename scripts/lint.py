@@ -66,19 +66,29 @@ def which(cmd: str) -> str | None:
     return shutil.which(cmd)
 
 
-def run_python_linters(project_root: Path) -> bool:
+def run_python_linters(project_root: Path) -> tuple[bool, bool]:
     """Run Python linters with auto-fix.
 
     Args:
         project_root: Path to the project root directory
 
     Returns:
-        True if all linters succeeded, False otherwise
+        Tuple of (success, was_run) - success indicates if linters passed, was_run indicates if they could run
     """
     print_section_header("PYTHON LINTING")
     success = True
 
     backend_dir = project_root / "backend"
+    
+    # Check if backend directory exists
+    if not backend_dir.exists():
+        print("⚠️  Backend directory not found. Skipping Python linting.")
+        return True, False
+    
+    # Check if poetry is available
+    if not which("poetry"):
+        print("⚠️  Poetry is not installed. Skipping Python linting.")
+        return True, False
 
     print_step("Running Black code formatter")
     success &= run_command(["poetry", "run", "black", "."], cwd=backend_dir)
@@ -90,17 +100,17 @@ def run_python_linters(project_root: Path) -> bool:
         cwd=backend_dir,
     )
 
-    return success
+    return success, True
 
 
-def run_prettier(project_root: Path) -> bool:
+def run_prettier(project_root: Path) -> tuple[bool, bool]:
     """Run prettier on all supported file types in the project directory.
 
     Args:
         project_root: Path to the project root directory
 
     Returns:
-        True if all formatters succeeded or were skipped, False otherwise
+        Tuple of (success, was_run) - success indicates if formatters passed, was_run indicates if they could run
     """
     print_section_header("PRETTIER FORMATTING")
     success = True
@@ -108,12 +118,12 @@ def run_prettier(project_root: Path) -> bool:
     # Skip if the project_root doesn't exist
     if not project_root.exists():
         print("⚠️  Project root directory not found. Skipping Prettier formatting.")
-        return success
+        return True, False
 
     frontend_dir = project_root / "frontend"
     if not frontend_dir.exists():
         print("⚠️  Frontend directory not found. Skipping Prettier formatting.")
-        return success
+        return True, False
 
     # Check if package.json exists and verify npm scripts
     package_json = frontend_dir / "package.json"
@@ -122,7 +132,12 @@ def run_prettier(project_root: Path) -> bool:
             "⚠️  No package.json found in frontend directory. "
             "Skipping Prettier formatting.",
         )
-        return success
+        return True, False
+    
+    # Check if npm is available
+    if not which("npm"):
+        print("⚠️  npm is not installed. Skipping Prettier formatting.")
+        return True, False
 
     try:
         # First, try to run the format:all script which is defined in package.json
@@ -162,27 +177,32 @@ def run_prettier(project_root: Path) -> bool:
         print(f"❌ Error running Prettier: {e}")
         success = False
 
-    return success
+    return success, True
 
 
-def run_terraform_linters(project_root: Path) -> bool:
+def run_terraform_linters(project_root: Path) -> tuple[bool, bool]:
     """Run Terraform linters if terraform is installed.
 
     Args:
         project_root: Path to the project root directory
 
     Returns:
-        True if all linters succeeded or were skipped, False otherwise
+        Tuple of (success, was_run) - success indicates if linters passed, was_run indicates if they could run
     """
     print_section_header("TERRAFORM LINTING")
     success = True
 
     terraform_dir = project_root / "terraform"
 
+    # Skip if terraform directory doesn't exist
+    if not terraform_dir.exists():
+        print("⚠️  Terraform directory not found. Skipping terraform lint checks.")
+        return True, False
+
     # Skip if terraform is not installed
     if not which("terraform"):
         print("⚠️  Terraform is not installed. Skipping terraform lint checks.")
-        return success
+        return True, False
 
     # Run terraform fmt with -write=true to auto-fix formatting
     print_step("Running Terraform formatting")
@@ -229,17 +249,17 @@ def run_terraform_linters(project_root: Path) -> bool:
             print(f"❌ Error running TFLint: {e}")
             success = False
 
-    return success
+    return success, True
 
 
-def run_shell_linters(project_root: Path) -> bool:
+def run_shell_linters(project_root: Path) -> tuple[bool, bool]:
     """Run shell script linters if shellcheck is installed.
 
     Args:
         project_root: Path to the project root directory
 
     Returns:
-        True if all linters succeeded or were skipped, False otherwise
+        Tuple of (success, was_run) - success indicates if linters passed, was_run indicates if they could run
     """
     print_section_header("SHELL SCRIPT LINTING")
     success = True
@@ -247,13 +267,13 @@ def run_shell_linters(project_root: Path) -> bool:
     # Skip if shellcheck is not installed
     if not which("shellcheck"):
         print("⚠️  ShellCheck is not installed. Skipping shell script lint checks.")
-        return success
+        return True, False
 
     # Find all .sh files in the project
     shell_scripts = list(project_root.glob("**/*.sh"))
     if not shell_scripts:
         print("ℹ️  No shell scripts found in project.")
-        return success
+        return True, False
 
     ignored_dirs = [".git", "node_modules", ".terraform"]
 
@@ -265,7 +285,7 @@ def run_shell_linters(project_root: Path) -> bool:
 
     if not filtered_scripts:
         print("ℹ️  No shell scripts found outside of ignored directories.")
-        return success
+        return True, False
 
     print_step(f"Found {len(filtered_scripts)} shell script(s) to check")
 
@@ -291,17 +311,17 @@ def run_shell_linters(project_root: Path) -> bool:
                 cwd=project_root,
             )
 
-    return success
+    return success, True
 
 
-def run_go_linters(project_root: Path) -> bool:
+def run_go_linters(project_root: Path) -> tuple[bool, bool]:
     """Run Go linters if Go is installed and Go projects exist.
 
     Args:
         project_root: Path to the project root directory
 
     Returns:
-        True if all linters succeeded or were skipped, False otherwise
+        Tuple of (success, was_run) - success indicates if linters passed, was_run indicates if they could run
     """
     print_section_header("GO LINTING")
     success = True
@@ -309,7 +329,7 @@ def run_go_linters(project_root: Path) -> bool:
     # Skip if Go is not installed
     if not which("go"):
         print("⚠️  Go is not installed. Skipping Go lint checks.")
-        return success
+        return True, False
 
     # Find Go modules in the project
     go_modules = []
@@ -321,7 +341,7 @@ def run_go_linters(project_root: Path) -> bool:
 
     if not go_modules:
         print("ℹ️  No Go modules found in project.")
-        return success
+        return True, False
 
     print_step(f"Found {len(go_modules)} Go module(s) to check")
 
@@ -404,7 +424,7 @@ def run_go_linters(project_root: Path) -> bool:
             if not gosec_result:
                 print(f"   ⚠️  Security findings detected - please review")
 
-    return success
+    return success, True
 
 
 def main() -> int:
@@ -420,7 +440,7 @@ def main() -> int:
     print(f"🕐 Started at: {Path(__file__).name}")
 
     # Define all linter functions to run
-    linters: list[tuple[str, Callable[[Path], bool]]] = [
+    linters: list[tuple[str, Callable[[Path], tuple[bool, bool]]]] = [
         ("Python", lambda root: run_python_linters(root)),
         ("Prettier", lambda root: run_prettier(root)),
         ("Terraform", lambda root: run_terraform_linters(root)),
@@ -433,14 +453,21 @@ def main() -> int:
     results = []
 
     for name, linter in linters:
-        result = linter(project_root)
-        success &= result
-        results.append((name, result))
+        linter_success, was_run = linter(project_root)
+        # Only count failures if the linter actually ran
+        if was_run:
+            success &= linter_success
+        results.append((name, linter_success, was_run))
 
     # Print summary
     print_section_header("SUMMARY")
-    for name, result in results:
-        status = "✅ PASSED" if result else "❌ FAILED"
+    for name, linter_success, was_run in results:
+        if not was_run:
+            status = "⏭️  SKIPPED"
+        elif linter_success:
+            status = "✅ PASSED"
+        else:
+            status = "❌ FAILED"
         print(f"{status} - {name}")
 
     print(f"\n{'='*60}")
