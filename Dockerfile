@@ -1,6 +1,6 @@
 # Stage 1: Python base with GDAL dependencies
 # This stage contains all the heavy dependencies that rarely change
-FROM python:3.13 AS python-base
+FROM python:3.13-slim AS python-base
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
