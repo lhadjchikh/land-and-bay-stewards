@@ -107,33 +107,34 @@ def run_prettier(project_root: Path) -> bool:
             cwd=project_root,
         )
 
-        if format_result:
-            print("Format:all script completed successfully.")
-        else:
-            print("Format:all script failed, trying YAML formatting...")
+        if not format_result:
+            print("Format:all script failed, trying alternative approaches...")
+            success = False
+
             # Try YAML formatting as a fallback
+            print("Trying YAML formatting...")
             yaml_result = run_command(
                 ["npm", "--prefix", "frontend", "run", "yaml:format"],
                 cwd=project_root,
             )
 
-            if yaml_result:
-                print("YAML formatting completed successfully.")
-            else:
-                print("YAML formatting failed.")
-
-            # As a last resort, try the basic format command
+            # Try the basic format command for frontend files
             print("Trying basic format command...")
             basic_result = run_command(
                 ["npm", "--prefix", "frontend", "run", "format"],
                 cwd=project_root,
             )
 
-            if basic_result:
-                print("Basic formatting completed successfully.")
+            # If any of the fallback methods succeed, consider it a partial success
+            if yaml_result or basic_result:
+                print("Some formatting completed, but format:all failed.")
+                # Still mark as failure since format:all should work
+                success = False
             else:
                 print("All formatting attempts failed.")
                 success = False
+        else:
+            print("Format:all script completed successfully.")
     except Exception as e:
         print(f"Error running Prettier: {e}")
         success = False
