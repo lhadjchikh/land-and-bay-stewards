@@ -6,21 +6,21 @@ export const metrics = {
   // Counter for different types of requests
   requestCount: 0,
   errorCount: 0,
-  
+
   // Timing
   startTime: Date.now(),
   lastRequest: Date.now(),
-  
+
   // Methods to update metrics
   incrementRequestCount() {
     this.requestCount++;
     this.lastRequest = Date.now();
   },
-  
+
   registerError() {
     this.errorCount++;
   },
-  
+
   // Helper to get uptime info
   getUptime() {
     const uptime = Math.floor((Date.now() - this.startTime) / 1000);
@@ -29,7 +29,7 @@ export const metrics = {
       formatted: `${Math.floor(uptime / 3600)}h ${Math.floor((uptime % 3600) / 60)}m ${uptime % 60}s`,
     };
   },
-  
+
   // Get memory usage info
   getMemoryUsage() {
     const memUsage = process.memoryUsage();

@@ -25,7 +25,7 @@
     "lint:ci": "eslint \"src/**/*.{js,jsx,ts,tsx}\" --max-warnings=0",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,css,md,json}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,css,md,json}\"",
-    "format:all": "prettier --write \"**/*.{js,jsx,ts,tsx,css,md,json}\" \"../**/*.{md,yml,yaml}\" --ignore-path ../.prettierignore",
+    "format:all": "prettier --write \"**/*.{js,jsx,ts,tsx,css,md,json}\" \"../**/*.{md,yml,yaml,js,jsx,ts,tsx,css,json}\" --ignore-path ../.prettierignore",
     "yaml:format": "prettier --write \"../**/*.{yml,yaml}\" --ignore-path ../.prettierignore",
     "typecheck": "tsc --noEmit",
     "eject": "react-scripts eject"

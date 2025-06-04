@@ -13,9 +13,14 @@ body {
 }
 
 /* Ensure all text is legible */
-body, button, input, select, textarea {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+body,
+button,
+input,
+select,
+textarea {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
 }
 
 /* Basic link styling */

@@ -4,7 +4,7 @@
  */
 
 // Import utilities
-const { makeRequest, waitForService } = require('./utils');
+const { makeRequest, waitForService } = require("./utils");
 
 // Configuration
 const SSR_URL = process.env.SSR_URL || "http://localhost:3000";
@@ -36,7 +36,7 @@ async function runTests() {
       console.log(`❌ API health endpoint failed: ${apiResponse.statusCode}`);
       failed++;
     }
-    
+
     // Test 3: API Data Endpoint
     console.log("🔍 Testing API data endpoint...");
     const apiDataResponse = await makeRequest(`${API_URL}/api/campaigns/`);
@@ -82,7 +82,9 @@ async function runTests() {
         const checkResponse = await makeRequest(NGINX_URL);
         nginxAvailable = checkResponse.statusCode < 500; // Any non-server error is considered available
       } catch (error) {
-        console.log(`⚠️  Load balancer at ${NGINX_URL} not accessible: ${error.message}`);
+        console.log(
+          `⚠️  Load balancer at ${NGINX_URL} not accessible: ${error.message}`,
+        );
       }
 
       if (nginxAvailable) {
@@ -97,7 +99,7 @@ async function runTests() {
           passed++;
         } else {
           console.log(
-            `❌ Load balancer routing failed: API ${lbApiResponse.statusCode}, SSR ${lbSSRResponse.statusCode}`
+            `❌ Load balancer routing failed: API ${lbApiResponse.statusCode}, SSR ${lbSSRResponse.statusCode}`,
           );
           failed++;
         }

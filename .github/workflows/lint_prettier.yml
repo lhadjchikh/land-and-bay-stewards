@@ -3,16 +3,8 @@ name: Prettier Lint
 on:
   push:
     branches: [main]
-    paths:
-      - "*.{md,json,yml,yaml}"
-      - "**/*.{js,jsx,ts,tsx,css,md,json,yml,yaml}"
-      - ".github/workflows/*.{yml,yaml}"
   pull_request:
     branches: [main]
-    paths:
-      - "*.{md,json,yml,yaml}"
-      - "**/*.{js,jsx,ts,tsx,css,md,json,yml,yaml}"
-      - ".github/workflows/*.{yml,yaml}"
 
 jobs:
   prettier_lint:

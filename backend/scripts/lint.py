@@ -6,6 +6,19 @@ from collections.abc import Callable
 from pathlib import Path
 
 
+def print_section_header(title: str) -> None:
+    """Print a formatted section header."""
+    print(f"\n{'='*60}")
+    print(f" {title}")
+    print(f"{'='*60}")
+
+
+def print_step(step: str) -> None:
+    """Print a formatted step indicator."""
+    print(f"\n🔧 {step}")
+    print("-" * 50)
+
+
 def run_command(cmd: list[str], cwd: str | Path | None = None) -> bool:
     """Run a command and print its output.
 
@@ -16,7 +29,7 @@ def run_command(cmd: list[str], cwd: str | Path | None = None) -> bool:
     Returns:
         True if the command was successful, False otherwise
     """
-    print(f"Running: {' '.join(cmd)}")
+    print(f"   └─ {' '.join(cmd)}")
     try:
         result = subprocess.run(
             cmd,
@@ -26,14 +39,25 @@ def run_command(cmd: list[str], cwd: str | Path | None = None) -> bool:
             capture_output=True,
         )
         if result.stdout:
-            print(result.stdout)
+            # Indent output for better readability
+            indented_output = "\n".join(
+                f"      {line}" for line in result.stdout.strip().split("\n")
+            )
+            print(indented_output)
+        print("   ✅ Success")
         return True
     except subprocess.CalledProcessError as e:
-        print(f"Error running command: {e}")
+        print(f"   ❌ Error: {e}")
         if e.stdout:
-            print(e.stdout)
+            indented_output = "\n".join(
+                f"      {line}" for line in e.stdout.strip().split("\n")
+            )
+            print(indented_output)
         if e.stderr:
-            print(e.stderr)
+            indented_output = "\n".join(
+                f"      {line}" for line in e.stderr.strip().split("\n")
+            )
+            print(indented_output)
         return False
 
 
@@ -51,14 +75,15 @@ def run_python_linters(project_root: Path) -> bool:
     Returns:
         True if all linters succeeded, False otherwise
     """
+    print_section_header("PYTHON LINTING")
     success = True
 
     backend_dir = project_root / "backend"
 
-    print("Running black...")
+    print_step("Running Black code formatter")
     success &= run_command(["poetry", "run", "black", "."], cwd=backend_dir)
 
-    print("Running ruff...")
+    print_step("Running Ruff linter with auto-fix")
     # Run ruff with --fix to auto-fix issues
     success &= run_command(
         ["poetry", "run", "ruff", "check", "--fix", "."],
@@ -77,65 +102,64 @@ def run_prettier(project_root: Path) -> bool:
     Returns:
         True if all formatters succeeded or were skipped, False otherwise
     """
+    print_section_header("PRETTIER FORMATTING")
     success = True
 
     # Skip if the project_root doesn't exist
     if not project_root.exists():
+        print("⚠️  Project root directory not found. Skipping Prettier formatting.")
         return success
 
     frontend_dir = project_root / "frontend"
     if not frontend_dir.exists():
-        print("Frontend directory not found. Skipping frontend formatting.")
+        print("⚠️  Frontend directory not found. Skipping Prettier formatting.")
         return success
 
     # Check if package.json exists and verify npm scripts
     package_json = frontend_dir / "package.json"
     if not package_json.exists():
         print(
-            "No package.json found in frontend directory. "
-            "Skipping frontend formatting.",
+            "⚠️  No package.json found in frontend directory. "
+            "Skipping Prettier formatting.",
         )
         return success
 
-    print("Running Prettier formatting...")
-
     try:
         # First, try to run the format:all script which is defined in package.json
-        print("Running format:all script...")
+        print_step("Running comprehensive format:all script")
         format_result = run_command(
             ["npm", "--prefix", "frontend", "run", "format:all"],
             cwd=project_root,
         )
 
-        if format_result:
-            print("Format:all script completed successfully.")
-        else:
-            print("Format:all script failed, trying YAML formatting...")
+        if not format_result:
+            print("⚠️  Format:all script failed, trying alternative approaches...")
+            success = False
+
             # Try YAML formatting as a fallback
+            print_step("Fallback: YAML formatting")
             yaml_result = run_command(
                 ["npm", "--prefix", "frontend", "run", "yaml:format"],
                 cwd=project_root,
             )
 
-            if yaml_result:
-                print("YAML formatting completed successfully.")
-            else:
-                print("YAML formatting failed.")
-
-            # As a last resort, try the basic format command
-            print("Trying basic format command...")
+            # Try the basic format command for frontend files
+            print_step("Fallback: Basic frontend formatting")
             basic_result = run_command(
                 ["npm", "--prefix", "frontend", "run", "format"],
                 cwd=project_root,
             )
 
-            if basic_result:
-                print("Basic formatting completed successfully.")
+            # If any of the fallback methods succeed, consider it a partial success
+            if yaml_result or basic_result:
+                print("⚠️  Some formatting completed, but format:all failed.")
+                # Still mark as failure since format:all should work
+                success = False
             else:
-                print("All formatting attempts failed.")
+                print("❌ All formatting attempts failed.")
                 success = False
     except Exception as e:
-        print(f"Error running Prettier: {e}")
+        print(f"❌ Error running Prettier: {e}")
         success = False
 
     return success
@@ -150,17 +174,18 @@ def run_terraform_linters(project_root: Path) -> bool:
     Returns:
         True if all linters succeeded or were skipped, False otherwise
     """
+    print_section_header("TERRAFORM LINTING")
     success = True
 
     terraform_dir = project_root / "terraform"
 
     # Skip if terraform is not installed
     if not which("terraform"):
-        print("Terraform is not installed. Skipping terraform lint checks.")
+        print("⚠️  Terraform is not installed. Skipping terraform lint checks.")
         return success
 
     # Run terraform fmt with -write=true to auto-fix formatting
-    print("Running terraform fmt...")
+    print_step("Running Terraform formatting")
     success &= run_command(
         ["terraform", "fmt", "-write=true", "-recursive"],
         cwd=terraform_dir,
@@ -168,14 +193,16 @@ def run_terraform_linters(project_root: Path) -> bool:
 
     # Check for tflint binary
     if not which("tflint"):
-        print("TFLint is not installed. Skipping tflint checks.")
+        print("⚠️  TFLint is not installed. Skipping tflint checks.")
     else:
-        print("Running tflint...")
         try:
             # Check for GitHub token to avoid rate limiting
             if "GITHUB_TOKEN" not in os.environ:
+                print_step(
+                    "Initializing TFLint (without plugins due to missing GITHUB_TOKEN)",
+                )
                 print(
-                    "Warning: GITHUB_TOKEN not found in environment. "
+                    "      ⚠️  Warning: GITHUB_TOKEN not found in environment. "
                     "TFLint plugin initialization may fail due to GitHub API "
                     "rate limits.",
                 )
@@ -183,6 +210,7 @@ def run_terraform_linters(project_root: Path) -> bool:
                 # to avoid API rate limit errors
                 init_args = ["tflint", "--no-plugins"]
             else:
+                print_step("Initializing TFLint with plugins")
                 init_args = ["tflint", "--init"]
 
             # Try to initialize TFLint (with or without plugins)
@@ -190,12 +218,15 @@ def run_terraform_linters(project_root: Path) -> bool:
 
             # Run TFLint recursively if initialization succeeded
             if init_result:
+                print_step("Running TFLint recursive check")
                 success &= run_command(["tflint", "--recursive"], cwd=terraform_dir)
             else:
-                print("Skipping recursive TFLint check due to initialization failure")
+                print(
+                    "❌ Skipping recursive TFLint check due to initialization failure",
+                )
                 success = False
         except Exception as e:
-            print(f"Error running TFLint: {e}")
+            print(f"❌ Error running TFLint: {e}")
             success = False
 
     return success
@@ -210,37 +241,51 @@ def run_shell_linters(project_root: Path) -> bool:
     Returns:
         True if all linters succeeded or were skipped, False otherwise
     """
+    print_section_header("SHELL SCRIPT LINTING")
     success = True
 
     # Skip if shellcheck is not installed
     if not which("shellcheck"):
-        print("ShellCheck is not installed. Skipping shell script lint checks.")
+        print("⚠️  ShellCheck is not installed. Skipping shell script lint checks.")
         return success
 
-    print("Running ShellCheck on shell scripts...")
     # Find all .sh files in the project
     shell_scripts = list(project_root.glob("**/*.sh"))
     if not shell_scripts:
+        print("ℹ️  No shell scripts found in project.")
         return success
 
     ignored_dirs = [".git", "node_modules", ".terraform"]
 
+    # Filter out ignored directories
+    filtered_scripts = []
     for script in shell_scripts:
-        # Skip files in ignored directories
-        if any(ignore_dir in str(script) for ignore_dir in ignored_dirs):
-            continue
+        if not any(ignore_dir in str(script) for ignore_dir in ignored_dirs):
+            filtered_scripts.append(script)
 
-        print(f"Checking {script.relative_to(project_root)}...")
+    if not filtered_scripts:
+        print("ℹ️  No shell scripts found outside of ignored directories.")
+        return success
+
+    print_step(f"Found {len(filtered_scripts)} shell script(s) to check")
+
+    for script in filtered_scripts:
+        print(f"\n   📄 Checking {script.relative_to(project_root)}")
+
         # Run shellcheck with -x to follow external sources
-        success &= run_command(["shellcheck", "-x", str(script)], cwd=project_root)
+        script_success = run_command(
+            ["shellcheck", "-x", str(script)],
+            cwd=project_root,
+        )
+        success &= script_success
 
         # Auto-fix shell scripts if the shellcheck-fix command is available
         if which("shellcheck-fix"):
-            print(f"Auto-fixing {script.relative_to(project_root)}...")
+            print(f"   🔧 Auto-fixing {script.relative_to(project_root)}")
             run_command(["shellcheck-fix", str(script)], cwd=project_root)
         elif which("shfmt"):
             # As an alternative, format the shell scripts with shfmt
-            print(f"Formatting {script.relative_to(project_root)} with shfmt...")
+            print(f"   🎨 Formatting {script.relative_to(project_root)} with shfmt")
             run_command(
                 ["shfmt", "-w", "-i", "2", "-ci", str(script)],
                 cwd=project_root,
@@ -257,24 +302,41 @@ def main() -> int:
     """
     project_root = Path(__file__).parent.parent.parent
 
+    print_section_header("STARTING LINT & FORMAT PROCESS")
+    print(f"📁 Project root: {project_root}")
+    print(f"🕐 Started at: {Path(__file__).name}")
+
     # Define all linter functions to run
-    linters: list[Callable[[Path], bool]] = [
-        lambda root: run_python_linters(root),
-        lambda root: run_prettier(root),
-        lambda root: run_terraform_linters(root),
-        lambda root: run_shell_linters(root),
+    linters: list[tuple[str, Callable[[Path], bool]]] = [
+        ("Python", lambda root: run_python_linters(root)),
+        ("Prettier", lambda root: run_prettier(root)),
+        ("Terraform", lambda root: run_terraform_linters(root)),
+        ("Shell Scripts", lambda root: run_shell_linters(root)),
     ]
 
     # Run all linters
     success = True
-    for linter in linters:
-        success &= linter(project_root)
+    results = []
 
+    for name, linter in linters:
+        result = linter(project_root)
+        success &= result
+        results.append((name, result))
+
+    # Print summary
+    print_section_header("SUMMARY")
+    for name, result in results:
+        status = "✅ PASSED" if result else "❌ FAILED"
+        print(f"{status} - {name}")
+
+    print(f"\n{'='*60}")
     if success:
-        print("All linters completed successfully!")
+        print("🎉 ALL LINTERS COMPLETED SUCCESSFULLY!")
+        print("Your code is properly formatted and passes all checks.")
         return 0
     else:
-        print("One or more linters failed. Please fix the issues manually.")
+        print("❌ ONE OR MORE LINTERS FAILED")
+        print("Please review the output above and fix any issues manually.")
         return 1
 
 

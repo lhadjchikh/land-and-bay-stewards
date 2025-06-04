@@ -1,6 +1,6 @@
 /**
  * Health check script for Docker container
- * 
+ *
  * This script checks the health of the Next.js SSR service by
  * making a request to the dedicated health endpoint.
  */
@@ -15,36 +15,43 @@ const options = {
   method: "GET",
   timeout: 3000,
   headers: {
-    "Accept": "application/json"
-  }
+    Accept: "application/json",
+  },
 };
 
 // Execute health check
 const req = http.request(options, (res) => {
   let data = "";
-  
+
   // Collect response data
   res.on("data", (chunk) => {
     data += chunk;
   });
-  
+
   // Process the complete response
   res.on("end", () => {
     if (res.statusCode === 200) {
       try {
         // Parse the JSON response
         const healthData = JSON.parse(data);
-        
+
         // Check if the status is healthy and API is connected
-        if (healthData.status === "healthy" && healthData.api?.status === "connected") {
+        if (
+          healthData.status === "healthy" &&
+          healthData.api?.status === "connected"
+        ) {
           console.log("✅ Health check passed - API connection verified");
           process.exit(0);
         } else {
-          console.log(`❌ Health check failed - Status: ${healthData.status}, API: ${healthData.api?.status}`);
+          console.log(
+            `❌ Health check failed - Status: ${healthData.status}, API: ${healthData.api?.status}`,
+          );
           process.exit(1);
         }
       } catch (e) {
-        console.log(`❌ Health check failed - Invalid JSON response: ${e.message}`);
+        console.log(
+          `❌ Health check failed - Invalid JSON response: ${e.message}`,
+        );
         process.exit(1);
       }
     } else {
