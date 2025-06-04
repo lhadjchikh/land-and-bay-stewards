@@ -419,8 +419,8 @@ This project is licensed under the GNU General Public License v3.0 - see the [LI
 
 This project demonstrates the power of human-AI collaboration in modern software development. The codebase, infrastructure, and documentation were developed through a collaborative process utilizing:
 
-- [Claude](https://claude.ai/) by Anthropic - for code generation and documentation
-- [GitHub Copilot](https://github.com/features/copilot) - for automated code reviews
+- [Claude](https://claude.ai/) by Anthropic and [Codex](https://openai.com/codex/) by OpenAI - for code generation, documentation, and troubleshooting
+- [GitHub Copilot](https://github.com/features/copilot) - for code snippets and automated code reviews
 - Human expertise in system design, testing, and deployment strategies
 
 We believe in transparency about our development process and the tools that help us build better software.
