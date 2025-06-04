@@ -15,12 +15,12 @@ const { promisify } = require("util");
 const execAsync = promisify(exec);
 
 // Import utilities for HTTP requests and service waiting
-const { 
-  makeRequest, 
-  waitForService, 
-  fetchCompatible: fetch, 
-  fetchWithRetry 
-} = require('./utils');
+const {
+  makeRequest,
+  waitForService,
+  fetchCompatible: fetch,
+  fetchWithRetry,
+} = require("./utils");
 
 // Test configuration
 const TEST_CONFIG = {
@@ -30,7 +30,7 @@ const TEST_CONFIG = {
   TIMEOUT: parseInt(process.env.TEST_TIMEOUT) || 60000, // 60 seconds by default
   RETRY_COUNT: parseInt(process.env.TEST_RETRY_COUNT) || 5,
   RETRY_DELAY: parseInt(process.env.TEST_RETRY_DELAY) || 3000, // 3 seconds
-  CI_MODE: process.env.CI === 'true' || process.env.GITHUB_ACTIONS === 'true'
+  CI_MODE: process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true",
 };
 
 // Log test configuration
@@ -38,7 +38,7 @@ console.log("Test Configuration:", {
   ...TEST_CONFIG,
   TIMEOUT: `${TEST_CONFIG.TIMEOUT}ms`,
   RETRY_DELAY: `${TEST_CONFIG.RETRY_DELAY}ms`,
-  ENVIRONMENT: TEST_CONFIG.CI_MODE ? "CI" : "Local"
+  ENVIRONMENT: TEST_CONFIG.CI_MODE ? "CI" : "Local",
 });
 
 // The helper functions have been replaced by imports from the utils module
@@ -51,7 +51,7 @@ async function testSSRHealth() {
 
   if (!response.ok) {
     throw new Error(
-      `SSR health check failed: ${response.status} ${response.statusText}`
+      `SSR health check failed: ${response.status} ${response.statusText}`,
     );
   }
 
@@ -59,7 +59,7 @@ async function testSSRHealth() {
 
   if (data.status !== "healthy") {
     throw new Error(
-      `SSR health check returned unhealthy status: ${JSON.stringify(data)}`
+      `SSR health check returned unhealthy status: ${JSON.stringify(data)}`,
     );
   }
 
@@ -71,13 +71,11 @@ async function testSSRHealth() {
 async function testDjangoAPI() {
   console.log("🔍 Testing Django API health...");
 
-  const response = await fetchWithRetry(
-    `${TEST_CONFIG.API_URL}/api/health/`
-  );
+  const response = await fetchWithRetry(`${TEST_CONFIG.API_URL}/api/health/`);
 
   if (!response.ok) {
     throw new Error(
-      `Django API health test failed: ${response.status} ${response.statusText}`
+      `Django API health test failed: ${response.status} ${response.statusText}`,
     );
   }
 
@@ -85,18 +83,18 @@ async function testDjangoAPI() {
 
   if (healthData.status !== "healthy") {
     throw new Error(
-      `Django API health check returned unhealthy status: ${JSON.stringify(healthData)}`
+      `Django API health check returned unhealthy status: ${JSON.stringify(healthData)}`,
     );
   }
 
   // Also test data endpoint
   const dataResponse = await fetchWithRetry(
-    `${TEST_CONFIG.API_URL}/api/campaigns/`
+    `${TEST_CONFIG.API_URL}/api/campaigns/`,
   );
 
   if (!dataResponse.ok) {
     throw new Error(
-      `Django API data endpoint failed: ${dataResponse.status} ${dataResponse.statusText}`
+      `Django API data endpoint failed: ${dataResponse.status} ${dataResponse.statusText}`,
     );
   }
 
@@ -104,12 +102,12 @@ async function testDjangoAPI() {
 
   if (!Array.isArray(campaigns)) {
     throw new Error(
-      `Django API returned invalid data: expected array, got ${typeof campaigns}`
+      `Django API returned invalid data: expected array, got ${typeof campaigns}`,
     );
   }
 
   console.log(
-    `✅ Django API tests passed (health check OK, returned ${campaigns.length} campaigns)`
+    `✅ Django API tests passed (health check OK, returned ${campaigns.length} campaigns)`,
   );
   return campaigns;
 }
@@ -122,7 +120,7 @@ async function testSSRHomepage() {
 
   if (!response.ok) {
     throw new Error(
-      `SSR homepage failed: ${response.status} ${response.statusText}`
+      `SSR homepage failed: ${response.status} ${response.statusText}`,
     );
   }
 
@@ -140,7 +138,7 @@ async function testSSRHomepage() {
     "<head",
     "<body",
   ];
-  
+
   // Content that should be present but won't fail tests if missing
   // These could change with UI updates
   const expectedContent = [
@@ -156,7 +154,7 @@ async function testSSRHomepage() {
       throw new Error(`SSR homepage missing critical content: "${content}"`);
     }
   }
-  
+
   // Check expected content (warn if missing but don't fail)
   let missingContent = [];
   for (const content of expectedContent) {
@@ -164,17 +162,17 @@ async function testSSRHomepage() {
       missingContent.push(content);
     }
   }
-  
+
   if (missingContent.length > 0) {
     console.warn(
-      `⚠️  Warning: SSR homepage missing some expected content: ${missingContent.join(", ")}`
+      `⚠️  Warning: SSR homepage missing some expected content: ${missingContent.join(", ")}`,
     );
   }
 
   // Verify it's actually SSR by checking for hydration markers
   if (!html.includes("__NEXT_DATA__") && !html.includes("next/script")) {
     console.warn(
-      "⚠️  Warning: Page might not be properly server-side rendered (missing Next.js hydration markers)"
+      "⚠️  Warning: Page might not be properly server-side rendered (missing Next.js hydration markers)",
     );
   }
 
@@ -188,12 +186,12 @@ async function testAPIRouting() {
 
   // Test through Nginx (simulates ALB routing)
   const response = await fetchWithRetry(
-    `${TEST_CONFIG.NGINX_URL}/api/campaigns/`
+    `${TEST_CONFIG.NGINX_URL}/api/campaigns/`,
   );
 
   if (!response.ok) {
     throw new Error(
-      `API routing test failed: ${response.status} ${response.statusText}`
+      `API routing test failed: ${response.status} ${response.statusText}`,
     );
   }
 
@@ -201,12 +199,12 @@ async function testAPIRouting() {
 
   if (!Array.isArray(campaigns)) {
     throw new Error(
-      `API routing returned invalid data: expected array, got ${typeof campaigns}`
+      `API routing returned invalid data: expected array, got ${typeof campaigns}`,
     );
   }
 
   console.log(
-    `✅ API routing test passed (returned ${campaigns.length} campaigns through load balancer)`
+    `✅ API routing test passed (returned ${campaigns.length} campaigns through load balancer)`,
   );
   return campaigns;
 }
@@ -228,7 +226,7 @@ async function testSSRAPIIntegration() {
 
   if (!hasDataRendered) {
     console.warn(
-      "⚠️  Warning: SSR page may not have successfully fetched API data"
+      "⚠️  Warning: SSR page may not have successfully fetched API data",
     );
   } else {
     console.log("✅ SSR appears to have successfully integrated with API");
@@ -248,7 +246,9 @@ async function testContainerCommunication() {
       await execAsync("docker --version");
       dockerAvailable = true;
     } catch (error) {
-      console.log("ℹ️  Docker not available, skipping container communication test");
+      console.log(
+        "ℹ️  Docker not available, skipping container communication test",
+      );
       return true; // Skip test but don't fail it
     }
 
@@ -264,7 +264,7 @@ async function testContainerCommunication() {
         // Test that SSR container can reach API container
         try {
           const { stdout: apiTest } = await execAsync(
-            `${dockerComposeCmd} exec -T ssr curl -s -o /dev/null -w "%{http_code}" http://api:8000/api/campaigns/ || echo "failed"`
+            `${dockerComposeCmd} exec -T ssr curl -s -o /dev/null -w "%{http_code}" http://api:8000/api/campaigns/ || echo "failed"`,
           );
 
           if (apiTest.trim() === "200") {
@@ -272,27 +272,29 @@ async function testContainerCommunication() {
             return true;
           } else {
             console.warn(
-              `⚠️  Warning: Container-to-container communication may have issues (status: ${apiTest.trim()})`
+              `⚠️  Warning: Container-to-container communication may have issues (status: ${apiTest.trim()})`,
             );
             return false;
           }
         } catch (cmdError) {
-          console.warn(`⚠️  Container command execution failed: ${cmdError.message}`);
+          console.warn(
+            `⚠️  Container command execution failed: ${cmdError.message}`,
+          );
           return false;
         }
       } else {
-        console.log(`ℹ️  Required services (ssr, api) not running in Docker. Found: [${services.join(", ")}]`);
+        console.log(
+          `ℹ️  Required services (ssr, api) not running in Docker. Found: [${services.join(", ")}]`,
+        );
         return true; // Skip test but don't fail it
       }
     }
   } catch (error) {
     // Log the error but don't fail the entire test suite for this
-    console.log(
-      `ℹ️  Skipping container communication test: ${error.message}`
-    );
+    console.log(`ℹ️  Skipping container communication test: ${error.message}`);
     return true;
   }
-  
+
   return true; // Default pass if we reach here
 }
 
@@ -352,8 +354,12 @@ async function runIntegrationTests() {
   console.log("⏳ Waiting for services to be ready...");
   try {
     await Promise.all([
-      waitForService(`${TEST_CONFIG.SSR_URL}/health`, { timeout: TEST_CONFIG.TIMEOUT }),
-      waitForService(`${TEST_CONFIG.API_URL}/api/health/`, { timeout: TEST_CONFIG.TIMEOUT }),
+      waitForService(`${TEST_CONFIG.SSR_URL}/health`, {
+        timeout: TEST_CONFIG.TIMEOUT,
+      }),
+      waitForService(`${TEST_CONFIG.API_URL}/api/health/`, {
+        timeout: TEST_CONFIG.TIMEOUT,
+      }),
     ]);
     console.log("✅ All services are ready\n");
   } catch (error) {
@@ -386,18 +392,20 @@ async function runIntegrationTests() {
   const totalTime = Date.now() - results.startTime;
   const minutes = Math.floor(totalTime / 60000);
   const seconds = ((totalTime % 60000) / 1000).toFixed(2);
-  
+
   // Print summary
   console.log("\n📊 Test Summary:");
   console.log(`✅ Passed: ${results.passed}`);
   console.log(`❌ Failed: ${results.failed}`);
   console.log(`⚠️  Warnings: ${results.warnings}`);
-  console.log(`⏱️  Total time: ${minutes > 0 ? `${minutes}m ` : ''}${seconds}s`);
+  console.log(
+    `⏱️  Total time: ${minutes > 0 ? `${minutes}m ` : ""}${seconds}s`,
+  );
 
   // Print test results
   if (results.tests.length > 0) {
     console.log("\nTest details:");
-    results.tests.forEach(test => {
+    results.tests.forEach((test) => {
       if (test.status === "PASSED") {
         console.log(`  ✅ ${test.name}`);
       } else {

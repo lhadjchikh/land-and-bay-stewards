@@ -15,13 +15,13 @@ const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || "info",
   format: winston.format.combine(
     winston.format.timestamp(),
-    winston.format.json()
+    winston.format.json(),
   ),
   transports: [
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
-        winston.format.simple()
+        winston.format.simple(),
       ),
     }),
   ],
@@ -42,7 +42,7 @@ app.use(
         imgSrc: ["'self'", "data:", "https:"],
       },
     },
-  })
+  }),
 );
 
 // Performance middleware
@@ -56,7 +56,7 @@ app.use(
       : "*",
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type", "Authorization"],
-  })
+  }),
 );
 
 // Body parsing
@@ -106,7 +106,7 @@ const AppComponent = (props = {}) => {
           React.createElement(
             "h1",
             { key: "title" },
-            title || "Land and Bay Stewards"
+            title || "Land and Bay Stewards",
           ),
           React.createElement(
             "a",
@@ -117,9 +117,9 @@ const AppComponent = (props = {}) => {
               target: "_blank",
               rel: "noopener noreferrer",
             },
-            "Learn React"
+            "Learn React",
           ),
-        ]
+        ],
       ),
       React.createElement(
         "main",
@@ -130,9 +130,9 @@ const AppComponent = (props = {}) => {
         [
           renderCampaignsList(initialData.campaigns || []),
           renderEndorsersList(initialData.endorsers || []),
-        ]
+        ],
       ),
-    ]
+    ],
   );
 };
 
@@ -163,13 +163,13 @@ const renderCampaignsList = (campaigns) => {
                   React.createElement(
                     "p",
                     { key: "summary" },
-                    campaign.summary
+                    campaign.summary,
                   ),
-                ]
-              )
-            )
+                ],
+              ),
+            ),
           ),
-    ]
+    ],
   );
 };
 
@@ -201,13 +201,13 @@ const renderEndorsersList = (endorsers) => {
                       {
                         key: "org",
                       },
-                      `Organization: ${endorser.organization}`
+                      `Organization: ${endorser.organization}`,
                     ),
-                ]
-              )
-            )
+                ],
+              ),
+            ),
           ),
-    ]
+    ],
   );
 };
 

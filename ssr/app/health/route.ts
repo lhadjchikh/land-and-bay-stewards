@@ -42,7 +42,7 @@ export async function GET() {
         headers: {
           "Cache-Control": "no-store, max-age=0",
         },
-      }
+      },
     );
   } catch (error) {
     registerError();
@@ -57,7 +57,7 @@ export async function GET() {
         headers: {
           "Cache-Control": "no-store, max-age=0",
         },
-      }
+      },
     );
   }
 }
