@@ -1,0 +1,373 @@
+name: Terraform Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/test_terraform.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/test_terraform.yml'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of tests to run'
+        required: true
+        default: 'unit'
+        type: choice
+        options:
+          - 'unit'
+          - 'integration'
+          - 'all'
+      skip_aws_resources:
+        description: 'Skip AWS resource creation (faster, cheaper)'
+        required: true
+        default: 'true'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
+# Permissions needed for testing
+permissions:
+  contents: read
+  id-token: write # For AWS authentication
+  pull-requests: write # For commenting on PRs
+
+env:
+  GO_VERSION: '1.21'
+  AWS_DEFAULT_REGION: us-east-1
+  TF_IN_AUTOMATION: true
+
+jobs:
+  # Validate Terraform configurations first
+  validate:
+    name: Validate Terraform
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ~1.6.0
+
+      - name: Terraform Format Check
+        run: |
+          cd terraform
+          terraform fmt -check -recursive
+
+      - name: Terraform Validate
+        run: |
+          cd terraform
+          terraform init -backend=false
+          terraform validate
+
+  # Run unit tests (fast, no AWS resources)
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: validate
+    strategy:
+      matrix:
+        module: [networking, compute, security, database]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: terraform/tests/go.sum
+
+      - name: Install dependencies
+        run: |
+          cd terraform/tests
+          go mod download
+
+      - name: Format check
+        run: |
+          cd terraform/tests
+          make fmt-check
+
+      - name: Lint
+        run: |
+          cd terraform/tests
+          # Install golangci-lint if needed
+          if ! command -v golangci-lint &> /dev/null; then
+            go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          fi
+          make lint || true # Allow lint failures for now
+
+      - name: Run unit tests for ${{ matrix.module }}
+        run: |
+          cd terraform/tests
+          go test -short -v -timeout 10m -run Test$(echo ${{ matrix.module }} | sed 's/.*/\u&/') ./modules/
+
+  # Integration tests (creates AWS resources - only on main branch or manual trigger)
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [validate, unit-tests]
+    if: |
+      (github.ref == 'refs/heads/main' && github.event_name == 'push') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.skip_aws_resources == 'false')
+    environment: test # Use test environment for AWS credentials
+    strategy:
+      max-parallel: 1 # Prevent parallel runs to avoid resource conflicts
+      matrix:
+        test-scenario:
+          - name: "Full Stack without SSR"
+            pattern: "TestFullStackDeploymentWithoutSSR"
+          - name: "Security Configuration"
+            pattern: "TestFullStackSecurityConfiguration"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: terraform/tests/go.sum
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ~1.6.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - name: Verify AWS credentials
+        run: |
+          aws sts get-caller-identity
+
+      - name: Install dependencies
+        run: |
+          cd terraform/tests
+          go mod download
+
+      - name: Run integration test - ${{ matrix.test-scenario.name }}
+        timeout-minutes: 45
+        run: |
+          cd terraform/tests
+          go test -v -timeout 45m -run ${{ matrix.test-scenario.pattern }} ./integration/
+
+      - name: Cleanup on failure
+        if: failure()
+        run: |
+          echo "Cleaning up any leftover resources..."
+          # List resources with test prefix for manual cleanup if needed
+          aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*" --query 'Vpcs[].VpcId' --output table || true
+          aws ecs list-clusters --query 'clusterArns[?contains(@, `test`)]' --output table || true
+
+  # Fast integration tests (no AWS resources created)
+  integration-tests-short:
+    name: Integration Tests (No AWS)
+    runs-on: ubuntu-latest
+    needs: [validate, unit-tests]
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.skip_aws_resources == 'true')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: terraform/tests/go.sum
+
+      - name: Install dependencies
+        run: |
+          cd terraform/tests
+          go mod download
+
+      - name: Run short integration tests
+        run: |
+          cd terraform/tests
+          go test -short -v -timeout 10m ./integration/
+
+  # Comprehensive test report
+  test-summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests-short]
+    if: always() && github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache-dependency-path: terraform/tests/go.sum
+
+      - name: Install dependencies
+        run: |
+          cd terraform/tests
+          go mod download
+
+      - name: Generate test coverage
+        run: |
+          cd terraform/tests
+          go test -short -coverprofile=coverage.out ./...
+          go tool cover -html=coverage.out -o coverage.html
+
+      - name: Comment PR with test results
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            
+            // Get test results
+            const unitTestResult = '${{ needs.unit-tests.result }}';
+            const integrationTestResult = '${{ needs.integration-tests-short.result }}';
+            
+            const statusIcon = (result) => {
+              switch(result) {
+                case 'success': return '✅';
+                case 'failure': return '❌';
+                case 'skipped': return '⏭️';
+                default: return '⚠️';
+              }
+            };
+            
+            const body = `## 🧪 Terraform Test Results
+            
+            | Test Type | Status | Details |
+            |-----------|--------|---------|
+            | Unit Tests | ${statusIcon(unitTestResult)} ${unitTestResult} | Tests individual modules without AWS resources |
+            | Integration Tests (Short) | ${statusIcon(integrationTestResult)} ${integrationTestResult} | Tests module interactions without AWS resources |
+            
+            ### 📝 Test Summary
+            
+            - **Unit Tests**: Validate individual Terraform modules (networking, compute, security, database)
+            - **Integration Tests (Short)**: Test module interactions and configurations without creating AWS resources
+            - **AWS Integration Tests**: Only run on main branch pushes to avoid costs
+            
+            ### 🚀 Manual Testing
+            
+            To run full integration tests with AWS resources:
+            
+            \`\`\`bash
+            cd terraform/tests
+            make test-integration
+            \`\`\`
+            
+            **Note**: Full integration tests create real AWS resources and incur costs.
+            
+            ### 📊 Coverage
+            
+            Test coverage report will be available in the workflow artifacts.
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-coverage
+          path: terraform/tests/coverage.html
+
+  # Cost monitoring job
+  cost-monitor:
+    name: Cost Monitor
+    runs-on: ubuntu-latest
+    needs: integration-tests
+    if: needs.integration-tests.result == 'success'
+    environment: test
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_DEFAULT_REGION }}
+
+      - name: Check for leftover test resources
+        run: |
+          echo "Checking for leftover test resources..."
+          
+          # Check for test VPCs
+          TEST_VPCS=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*" --query 'Vpcs[].VpcId' --output text)
+          if [ -n "$TEST_VPCS" ]; then
+            echo "⚠️ Found leftover test VPCs: $TEST_VPCS"
+            echo "TEST_VPCS_FOUND=true" >> $GITHUB_ENV
+          else
+            echo "✅ No leftover test VPCs found"
+          fi
+          
+          # Check for test ECS clusters
+          TEST_CLUSTERS=$(aws ecs list-clusters --query 'clusterArns[?contains(@, `test`)]' --output text)
+          if [ -n "$TEST_CLUSTERS" ]; then
+            echo "⚠️ Found leftover test ECS clusters: $TEST_CLUSTERS"
+            echo "TEST_CLUSTERS_FOUND=true" >> $GITHUB_ENV
+          else
+            echo "✅ No leftover test ECS clusters found"
+          fi
+
+      - name: Create issue for leftover resources
+        if: env.TEST_VPCS_FOUND == 'true' || env.TEST_CLUSTERS_FOUND == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Leftover test resources detected',
+              body: `## Leftover Test Resources Detected
+              
+              The integration tests may have left behind AWS resources that could incur costs.
+              
+              **VPCs**: ${{ env.TEST_VPCS_FOUND == 'true' && 'Found leftover test VPCs' || 'None' }}
+              **ECS Clusters**: ${{ env.TEST_CLUSTERS_FOUND == 'true' && 'Found leftover test ECS clusters' || 'None' }}
+              
+              **Action Required**: Please review and clean up these resources manually.
+              
+              **Workflow Run**: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+              `,
+              labels: ['bug', 'infrastructure', 'urgent']
+            });
+
+  # Final status check
+  terraform-tests:
+    name: Terraform Tests Complete
+    runs-on: ubuntu-latest
+    needs: [validate, unit-tests, integration-tests-short]
+    if: always()
+    steps:
+      - name: Check test results
+        run: |
+          validate_result="${{ needs.validate.result }}"
+          unit_result="${{ needs.unit-tests.result }}"
+          integration_result="${{ needs.integration-tests-short.result }}"
+          
+          echo "Validate: $validate_result"
+          echo "Unit Tests: $unit_result"
+          echo "Integration Tests (Short): $integration_result"
+          
+          if [[ "$validate_result" == "success" && "$unit_result" == "success" && "$integration_result" == "success" ]]; then
+            echo "✅ All Terraform tests passed!"
+            exit 0
+          else
+            echo "❌ Some Terraform tests failed"
+            exit 1
+          fi

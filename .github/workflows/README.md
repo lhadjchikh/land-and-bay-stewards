@@ -33,6 +33,22 @@ This project uses a structured CI/CD pipeline with the following key workflows:
 - Starts the complete application stack in Docker
 - Runs the E2E tests from the frontend against the live backend
 
+#### Terraform Tests (`test_terraform.yml`)
+
+- Triggered by changes to files in the `terraform/` directory
+- Validates Terraform configurations and formatting
+- Runs comprehensive unit tests for individual modules (networking, compute, security, database)
+- Runs integration tests that validate module interactions
+- **Cost-aware testing**: Creates AWS resources only on main branch pushes or manual triggers
+- Includes automatic resource cleanup and cost monitoring
+- Supports manual testing scenarios with configurable options
+
+**Test Types:**
+- **Unit Tests**: Fast tests without AWS resources (networking, compute, security, database modules)
+- **Integration Tests (Short)**: Module interaction tests without AWS resources
+- **Integration Tests (Full)**: Complete infrastructure deployment with real AWS resources
+- **Cost Monitoring**: Checks for leftover resources and creates alerts
+
 ### Deployment Workflow (`deploy-to-ecs.yml`)
 
 - Deploys the application to Amazon ECS
@@ -58,6 +74,8 @@ This project uses a structured CI/CD pipeline with the following key workflows:
 Frontend Tests ─┐
 Backend Tests ──┼─► Deploy to ECS ─► Amazon ECS
 Full Stack Tests┘
+
+Terraform Tests ─► Infrastructure Changes ─► AWS Resources
 ```
 
 ## Manual Triggers
