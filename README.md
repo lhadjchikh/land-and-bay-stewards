@@ -221,6 +221,35 @@ cd ssr
 npm test
 ```
 
+### Infrastructure Tests
+
+The Terraform infrastructure includes comprehensive testing using Go and Terratest with AWS SDK v2:
+
+```bash
+cd terraform/tests
+
+# Run all tests (creates real AWS resources)
+go test ./...
+
+# Run tests without creating AWS resources
+go test -short ./...
+
+# Run specific module tests
+go test -v ./modules/networking_test.go
+go test -v ./modules/compute_test.go
+go test -v ./modules/security_test.go
+
+# Run integration tests
+go test -v ./integration/
+```
+
+**Features:**
+- AWS SDK Go v2 integration for modern, efficient API calls
+- Unit tests for each Terraform module (networking, compute, security, database)
+- Integration tests for full stack deployments
+- Automatic resource cleanup after tests
+- Context-based API calls with proper timeout handling
+
 ## 🔧 Development Tools
 
 ### Code Quality

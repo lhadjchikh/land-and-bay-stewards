@@ -807,12 +807,25 @@ Connection timeout when accessing database
 - ALB security group can send traffic to app on port 8000
 - App security group accepts traffic from ALB security group on port 8000
 
-## File Structure
+## Testing Framework
 
-Your complete project structure should look like this:
+The infrastructure includes a comprehensive testing suite built with Go and Terratest:
 
 ```
 terraform/
+├── tests/
+│   ├── common/
+│   │   └── test_helpers.go          # AWS SDK v2 test utilities
+│   ├── modules/
+│   │   ├── networking_test.go       # VPC, subnets, routing tests
+│   │   ├── compute_test.go          # ECS, ECR, bastion tests
+│   │   ├── security_test.go         # Security groups, WAF tests
+│   │   └── database_test.go         # RDS, parameter groups tests
+│   ├── integration/
+│   │   └── full_stack_test.go       # End-to-end infrastructure tests
+│   ├── go.mod                       # Go dependencies (SDK v2)
+│   ├── go.sum                       # Dependency checksums
+│   └── README.md                    # Testing documentation
 ├── main.tf                          # Main Terraform configuration
 ├── variables.tf                     # Input variables
 ├── outputs.tf                       # Output values
@@ -904,11 +917,49 @@ terraform/
 3. **Database Issues**: Use bastion host for direct troubleshooting
 4. **Security Issues**: Review WAF logs and security group rules
 
+### Testing the Infrastructure
+
+The infrastructure includes comprehensive tests using Terratest and AWS SDK Go v2:
+
+```bash
+# Run all tests (creates real AWS resources)
+cd terraform/tests
+go test ./...
+
+# Run tests without creating AWS resources
+go test -short ./...
+
+# Run specific module tests
+go test -v ./modules/networking_test.go
+go test -v ./modules/compute_test.go
+go test -v ./modules/security_test.go
+
+# Run integration tests
+go test -v ./integration/
+```
+
+**Test Features:**
+- AWS SDK Go v2 integration for modern, efficient API calls
+- Comprehensive unit tests for each Terraform module
+- Integration tests for full stack deployments
+- Automatic resource cleanup after tests
+- Context-based API calls with proper timeout handling
+- Type-safe AWS resource validation
+
+See `terraform/tests/README.md` for detailed testing documentation.
+
 ### Version Information
 
+**Infrastructure:**
 - **Terraform**: >= 1.12.0
 - **AWS Provider**: ~> 5.99.0
 - **PostgreSQL**: 16.9
 - **Node.js/Container Runtime**: As specified in application
+
+**Testing Framework:**
+- **Go**: 1.23+
+- **Terratest**: v0.49.0
+- **AWS SDK Go v2**: v1.36.3
+- **Testify**: v1.10.0
 
 This infrastructure configuration provides a robust, secure, and scalable foundation for the Land and Bay Stewards application with comprehensive documentation and troubleshooting guidance.
