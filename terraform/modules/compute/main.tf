@@ -415,6 +415,15 @@ resource "aws_ecs_service" "app" {
   tags = {
     Name = "${var.prefix}-service"
   }
+
+  lifecycle {
+    create_before_destroy = true
+    # Ignore changes to target groups to make deployments more resilient
+    # This prevents terraform from failing when a target group isn't found
+    ignore_changes = [
+      load_balancer
+    ]
+  }
 }
 
 # Bastion Host
