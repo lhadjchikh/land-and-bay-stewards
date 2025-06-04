@@ -309,54 +309,37 @@ resource "aws_security_group" "endpoints" {
   }
 }
 
-resource "aws_vpc_endpoint" "ecr_api" {
-  vpc_id              = local.vpc_id
-  service_name        = "com.amazonaws.${var.aws_region}.ecr.api"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = local.private_subnet_ids
-  security_group_ids  = [aws_security_group.endpoints.id]
-  private_dns_enabled = true
-
-  tags = {
-    Name = "${var.prefix}-ecr-api-endpoint"
+locals {
+  vpc_endpoints = {
+    ecr_api = {
+      service_name = "com.amazonaws.${var.aws_region}.ecr.api"
+      tag_name     = "${var.prefix}-ecr-api-endpoint"
+    },
+    ecr_dkr = {
+      service_name = "com.amazonaws.${var.aws_region}.ecr.dkr"
+      tag_name     = "${var.prefix}-ecr-dkr-endpoint"
+    },
+    logs = {
+      service_name = "com.amazonaws.${var.aws_region}.logs"
+      tag_name     = "${var.prefix}-logs-endpoint"
+    },
+    secretsmanager = {
+      service_name = "com.amazonaws.${var.aws_region}.secretsmanager"
+      tag_name     = "${var.prefix}-secretsmanager-endpoint"
+    }
   }
 }
 
-resource "aws_vpc_endpoint" "ecr_dkr" {
-  vpc_id              = local.vpc_id
-  service_name        = "com.amazonaws.${var.aws_region}.ecr.dkr"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = local.private_subnet_ids
-  security_group_ids  = [aws_security_group.endpoints.id]
+resource "aws_vpc_endpoint" "interface" {
+  for_each           = local.vpc_endpoints
+  vpc_id             = local.vpc_id
+  service_name       = each.value.service_name
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = local.private_subnet_ids
+  security_group_ids = [aws_security_group.endpoints.id]
   private_dns_enabled = true
 
   tags = {
-    Name = "${var.prefix}-ecr-dkr-endpoint"
-  }
-}
-
-resource "aws_vpc_endpoint" "logs" {
-  vpc_id              = local.vpc_id
-  service_name        = "com.amazonaws.${var.aws_region}.logs"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = local.private_subnet_ids
-  security_group_ids  = [aws_security_group.endpoints.id]
-  private_dns_enabled = true
-
-  tags = {
-    Name = "${var.prefix}-logs-endpoint"
-  }
-}
-
-resource "aws_vpc_endpoint" "secretsmanager" {
-  vpc_id              = local.vpc_id
-  service_name        = "com.amazonaws.${var.aws_region}.secretsmanager"
-  vpc_endpoint_type   = "Interface"
-  subnet_ids          = local.private_subnet_ids
-  security_group_ids  = [aws_security_group.endpoints.id]
-  private_dns_enabled = true
-
-  tags = {
-    Name = "${var.prefix}-secretsmanager-endpoint"
+    Name = each.value.tag_name
   }
 }
