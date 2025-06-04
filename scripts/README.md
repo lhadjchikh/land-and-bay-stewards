@@ -8,6 +8,10 @@ This directory contains project-wide scripts that operate across multiple compon
 
 Comprehensive linting and formatting script that processes the entire codebase.
 
+### `setup_dev_env.py`
+
+Cross-platform development environment setup script that installs and configures all tools needed for linting.
+
 **Languages/Tools Supported:**
 
 - **Python**: Black formatting, Ruff linting
@@ -26,7 +30,34 @@ python scripts/lint.py
 cd backend && poetry run python ../scripts/lint.py
 ```
 
+**Supported Operating Systems:**
+
+- **macOS**: Uses Homebrew for package management
+- **Linux**: Uses apt for package management (Ubuntu/Debian)
+- **Windows**: Uses winget/chocolatey for package management
+
+**Usage:**
+
+```bash
+# Auto-detect OS and set up environment
+python scripts/setup_dev_env.py
+
+# Specify OS explicitly
+python scripts/setup_dev_env.py --os macos
+python scripts/setup_dev_env.py --os linux
+python scripts/setup_dev_env.py --os windows
+```
+
 **Features:**
+
+- 🖥️ **Cross-platform**: Supports macOS, Linux, and Windows
+- 🔧 **Auto-detection**: Automatically detects your operating system
+- 📦 **Tool Installation**: Provides installation commands for all required tools
+- 🐍 **Python Setup**: Configures Poetry to use Python 3.13
+- 🔄 **Go Tools**: Installs all Go linting tools automatically
+- ✅ **Validation**: Tests the setup by running the lint script
+
+## Lint Script Features:
 
 - 🎨 **Auto-formatting**: Fixes formatting issues automatically
 - 🔧 **Tool Installation**: Installs missing linting tools automatically

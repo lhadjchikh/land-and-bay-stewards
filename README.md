@@ -261,23 +261,43 @@ go test -v ./integration/
 The project enforces high code quality standards:
 
 - **Python**: Black formatting, Ruff linting, type hints
+- **Go**: gofmt, go vet, staticcheck, golangci-lint (for Terraform tests)
 - **TypeScript/JavaScript**: ESLint, Prettier formatting
-- **Shell Scripts**: ShellCheck validation
+- **Shell Scripts**: ShellCheck validation and shfmt formatting
 - **Terraform**: TFLint validation and formatting
 
-Run all linters:
+### Quick Setup
+
+**First-time setup** (installs all tools and configures environment):
 
 ```bash
-# Comprehensive project-wide linting (recommended)
-python scripts/lint.py
+# Auto-detect your OS and set up everything
+python scripts/setup_dev_env.py
 
-# Individual component linting
+# Or specify your OS
+python scripts/setup_dev_env.py --os macos    # macOS
+python scripts/setup_dev_env.py --os linux    # Linux
+python scripts/setup_dev_env.py --os windows  # Windows
+```
+
+**Daily linting** (after setup):
+
+```bash
+# Run all linters across the entire project
+python scripts/lint.py
+```
+
+### Manual Setup
+
+If you prefer manual setup, see [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md) for detailed instructions.
+
+### Individual Component Linting
+
+```bash
+# Individual component linting (if needed)
 cd backend && poetry run black . && poetry run ruff check .
 cd frontend && npm run lint:fix && npm run format
 cd terraform/tests && make lint
-
-# Legacy backend-only script
-cd backend && poetry run python ../scripts/lint.py
 ```
 
 ### Environment Configuration
