@@ -294,6 +294,119 @@ def run_shell_linters(project_root: Path) -> bool:
     return success
 
 
+def run_go_linters(project_root: Path) -> bool:
+    """Run Go linters if Go is installed and Go projects exist.
+
+    Args:
+        project_root: Path to the project root directory
+
+    Returns:
+        True if all linters succeeded or were skipped, False otherwise
+    """
+    print_section_header("GO LINTING")
+    success = True
+
+    # Skip if Go is not installed
+    if not which("go"):
+        print("⚠️  Go is not installed. Skipping Go lint checks.")
+        return success
+
+    # Find Go modules in the project
+    go_modules = []
+    for go_mod in project_root.glob("**/go.mod"):
+        # Skip node_modules and other common directories to ignore
+        ignored_dirs = [".git", "node_modules", ".terraform", "vendor"]
+        if not any(ignore_dir in str(go_mod) for ignore_dir in ignored_dirs):
+            go_modules.append(go_mod.parent)
+
+    if not go_modules:
+        print("ℹ️  No Go modules found in project.")
+        return success
+
+    print_step(f"Found {len(go_modules)} Go module(s) to check")
+
+    for module_dir in go_modules:
+        module_name = module_dir.relative_to(project_root)
+        print(f"\n   📦 Processing module: {module_name}")
+
+        # Check Go formatting
+        print(f"   🎨 Checking Go formatting")
+        format_result = run_command(["gofmt", "-l", "."], cwd=module_dir)
+        if not format_result:
+            success = False
+        else:
+            # If gofmt found unformatted files, try to fix them
+            print(f"   🔧 Auto-formatting Go files")
+            run_command(["gofmt", "-w", "."], cwd=module_dir)
+
+        # Run go vet
+        print(f"   🔍 Running go vet")
+        vet_result = run_command(["go", "vet", "./..."], cwd=module_dir)
+        success &= vet_result
+
+        # Run go mod tidy
+        print(f"   📦 Checking module tidiness")
+        tidy_result = run_command(["go", "mod", "tidy"], cwd=module_dir)
+        success &= tidy_result
+
+        # Run staticcheck if available
+        if which("staticcheck"):
+            print(f"   🧹 Running staticcheck")
+            staticcheck_result = run_command(["staticcheck", "./..."], cwd=module_dir)
+            success &= staticcheck_result
+        else:
+            print(f"   ⚠️  staticcheck not installed, installing...")
+            install_result = run_command(
+                ["go", "install", "honnef.co/go/tools/cmd/staticcheck@latest"],
+                cwd=module_dir,
+            )
+            if install_result:
+                staticcheck_result = run_command(["staticcheck", "./..."], cwd=module_dir)
+                success &= staticcheck_result
+
+        # Run golangci-lint if available
+        if which("golangci-lint"):
+            print(f"   ⚡ Running golangci-lint")
+            # Check if config exists, use it if available
+            config_args = []
+            if (module_dir / ".golangci.yml").exists():
+                config_args = ["--config", ".golangci.yml"]
+            elif (module_dir / ".golangci.yaml").exists():
+                config_args = ["--config", ".golangci.yaml"]
+            
+            lint_cmd = ["golangci-lint", "run"] + config_args + ["./..."]
+            lint_result = run_command(lint_cmd, cwd=module_dir)
+            success &= lint_result
+        else:
+            print(f"   ℹ️  golangci-lint not installed. Consider installing for comprehensive linting.")
+
+        # Run ineffassign if available
+        if which("ineffassign"):
+            print(f"   🎯 Checking ineffective assignments")
+            ineffassign_result = run_command(["ineffassign", "./..."], cwd=module_dir)
+            success &= ineffassign_result
+
+        # Run misspell if available
+        if which("misspell"):
+            print(f"   📝 Checking for misspellings")
+            misspell_result = run_command(["misspell", "-error", "."], cwd=module_dir)
+            success &= misspell_result
+
+        # Security check with gosec if available
+        if which("gosec"):
+            print(f"   🔒 Running security scan")
+            # Don't fail on security findings, just report them
+            gosec_result = run_command(
+                ["gosec", "-quiet", "./..."], 
+                cwd=module_dir
+            )
+            # Note: We don't update success here as gosec findings are informational
+            if not gosec_result:
+                print(f"   ⚠️  Security findings detected - please review")
+
+    return success
+
+
 def main() -> int:
     """Run all linters and formatters.
 
@@ -312,6 +425,7 @@ def main() -> int:
         ("Prettier", lambda root: run_prettier(root)),
         ("Terraform", lambda root: run_terraform_linters(root)),
         ("Shell Scripts", lambda root: run_shell_linters(root)),
+        ("Go", lambda root: run_go_linters(root)),
     ]
 
     # Run all linters
