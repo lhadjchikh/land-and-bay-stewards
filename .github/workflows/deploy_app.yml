@@ -47,13 +47,35 @@ jobs:
       - name: Check for documentation-only changes
         id: changes
         run: |
-          # Get list of changed files since last commit on main
+          # Get list of changed files based on trigger type
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
-            # For workflow_run, compare with previous commit
-            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            # For workflow_run, get files changed in the triggering workflow
+            echo "Workflow run trigger detected"
+            echo "Head SHA: ${{ github.event.workflow_run.head_sha }}"
+            echo "Base SHA: ${{ github.event.workflow_run.head_branch }}"
+            
+            # Fetch the latest main branch to ensure we have a good comparison point
+            git fetch origin main
+            
+            # Compare against main branch to catch all changes in the push
+            CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+            
+            # If that fails or returns empty, fall back to the workflow run head commit
+            if [ -z "$CHANGED_FILES" ]; then
+              echo "Fallback: comparing last commit"
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            fi
           else
-            # For manual dispatch, compare with previous commit
-            CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            # For manual dispatch, compare against main branch
+            echo "Manual dispatch trigger detected"
+            git fetch origin main
+            CHANGED_FILES=$(git diff --name-only origin/main...HEAD)
+            
+            # If we're already on main or the comparison fails, compare with previous commit
+            if [ -z "$CHANGED_FILES" ]; then
+              echo "Fallback: comparing with previous commit on main"
+              CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD)
+            fi
           fi
 
           echo "Changed files:"
