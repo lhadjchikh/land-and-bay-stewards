@@ -46,13 +46,15 @@ jobs:
 
       - name: Check for documentation-only changes
         id: changes
+        env:
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
         run: |
           # Get list of changed files based on trigger type
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
             # For workflow_run, get files changed in the triggering workflow
             echo "Workflow run trigger detected"
             echo "Head SHA: ${{ github.event.workflow_run.head_sha }}"
-            echo "Base SHA: ${{ github.event.workflow_run.head_branch }}"
+            echo "Base SHA: $HEAD_BRANCH"
             
             # Fetch the latest main branch to ensure we have a good comparison point
             git fetch origin main
