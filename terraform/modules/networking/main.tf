@@ -270,9 +270,9 @@ resource "aws_route_table_association" "private_db_b" {
   route_table_id = aws_route_table.private_db[0].id
 }
 
-# VPC Endpoint for S3 - allows DB to access S3 without internet - only created if create_db_subnets is true
+# VPC Endpoint for S3 - allows private resources to access S3 without internet
 resource "aws_vpc_endpoint" "s3" {
-  count = var.create_db_subnets ? 1 : 0
+  count = var.create_db_subnets && var.create_vpc_endpoints ? 1 : 0
 
   vpc_id            = local.vpc_id
   service_name      = "com.amazonaws.${var.aws_region}.s3"
@@ -284,8 +284,10 @@ resource "aws_vpc_endpoint" "s3" {
   }
 }
 
-# Interface VPC Endpoints for ECS tasks
-resource "aws_security_group" "endpoints" {
+# Security Group for Interface VPC Endpoints
+resource "aws_security_group" "ecs_endpoints" {
+  count = var.create_vpc_endpoints && var.existing_endpoints_security_group_id == "" ? 1 : 0
+
   name   = "${var.prefix}-endpoints-sg"
   vpc_id = local.vpc_id
 
@@ -318,6 +320,11 @@ resource "aws_security_group" "endpoints" {
   }
 }
 
+# Use a local for the security group ID, which could be either the created one or an existing one
+locals {
+  endpoints_security_group_id = var.existing_endpoints_security_group_id != "" ? var.existing_endpoints_security_group_id : (length(aws_security_group.ecs_endpoints) > 0 ? aws_security_group.ecs_endpoints[0].id : "")
+}
+
 locals {
   vpc_endpoints = {
     ecr_api = {
@@ -340,12 +347,12 @@ locals {
 }
 
 resource "aws_vpc_endpoint" "interface" {
-  for_each            = local.vpc_endpoints
+  for_each            = var.create_vpc_endpoints ? local.vpc_endpoints : {}
   vpc_id              = local.vpc_id
   service_name        = each.value.service_name
   vpc_endpoint_type   = "Interface"
   subnet_ids          = local.private_subnet_ids
-  security_group_ids  = [aws_security_group.endpoints.id]
+  security_group_ids  = [local.endpoints_security_group_id]
   private_dns_enabled = true
 
   tags = {

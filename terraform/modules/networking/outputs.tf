@@ -42,3 +42,15 @@ output "s3_endpoint_prefix_list_id" {
   description = "Prefix list ID of the S3 VPC endpoint"
   value       = length(aws_vpc_endpoint.s3) > 0 ? aws_vpc_endpoint.s3[0].prefix_list_id : null
 }
+
+output "endpoints_security_group_id" {
+  description = "ID of the security group for VPC endpoints"
+  value       = local.endpoints_security_group_id
+}
+
+output "interface_endpoints" {
+  description = "Map of interface VPC endpoints created (service name => endpoint ID)"
+  value = {
+    for name, endpoint in aws_vpc_endpoint.interface : name => endpoint.id
+  }
+}
