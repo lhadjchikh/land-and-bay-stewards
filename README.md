@@ -98,6 +98,7 @@ This project uses a modern, scalable architecture:
 - **Python 3.13+** with Poetry (for backend development)
 - **Node.js 18+** with npm (for frontend development)
 - **PostgreSQL 16** with PostGIS (if running locally)
+- **GDAL 3.10+** system libraries (for GeoDjango)
 
 ### Option 1: Docker Development (Recommended)
 
@@ -128,6 +129,12 @@ docker-compose exec api python backend/scripts/create_test_data.py
 
 ```bash
 cd backend
+
+# Install GDAL system packages first (if not using Docker)
+# Ubuntu/Debian:
+#   sudo apt-get install gdal-bin libgdal-dev
+# macOS (Homebrew):
+#   brew install gdal
 
 # Install dependencies
 poetry install
