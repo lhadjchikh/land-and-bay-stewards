@@ -45,7 +45,7 @@ Test complete infrastructure deployments:
 
 ### Prerequisites
 
-1. **Go 1.21+** installed
+1. **Go 1.23+** installed
 2. **AWS CLI** configured with appropriate credentials
 3. **Terraform** installed
 4. **Make** (optional, for convenience commands)
@@ -396,9 +396,60 @@ func TestNewFeature(t *testing.T) {
 }
 ```
 
+## 🔧 Technical Details
+
+### AWS SDK Integration
+
+The test suite uses **AWS SDK for Go v2** for direct AWS resource validation:
+
+```go
+// Example: Validating EC2 instances
+cfg, err := config.LoadDefaultConfig(context.TODO(), config.WithRegion(region))
+svc := ec2.NewFromConfig(cfg)
+result, err := svc.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput{
+    InstanceIds: []string{instanceID},
+})
+```
+
+**Key Features:**
+- Modern context-based API calls
+- Improved type safety with enum types
+- Better performance and memory efficiency
+- Modular service imports
+
+### Dependencies
+
+**Core Testing Framework:**
+- `github.com/gruntwork-io/terratest` v0.49.0
+- `github.com/stretchr/testify` v1.10.0
+
+**AWS SDK v2:**
+- `github.com/aws/aws-sdk-go-v2` v1.36.3
+- `github.com/aws/aws-sdk-go-v2/config` v1.29.14
+- `github.com/aws/aws-sdk-go-v2/service/ec2` v1.224.0
+
+### Test Helper Functions
+
+Custom AWS SDK v2 helpers in `common/test_helpers.go`:
+
+```go
+// Get subnet by ID using AWS SDK v2
+func GetSubnetById(t *testing.T, subnetID, region string) *types.Subnet
+
+// Get security group by ID using AWS SDK v2
+func GetSecurityGroupById(t *testing.T, sgID, region string) *types.SecurityGroup
+
+// Get EC2 instance by ID using AWS SDK v2
+func GetEc2InstanceById(t *testing.T, instanceID, region string) *types.Instance
+
+// Get internet gateways for VPC using AWS SDK v2
+func GetInternetGatewaysForVpc(t *testing.T, vpcID, region string) []types.InternetGateway
+```
+
 ## 📚 Resources
 
 - [Terratest Documentation](https://terratest.gruntwork.io/)
 - [Go Testing Package](https://golang.org/pkg/testing/)
-- [AWS Go SDK](https://docs.aws.amazon.com/sdk-for-go/)
+- [AWS SDK for Go v2](https://aws.github.io/aws-sdk-go-v2/docs/)
+- [AWS SDK v2 EC2 Service](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/ec2)
 - [Terraform Testing Best Practices](https://www.terraform.io/docs/extend/testing/index.html)
