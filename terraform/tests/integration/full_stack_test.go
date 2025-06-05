@@ -17,13 +17,7 @@ func TestFullStackDeploymentWithoutSSR(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../") // Root terraform directory
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	// Merge CIDR blocks with test config
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetIntegrationTestVars()
 
 	// Override specific values for integration test
 	testVars["enable_ssr"] = false             // Simplify for initial test
@@ -92,12 +86,7 @@ func TestFullStackDeploymentWithSSR(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetIntegrationTestVars()
 
 	// Enable SSR for this test
 	testVars["enable_ssr"] = true
@@ -192,12 +181,7 @@ func TestFullStackResourceTagging(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetIntegrationTestVars()
 
 	// Add custom tags
 	testVars["tags"] = map[string]string{
@@ -239,12 +223,7 @@ func TestFullStackSecurityConfiguration(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetIntegrationTestVars()
 
 	// Use restrictive bastion access
 	testVars["allowed_bastion_cidrs"] = []string{"203.0.113.0/24"}
@@ -286,12 +265,7 @@ func TestFullStackBudgetMonitoring(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetIntegrationTestVars()
 
 	// Set a low budget for testing
 	testVars["budget_limit_amount"] = "10"
@@ -325,15 +299,8 @@ func TestFullStackBudgetMonitoring(t *testing.T) {
 func TestFullStackHealthCheckEndpoints(t *testing.T) {
 	t.Skip("Skipping health check test - requires actual container deployment")
 
-	common.SkipIfShortTest(t)
-
 	testConfig := common.NewTestConfig("../../")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetIntegrationTestVars()
 
 	// This test would require:
 	// 1. Building and pushing test containers to ECR

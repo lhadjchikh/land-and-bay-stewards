@@ -16,13 +16,7 @@ func TestNetworkingModuleCreatesVPCAndSubnets(t *testing.T) {
 
 	// Setup test configuration
 	testConfig := common.NewTestConfig("../../modules/networking")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	// Merge CIDR blocks with test config
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetNetworkingTestVars()
 
 	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 
@@ -48,12 +42,7 @@ func TestNetworkingModuleCreatesPublicSubnets(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../modules/networking")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetNetworkingTestVars()
 	testVars["create_public_subnets"] = true
 
 	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
@@ -75,6 +64,7 @@ func TestNetworkingModuleCreatesPublicSubnets(t *testing.T) {
 		assert.Equal(t, expectedAZ, *subnet.AvailabilityZone)
 
 		// Validate CIDR blocks
+		cidrBlocks := common.GetVPCCIDRBlocks()
 		expectedCIDR := []string{cidrBlocks["public_subnet_a_cidr"], cidrBlocks["public_subnet_b_cidr"]}[i]
 		assert.Equal(t, expectedCIDR, *subnet.CidrBlock)
 	}
@@ -84,12 +74,7 @@ func TestNetworkingModuleCreatesPrivateSubnets(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../modules/networking")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetNetworkingTestVars()
 	testVars["create_private_subnets"] = true
 
 	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
@@ -107,6 +92,7 @@ func TestNetworkingModuleCreatesPrivateSubnets(t *testing.T) {
 		assert.False(t, *subnet.MapPublicIpOnLaunch)
 
 		// Validate CIDR blocks
+		cidrBlocks := common.GetVPCCIDRBlocks()
 		expectedCIDR := []string{cidrBlocks["private_subnet_a_cidr"], cidrBlocks["private_subnet_b_cidr"]}[i]
 		assert.Equal(t, expectedCIDR, *subnet.CidrBlock)
 	}
@@ -116,12 +102,7 @@ func TestNetworkingModuleCreatesDatabaseSubnets(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../modules/networking")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetNetworkingTestVars()
 	testVars["create_db_subnets"] = true
 
 	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
@@ -139,6 +120,7 @@ func TestNetworkingModuleCreatesDatabaseSubnets(t *testing.T) {
 		assert.False(t, *subnet.MapPublicIpOnLaunch)
 
 		// Validate CIDR blocks
+		cidrBlocks := common.GetVPCCIDRBlocks()
 		expectedCIDR := []string{cidrBlocks["private_db_subnet_a_cidr"], cidrBlocks["private_db_subnet_b_cidr"]}[i]
 		assert.Equal(t, expectedCIDR, *subnet.CidrBlock)
 	}
@@ -148,12 +130,7 @@ func TestNetworkingModuleCreatesInternetGateway(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../modules/networking")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetNetworkingTestVars()
 
 	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 	defer common.CleanupResources(t, terraformOptions)
@@ -178,12 +155,7 @@ func TestNetworkingModuleCreatesVPCEndpoints(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../modules/networking")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetNetworkingTestVars()
 	testVars["create_vpc_endpoints"] = true
 	testVars["create_private_subnets"] = true
 
@@ -209,12 +181,7 @@ func TestNetworkingModuleSkipsResourcesWhenDisabled(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../modules/networking")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetNetworkingTestVars()
 	// Disable optional components
 	testVars["create_public_subnets"] = false
 	testVars["create_private_subnets"] = false
@@ -244,12 +211,7 @@ func TestNetworkingModuleValidatesResourceNaming(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	testConfig := common.NewTestConfig("../../modules/networking")
-	cidrBlocks := common.GetVPCCIDRBlocks()
-
-	testVars := make(map[string]interface{})
-	for k, v := range cidrBlocks {
-		testVars[k] = v
-	}
+	testVars := common.GetNetworkingTestVars()
 
 	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 	defer common.CleanupResources(t, terraformOptions)

@@ -291,6 +291,32 @@ func GetVPCCIDRBlocks() map[string]string {
 	}
 }
 
+// GetNetworkingTestVars creates test variables with CIDR blocks merged
+func GetNetworkingTestVars() map[string]interface{} {
+	cidrBlocks := GetVPCCIDRBlocks()
+	testVars := make(map[string]interface{})
+
+	// Merge CIDR blocks into test variables
+	for k, v := range cidrBlocks {
+		testVars[k] = v
+	}
+
+	return testVars
+}
+
+// GetIntegrationTestVars creates test variables with CIDR blocks for integration tests
+func GetIntegrationTestVars() map[string]interface{} {
+	cidrBlocks := GetVPCCIDRBlocks()
+	testVars := make(map[string]interface{})
+
+	// Merge CIDR blocks into test variables
+	for k, v := range cidrBlocks {
+		testVars[k] = v
+	}
+
+	return testVars
+}
+
 // CleanupResources performs cleanup for failed tests
 func CleanupResources(t *testing.T, terraformOptions *terraform.Options) {
 	// This will run terraform destroy
