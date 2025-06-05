@@ -76,9 +76,99 @@ func (tc *TestConfig) GetTerraformOptions(vars map[string]interface{}) *terrafor
 
 // GetModuleTerraformOptions returns terraform options for testing individual modules
 func (tc *TestConfig) GetModuleTerraformOptions(modulePath string, vars map[string]interface{}) *terraform.Options {
-	opts := tc.GetTerraformOptions(vars)
-	opts.TerraformDir = modulePath
-	return opts
+	// Get minimal variables suitable for individual module testing
+	moduleVars := tc.getModuleSpecificVars(modulePath, vars)
+
+	return &terraform.Options{
+		TerraformDir:    modulePath,
+		TerraformBinary: "terraform", // Explicitly use terraform instead of auto-detecting tofu
+		Vars:            moduleVars,
+		EnvVars: map[string]string{
+			"AWS_DEFAULT_REGION":  tc.AWSRegion,
+			"TERRATEST_TERRAFORM": "terraform", // Force Terratest to use terraform
+		},
+	}
+}
+
+// getModuleSpecificVars returns only the variables needed for a specific module
+func (tc *TestConfig) getModuleSpecificVars(
+	modulePath string,
+	additionalVars map[string]interface{},
+) map[string]interface{} {
+	var baseVars map[string]interface{}
+
+	// Add module-specific variables based on the module path
+	switch {
+	case strings.Contains(modulePath, "/security"):
+		// Security module variables (does not include aws_region)
+		baseVars = map[string]interface{}{
+			"prefix":                tc.Prefix,
+			"vpc_id":                "vpc-12345678",
+			"allowed_bastion_cidrs": []string{"10.0.0.0/8"},
+			"database_subnet_cidrs": []string{"10.0.5.0/24", "10.0.6.0/24"},
+		}
+	case strings.Contains(modulePath, "/networking"):
+		// Networking module variables (includes aws_region)
+		baseVars = map[string]interface{}{
+			"prefix":                 tc.Prefix,
+			"aws_region":             tc.AWSRegion,
+			"create_vpc":             true,
+			"create_public_subnets":  true,
+			"create_private_subnets": true,
+			"create_db_subnets":      true,
+		}
+	case strings.Contains(modulePath, "/database"):
+		// Database module variables (includes aws_region)
+		baseVars = map[string]interface{}{
+			"prefix":               tc.Prefix,
+			"aws_region":           tc.AWSRegion,
+			"db_subnet_ids":        []string{"subnet-12345", "subnet-67890"},
+			"db_security_group_id": "sg-db123",
+			"db_allocated_storage": 20,
+			"db_instance_class":    "db.t4g.micro",
+			"db_password":          "testpassword123!",
+			"db_name":              "testdb",
+			"db_username":          "testuser",
+			"app_db_username":      "appuser",
+		}
+	case strings.Contains(modulePath, "/compute"):
+		// Compute module variables (includes aws_region)
+		baseVars = map[string]interface{}{
+			"prefix":                    tc.Prefix,
+			"aws_region":                tc.AWSRegion,
+			"private_subnet_ids":        []string{"subnet-12345", "subnet-67890"},
+			"public_subnet_id":          "subnet-public",
+			"app_security_group_id":     "sg-app123",
+			"bastion_security_group_id": "sg-bastion123",
+			"db_url_secret_arn":         "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
+			"secret_key_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
+			"secrets_kms_key_arn":       "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+			"bastion_key_name":          "test-key",
+			"bastion_public_key":        "",
+			"create_new_key_pair":       false,
+			"container_port":            8000,
+			"domain_name":               fmt.Sprintf("%s.example.com", tc.UniqueID),
+			"enable_ssr":                false,
+			"health_check_path":         "/api/health/",
+			"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+				"targetgroup/test-api/1234567890123456",
+			"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+				"targetgroup/test-ssr/1234567890123456",
+		}
+	default:
+		// Default fallback for unrecognized modules
+		baseVars = map[string]interface{}{
+			"prefix":     tc.Prefix,
+			"aws_region": tc.AWSRegion,
+		}
+	}
+
+	// Merge with additional vars (additional vars override base vars)
+	for k, v := range additionalVars {
+		baseVars[k] = v
+	}
+
+	return baseVars
 }
 
 // GetSubnetById gets a subnet by ID using AWS SDK v2 directly
