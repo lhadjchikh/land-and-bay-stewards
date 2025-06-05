@@ -41,6 +41,7 @@ env:
   GO_VERSION: "1.24"
   AWS_DEFAULT_REGION: us-east-1
   TF_IN_AUTOMATION: true
+  TERRATEST_TERRAFORM: terraform
 
 jobs:
   # Validate Terraform configurations first
@@ -79,11 +80,27 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.1
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GO_VERSION }}
           cache-dependency-path: terraform/tests/go.sum
+
+      - name: Verify Terraform installation
+        run: |
+          terraform version
+          which terraform
+          echo "PATH: $PATH"
+          ls -la $(which terraform) || echo "terraform not found"
+          echo "Checking for tofu..."
+          which tofu || echo "tofu not found (good)"
+          echo "Environment variables:"
+          env | grep -i terra || echo "No terraform env vars"
 
       - name: Install dependencies
         run: |
@@ -183,6 +200,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.1
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
@@ -208,6 +230,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.12.1
 
       - name: Setup Go
         uses: actions/setup-go@v4
