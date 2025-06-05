@@ -412,6 +412,7 @@ result, err := svc.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput
 ```
 
 **Key Features:**
+
 - Modern context-based API calls
 - Improved type safety with enum types
 - Better performance and memory efficiency
@@ -420,10 +421,12 @@ result, err := svc.DescribeInstances(context.TODO(), &ec2.DescribeInstancesInput
 ### Dependencies
 
 **Core Testing Framework:**
+
 - `github.com/gruntwork-io/terratest` v0.49.0
 - `github.com/stretchr/testify` v1.10.0
 
 **AWS SDK v2:**
+
 - `github.com/aws/aws-sdk-go-v2` v1.36.3
 - `github.com/aws/aws-sdk-go-v2/config` v1.29.14
 - `github.com/aws/aws-sdk-go-v2/service/ec2` v1.224.0

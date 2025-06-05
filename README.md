@@ -248,6 +248,7 @@ go test -v ./integration/
 ```
 
 **Features:**
+
 - AWS SDK Go v2 integration for modern, efficient API calls
 - Unit tests for each Terraform module (networking, compute, security, database)
 - Integration tests for full stack deployments

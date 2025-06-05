@@ -939,6 +939,7 @@ go test -v ./integration/
 ```
 
 **Test Features:**
+
 - AWS SDK Go v2 integration for modern, efficient API calls
 - Comprehensive unit tests for each Terraform module
 - Integration tests for full stack deployments
@@ -951,12 +952,14 @@ See `terraform/tests/README.md` for detailed testing documentation.
 ### Version Information
 
 **Infrastructure:**
+
 - **Terraform**: >= 1.12.0
 - **AWS Provider**: ~> 5.99.0
 - **PostgreSQL**: 16.9
 - **Node.js/Container Runtime**: As specified in application
 
 **Testing Framework:**
+
 - **Go**: 1.23+
 - **Terratest**: v0.49.0
 - **AWS SDK Go v2**: v1.36.3
