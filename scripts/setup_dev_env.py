@@ -201,7 +201,7 @@ def setup_go(os_type: str, instructions: dict) -> bool:
         ]
         
         optional_tools = [
-            ("github.com/securecodewarrior/gosec/v2/cmd/gosec@latest", "gosec", "Security scanner for Go code"),
+            ("github.com/securego/gosec/v2/cmd/gosec@latest", "gosec", "Security scanner for Go code"),
         ]
         
         # Install essential tools first
