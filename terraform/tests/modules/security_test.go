@@ -39,24 +39,26 @@ func TestSecurityModuleCreatesALBSecurityGroup(t *testing.T) {
 	// Check for HTTP and HTTPS inbound rules
 	hasHTTPRule := false
 	hasHTTPSRule := false
+	var httpCidrBlocks []string
+	var httpsCidrBlocks []string
 
 	for _, permission := range sg.IpPermissions {
 		if permission.FromPort != nil && permission.ToPort != nil && permission.IpProtocol != nil {
 			if *permission.FromPort == 80 && *permission.ToPort == 80 && *permission.IpProtocol == "tcp" {
 				hasHTTPRule = true
-				// Check if 0.0.0.0/0 is in the CIDR blocks
+				// Collect CIDR blocks for HTTP rule
 				for _, ipRange := range permission.IpRanges {
-					if ipRange.CidrIp != nil && *ipRange.CidrIp == "0.0.0.0/0" {
-						break
+					if ipRange.CidrIp != nil {
+						httpCidrBlocks = append(httpCidrBlocks, *ipRange.CidrIp)
 					}
 				}
 			}
 			if *permission.FromPort == 443 && *permission.ToPort == 443 && *permission.IpProtocol == "tcp" {
 				hasHTTPSRule = true
-				// Check if 0.0.0.0/0 is in the CIDR blocks
+				// Collect CIDR blocks for HTTPS rule
 				for _, ipRange := range permission.IpRanges {
-					if ipRange.CidrIp != nil && *ipRange.CidrIp == "0.0.0.0/0" {
-						break
+					if ipRange.CidrIp != nil {
+						httpsCidrBlocks = append(httpsCidrBlocks, *ipRange.CidrIp)
 					}
 				}
 			}
@@ -65,6 +67,10 @@ func TestSecurityModuleCreatesALBSecurityGroup(t *testing.T) {
 
 	assert.True(t, hasHTTPRule, "ALB security group should allow HTTP traffic")
 	assert.True(t, hasHTTPSRule, "ALB security group should allow HTTPS traffic")
+
+	// Assert that HTTP and HTTPS rules allow traffic from anywhere (0.0.0.0/0)
+	assert.Contains(t, httpCidrBlocks, "0.0.0.0/0", "HTTP rule should allow traffic from anywhere")
+	assert.Contains(t, httpsCidrBlocks, "0.0.0.0/0", "HTTPS rule should allow traffic from anywhere")
 }
 
 func TestSecurityModuleCreatesAppSecurityGroup(t *testing.T) {
@@ -356,8 +362,27 @@ func TestSecurityModuleWithRestrictiveBastionCIDRs(t *testing.T) {
 	bastionSGID := terraform.Output(t, terraformOptions, "bastion_security_group_id")
 	bastionSG := common.GetSecurityGroupById(t, bastionSGID, testConfig.AWSRegion)
 
-	// Note: Security group rule validation simplified - InboundRules field doesn't exist
-	// In real implementation, you'd iterate through bastionSG.IpPermissions
-	// to validate SSH access is restricted to specific CIDR blocks
 	assert.NotNil(t, bastionSG, "Bastion security group should exist and be configured")
+
+	// Check for SSH rule with restricted CIDR blocks
+	hasSSHRule := false
+	for _, permission := range bastionSG.IpPermissions {
+		if permission.FromPort != nil && permission.ToPort != nil && permission.IpProtocol != nil {
+			if *permission.FromPort == 22 && *permission.ToPort == 22 && *permission.IpProtocol == "tcp" {
+				hasSSHRule = true
+				// Collect CIDR blocks for SSH rule
+				var cidrBlocks []string
+				for _, ipRange := range permission.IpRanges {
+					if ipRange.CidrIp != nil {
+						cidrBlocks = append(cidrBlocks, *ipRange.CidrIp)
+					}
+				}
+				// Should only allow traffic from the specific restrictive CIDR block
+				assert.Contains(t, cidrBlocks, "203.0.113.0/24", "Should allow SSH from the specific test network")
+				assert.NotContains(t, cidrBlocks, "0.0.0.0/0", "Should not allow SSH from anywhere")
+				assert.NotContains(t, cidrBlocks, "10.0.0.0/8", "Should not allow SSH from the broader private network")
+			}
+		}
+	}
+	assert.True(t, hasSSHRule, "Bastion security group should have SSH rule")
 }
