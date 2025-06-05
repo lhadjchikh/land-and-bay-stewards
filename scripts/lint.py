@@ -63,7 +63,43 @@ def run_command(cmd: list[str], cwd: str | Path | None = None) -> bool:
 
 def which(cmd: str) -> str | None:
     """Check if a command exists by using shutil.which."""
-    return shutil.which(cmd)
+    # First try the standard approach
+    result = shutil.which(cmd)
+    if result:
+        return result
+    
+    # For Go tools, also check common Go installation paths
+    if cmd in ["golangci-lint", "staticcheck", "gosec", "ineffassign", "misspell"]:
+        # Check common Go bin directories
+        common_go_paths = [
+            os.path.expanduser("~/go/bin"),
+            "/usr/local/go/bin",
+            "/opt/go/bin",
+        ]
+        
+        # Also try to get GOPATH from go env if available
+        try:
+            if shutil.which("go"):
+                gopath_result = subprocess.run(
+                    ["go", "env", "GOPATH"], 
+                    capture_output=True, 
+                    text=True, 
+                    timeout=5
+                )
+                if gopath_result.returncode == 0:
+                    gopath = gopath_result.stdout.strip()
+                    if gopath:
+                        common_go_paths.insert(0, f"{gopath}/bin")
+        except (subprocess.TimeoutExpired, subprocess.SubprocessError):
+            pass
+        
+        # Check each potential path
+        for go_bin_path in common_go_paths:
+            tool_path = os.path.join(go_bin_path, cmd)
+            if os.path.isfile(tool_path) and os.access(tool_path, os.X_OK):
+                return tool_path
+    
+    return None
 
 
 def run_python_linters(project_root: Path) -> tuple[bool, bool]:
@@ -370,12 +406,13 @@ def run_go_linters(project_root: Path) -> tuple[bool, bool]:
         success &= tidy_result
 
         # Run staticcheck if available
-        if which("staticcheck"):
+        staticcheck_path = which("staticcheck")
+        if staticcheck_path:
             print(f"   🧹 Running staticcheck")
-            staticcheck_result = run_command(["staticcheck", "./..."], cwd=module_dir)
+            staticcheck_result = run_command([staticcheck_path, "./..."], cwd=module_dir)
             success &= staticcheck_result
         else:
-            print(f"   ⚠️  staticcheck not installed, installing...")
+            print(f"   ⚠️  staticcheck not found, installing...")
             install_result = run_command(
                 ["go", "install", "honnef.co/go/tools/cmd/staticcheck@latest"],
                 cwd=module_dir,
@@ -390,7 +427,8 @@ def run_go_linters(project_root: Path) -> tuple[bool, bool]:
                 success &= staticcheck_result
 
         # Run golangci-lint if available
-        if which("golangci-lint"):
+        golangci_lint_path = which("golangci-lint")
+        if golangci_lint_path:
             print(f"   ⚡ Running golangci-lint")
             # Check if config exists, use it if available
             config_args = []
@@ -399,35 +437,44 @@ def run_go_linters(project_root: Path) -> tuple[bool, bool]:
             elif (module_dir / ".golangci.yaml").exists():
                 config_args = ["--config", ".golangci.yaml"]
             
-            lint_cmd = ["golangci-lint", "run"] + config_args + ["./..."]
+            lint_cmd = [golangci_lint_path, "run"] + config_args + ["./..."]
             lint_result = run_command(lint_cmd, cwd=module_dir)
             success &= lint_result
         else:
-            print(f"   ℹ️  golangci-lint not installed. Consider installing for comprehensive linting.")
+            print(f"   ℹ️  golangci-lint not found. Run 'python scripts/setup_dev_env.py' to install it.")
 
         # Run ineffassign if available
-        if which("ineffassign"):
+        ineffassign_path = which("ineffassign")
+        if ineffassign_path:
             print(f"   🎯 Checking ineffective assignments")
-            ineffassign_result = run_command(["ineffassign", "./..."], cwd=module_dir)
+            ineffassign_result = run_command([ineffassign_path, "./..."], cwd=module_dir)
             success &= ineffassign_result
+        else:
+            print(f"   ℹ️  ineffassign not found. Run 'python scripts/setup_dev_env.py' to install it.")
 
         # Run misspell if available
-        if which("misspell"):
+        misspell_path = which("misspell")
+        if misspell_path:
             print(f"   📝 Checking for misspellings")
-            misspell_result = run_command(["misspell", "-error", "."], cwd=module_dir)
+            misspell_result = run_command([misspell_path, "-error", "."], cwd=module_dir)
             success &= misspell_result
+        else:
+            print(f"   ℹ️  misspell not found. Run 'python scripts/setup_dev_env.py' to install it.")
 
         # Security check with gosec if available
-        if which("gosec"):
+        gosec_path = which("gosec")
+        if gosec_path:
             print(f"   🔒 Running security scan")
             # Don't fail on security findings, just report them
             gosec_result = run_command(
-                ["gosec", "-quiet", "./..."], 
+                [gosec_path, "-quiet", "./..."], 
                 cwd=module_dir
             )
             # Note: We don't update success here as gosec findings are informational
             if not gosec_result:
                 print(f"   ⚠️  Security findings detected - please review")
+        else:
+            print(f"   ℹ️  gosec not found. Run 'python scripts/setup_dev_env.py' to install it.")
 
     return success, True
 

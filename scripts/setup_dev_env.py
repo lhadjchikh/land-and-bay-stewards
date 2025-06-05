@@ -176,28 +176,79 @@ def setup_go(os_type: str, instructions: dict) -> bool:
             go_bin = f"{go_path}/bin"
             print(f"   Go tools will be installed to: {go_bin}")
             
-            if os_type == "windows":
-                print(f"   Add this to your PATH environment variable: {go_bin}")
-                print("   Instructions: https://www.java.com/en/download/help/path.html")
+            # Check if Go bin is already in PATH
+            current_path = subprocess.run(["go", "env", "PATH"], capture_output=True, text=True).stdout.strip()
+            if go_bin not in current_path:
+                print(f"   ⚠️  {go_bin} is not in your PATH")
+                if os_type == "windows":
+                    print(f"   Add this to your PATH environment variable: {go_bin}")
+                    print("   Instructions: https://www.java.com/en/download/help/path.html")
+                else:
+                    print(f"   Add this to your shell profile: export PATH=$PATH:{go_bin}")
+                    print("   Or run temporarily: export PATH=$PATH:$(go env GOPATH)/bin")
             else:
-                print(f"   Add this to your shell profile: export PATH=$PATH:{go_bin}")
+                print(f"   ✅ {go_bin} is already in PATH")
         except Exception as e:
             print(f"   ⚠️  Could not get GOPATH: {e}")
         
         # Install Go linting tools
         print_step("Installing Go linting tools")
-        tools = [
+        essential_tools = [
             "honnef.co/go/tools/cmd/staticcheck@latest",
             "github.com/golangci/golangci-lint/cmd/golangci-lint@latest", 
             "github.com/gordonklaus/ineffassign@latest",
             "github.com/client9/misspell/cmd/misspell@latest",
-            # Note: gosec installation may require manual setup due to repository access issues
         ]
         
-        for tool in tools:
+        optional_tools = [
+            ("github.com/securecodewarrior/gosec/v2/cmd/gosec@latest", "gosec", "Security scanner for Go code"),
+        ]
+        
+        # Install essential tools first
+        for tool in essential_tools:
             tool_name = tool.split("/")[-1].split("@")[0]
             print(f"   📦 Installing {tool_name}")
-            success &= run_command(["go", "install", tool])
+            install_success = run_command(["go", "install", tool])
+            success &= install_success
+            
+            # Verify installation by checking if tool is accessible
+            if install_success:
+                # Check if tool is in PATH or Go bin directory
+                if check_tool(tool_name):
+                    print(f"   ✅ {tool_name} is accessible via PATH")
+                else:
+                    try:
+                        go_path = subprocess.run(["go", "env", "GOPATH"], capture_output=True, text=True).stdout.strip()
+                        tool_path = Path(go_path) / "bin" / tool_name
+                        if tool_path.exists():
+                            print(f"   ⚠️  {tool_name} installed but not in PATH: {tool_path}")
+                        else:
+                            print(f"   ❌ {tool_name} installation may have failed")
+                    except Exception:
+                        print(f"   ⚠️  Cannot verify {tool_name} installation")
+        
+        # Install optional tools (don't fail setup if these fail)
+        for tool, tool_name, description in optional_tools:
+            print(f"   📦 Installing {tool_name} (optional) - {description}")
+            install_success = run_command(["go", "install", tool], check=False)
+            
+            if install_success:
+                # Verify installation by checking if tool is accessible
+                if check_tool(tool_name):
+                    print(f"   ✅ {tool_name} is accessible via PATH")
+                else:
+                    try:
+                        go_path = subprocess.run(["go", "env", "GOPATH"], capture_output=True, text=True).stdout.strip()
+                        tool_path = Path(go_path) / "bin" / tool_name
+                        if tool_path.exists():
+                            print(f"   ⚠️  {tool_name} installed but not in PATH: {tool_path}")
+                        else:
+                            print(f"   ❌ {tool_name} installation may have failed")
+                    except Exception:
+                        print(f"   ⚠️  Cannot verify {tool_name} installation")
+            else:
+                print(f"   ⚠️  {tool_name} installation failed - this is optional and won't affect linting")
+                print(f"      You can install {tool_name} manually later if needed")
     
     return success
 
@@ -295,15 +346,45 @@ def main() -> int:
     else:
         try:
             go_path = subprocess.run(["go", "env", "GOPATH"], capture_output=True, text=True).stdout.strip()
-            print("Add this to your shell profile (~/.bashrc, ~/.zshrc, etc.):")
-            print(f"   export PATH=$PATH:{go_path}/bin")
-            print("\nThen reload your shell or run:")
-            print("   source ~/.zshrc  # or ~/.bashrc")
+            go_bin = f"{go_path}/bin"
+            
+            # Check if PATH update is needed
+            current_path = subprocess.run(["go", "env", "PATH"], capture_output=True, text=True).stdout.strip()
+            if go_bin not in current_path:
+                print("⚠️  Go tools directory is not in your PATH!")
+                print("Add this to your shell profile (~/.bashrc, ~/.zshrc, etc.):")
+                print(f"   export PATH=$PATH:{go_bin}")
+                print("\nThen reload your shell or run:")
+                print("   source ~/.zshrc  # or ~/.bashrc")
+                print("\nAlternatively, run this temporarily for the current session:")
+                print(f"   export PATH=$PATH:$(go env GOPATH)/bin")
+                
+                # Check if specific tools are accessible
+                essential_tools_check = ["golangci-lint", "staticcheck", "ineffassign", "misspell"]
+                optional_tools_check = ["gosec"]
+                
+                missing_essential = [tool for tool in essential_tools_check if not check_tool(tool)]
+                missing_optional = [tool for tool in optional_tools_check if not check_tool(tool)]
+                
+                if missing_essential:
+                    print(f"\n🔍 Essential tools missing from PATH: {', '.join(missing_essential)}")
+                    print("   These tools were installed but can't be found via 'which'")
+                    print("   Make sure to update your PATH as shown above")
+                
+                if missing_optional:
+                    print(f"\n🔍 Optional tools not available: {', '.join(missing_optional)}")
+                    print("   These tools are optional for security scanning")
+                    print("   The linting will work fine without them")
+            else:
+                print("✅ Go tools directory is already in your PATH")
         except:
             print("Please ensure Go tools are in your PATH")
     
     print("\nTo run all linters:")
     print("   python scripts/lint.py")
+    print("\nTo verify golangci-lint is working:")
+    print("   golangci-lint version")
+    print("   # If this fails, check your PATH configuration above")
     
     overall_success = python_success and go_success and tools_success and test_success
     
