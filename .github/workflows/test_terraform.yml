@@ -38,7 +38,7 @@ permissions:
   pull-requests: write # For commenting on PRs
 
 env:
-  GO_VERSION: "1.21"
+  GO_VERSION: "1.23"
   AWS_DEFAULT_REGION: us-east-1
   TF_IN_AUTOMATION: true
 
@@ -54,7 +54,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ~1.6.0
+          terraform_version: 1.12.1
 
       - name: Terraform Format Check
         run: |
@@ -139,7 +139,7 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
-          terraform_version: ~1.6.0
+          terraform_version: 1.12.1
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
