@@ -5,11 +5,12 @@ import (
 	"testing"
 	"time"
 
+	"terraform-tests/common"
+
 	"github.com/gruntwork-io/terratest/modules/aws"
-	"github.com/gruntwork-io/terratest/modules/http-helper"
+	http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	"terraform-tests/common"
 )
 
 func TestFullStackDeploymentWithoutSSR(t *testing.T) {
@@ -145,7 +146,7 @@ func TestFullStackDeploymentWithExistingVPC(t *testing.T) {
 		networkingVars[k] = v
 	}
 
-	networkingOptions := testConfig.GetModuleTerraformOptions("../modules/networking", networkingVars)
+	networkingOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", networkingVars)
 	defer common.CleanupResources(t, networkingOptions)
 
 	terraform.InitAndApply(t, networkingOptions)

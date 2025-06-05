@@ -66,10 +66,12 @@ func (tc *TestConfig) GetTerraformOptions(vars map[string]interface{}) *terrafor
 	}
 
 	return &terraform.Options{
-		TerraformDir: tc.TerraformDir,
-		Vars:         defaultVars,
+		TerraformDir:    tc.TerraformDir,
+		TerraformBinary: "terraform", // Explicitly use terraform instead of auto-detecting tofu
+		Vars:            defaultVars,
 		EnvVars: map[string]string{
-			"AWS_DEFAULT_REGION": tc.AWSRegion,
+			"AWS_DEFAULT_REGION":  tc.AWSRegion,
+			"TERRATEST_TERRAFORM": "terraform", // Force Terratest to use terraform
 		},
 	}
 }
@@ -257,7 +259,7 @@ func ValidateAWSResource(t *testing.T, awsRegion, resourceType, resourceID strin
 }
 
 // ValidateResourceTags checks if resources have the expected tags
-func ValidateResourceTags(t *testing.T, tags map[string]string, expectedTags map[string]string) {
+func ValidateResourceTags(t *testing.T, tags, expectedTags map[string]string) {
 	for key, expectedValue := range expectedTags {
 		actualValue, exists := tags[key]
 		assert.True(t, exists, fmt.Sprintf("Expected tag %s not found", key))
@@ -292,7 +294,7 @@ func GetVPCCIDRBlocks() map[string]string {
 // CleanupResources performs cleanup for failed tests
 func CleanupResources(t *testing.T, terraformOptions *terraform.Options) {
 	// This will run terraform destroy
-	defer terraform.Destroy(t, terraformOptions)
+	terraform.Destroy(t, terraformOptions)
 }
 
 // SkipIfShortTest skips tests that require AWS resources when running with -short flag

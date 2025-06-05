@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"terraform-tests/common"
+
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	"terraform-tests/common"
 )
 
 func TestDatabaseModuleCreatesRDSInstance(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/database")
+	testConfig := common.NewTestConfig("../../modules/database")
 
 	testVars := map[string]interface{}{
 		// Required networking dependencies
@@ -32,7 +33,7 @@ func TestDatabaseModuleCreatesRDSInstance(t *testing.T) {
 		"auto_setup_database":        false, // Don't run setup scripts in tests
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/database", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -56,7 +57,7 @@ func TestDatabaseModuleCreatesRDSInstance(t *testing.T) {
 func TestDatabaseModuleCreatesSubnetGroup(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/database")
+	testConfig := common.NewTestConfig("../../modules/database")
 
 	testVars := map[string]interface{}{
 		"db_subnet_ids":              []string{"subnet-db1", "subnet-db2"},
@@ -73,7 +74,7 @@ func TestDatabaseModuleCreatesSubnetGroup(t *testing.T) {
 		"auto_setup_database":        false,
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/database", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -92,7 +93,7 @@ func TestDatabaseModuleCreatesSubnetGroup(t *testing.T) {
 func TestDatabaseModuleCreatesParameterGroup(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/database")
+	testConfig := common.NewTestConfig("../../modules/database")
 
 	testVars := map[string]interface{}{
 		"db_subnet_ids":              []string{"subnet-db1", "subnet-db2"},
@@ -109,7 +110,7 @@ func TestDatabaseModuleCreatesParameterGroup(t *testing.T) {
 		"auto_setup_database":        false,
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/database", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -125,7 +126,7 @@ func TestDatabaseModuleCreatesParameterGroup(t *testing.T) {
 func TestDatabaseModuleWithSecretsManager(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/database")
+	testConfig := common.NewTestConfig("../../modules/database")
 
 	testVars := map[string]interface{}{
 		"db_subnet_ids":              []string{"subnet-db1", "subnet-db2"},
@@ -142,7 +143,7 @@ func TestDatabaseModuleWithSecretsManager(t *testing.T) {
 		"auto_setup_database":        false,
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/database", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -158,7 +159,7 @@ func TestDatabaseModuleWithSecretsManager(t *testing.T) {
 func TestDatabaseModuleValidatesBackupConfiguration(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/database")
+	testConfig := common.NewTestConfig("../../modules/database")
 
 	testVars := map[string]interface{}{
 		"db_subnet_ids":              []string{"subnet-db1", "subnet-db2"},
@@ -175,7 +176,7 @@ func TestDatabaseModuleValidatesBackupConfiguration(t *testing.T) {
 		"auto_setup_database":        false,
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/database", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -194,7 +195,7 @@ func TestDatabaseModuleValidatesBackupConfiguration(t *testing.T) {
 func TestDatabaseModuleValidatesEncryption(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/database")
+	testConfig := common.NewTestConfig("../../modules/database")
 
 	testVars := map[string]interface{}{
 		"db_subnet_ids":              []string{"subnet-db1", "subnet-db2"},
@@ -211,7 +212,7 @@ func TestDatabaseModuleValidatesEncryption(t *testing.T) {
 		"auto_setup_database":        false,
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/database", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -228,7 +229,7 @@ func TestDatabaseModuleValidatesEncryption(t *testing.T) {
 func TestDatabaseModuleValidatesPostGISExtension(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/database")
+	testConfig := common.NewTestConfig("../../modules/database")
 
 	testVars := map[string]interface{}{
 		"db_subnet_ids":              []string{"subnet-db1", "subnet-db2"},
@@ -245,7 +246,7 @@ func TestDatabaseModuleValidatesPostGISExtension(t *testing.T) {
 		"auto_setup_database":        true, // Enable database setup to test PostGIS
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/database", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -264,7 +265,7 @@ func TestDatabaseModuleValidatesPostGISExtension(t *testing.T) {
 func TestDatabaseModuleValidatesResourceNaming(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/database")
+	testConfig := common.NewTestConfig("../../modules/database")
 
 	testVars := map[string]interface{}{
 		"db_subnet_ids":              []string{"subnet-db1", "subnet-db2"},
@@ -281,7 +282,7 @@ func TestDatabaseModuleValidatesResourceNaming(t *testing.T) {
 		"auto_setup_database":        false,
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/database", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -298,6 +299,8 @@ func TestDatabaseModuleValidatesResourceNaming(t *testing.T) {
 }
 
 func TestDatabaseModuleValidatesStorageConfiguration(t *testing.T) {
+	common.SkipIfShortTest(t)
+
 	// Test different storage configurations
 	testCases := []struct {
 		allocatedStorage int
@@ -319,7 +322,7 @@ func TestDatabaseModuleValidatesStorageConfiguration(t *testing.T) {
 
 			common.SkipIfShortTest(t)
 
-			testConfig := common.NewTestConfig("../modules/database")
+			testConfig := common.NewTestConfig("../../modules/database")
 
 			testVars := map[string]interface{}{
 				"db_subnet_ids":              []string{"subnet-db1", "subnet-db2"},
@@ -336,7 +339,7 @@ func TestDatabaseModuleValidatesStorageConfiguration(t *testing.T) {
 				"auto_setup_database":        false,
 			}
 
-			terraformOptions := testConfig.GetModuleTerraformOptions("../modules/database", testVars)
+			terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
 			defer common.CleanupResources(t, terraformOptions)
 
 			terraform.InitAndApply(t, terraformOptions)

@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"terraform-tests/common"
+
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	"terraform-tests/common"
 )
 
 func TestComputeModuleCreatesECRRepositories(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/compute")
+	testConfig := common.NewTestConfig("../../modules/compute")
 
 	// Mock dependencies that compute module needs
 	testVars := map[string]interface{}{
@@ -46,7 +47,7 @@ func TestComputeModuleCreatesECRRepositories(t *testing.T) {
 		"desired_count":     1,
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/compute", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -73,28 +74,30 @@ func TestComputeModuleCreatesECRRepositories(t *testing.T) {
 func TestComputeModuleCreatesECSCluster(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/compute")
+	testConfig := common.NewTestConfig("../../modules/compute")
 
 	testVars := map[string]interface{}{
 		"private_subnet_ids":        []string{"subnet-12345", "subnet-67890"},
 		"public_subnet_id":          "subnet-public",
 		"app_security_group_id":     "sg-app123",
 		"bastion_security_group_id": "sg-bastion123",
-		"api_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-api/1234567890123456",
-		"ssr_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-ssr/1234567890123456",
-		"db_url_secret_arn":         "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
-		"secret_key_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
-		"secrets_kms_key_arn":       "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
-		"bastion_key_name":          "test-key",
-		"bastion_public_key":        "",
-		"create_new_key_pair":       false,
-		"container_port":            8000,
-		"domain_name":               fmt.Sprintf("%s.example.com", testConfig.UniqueID),
-		"enable_ssr":                false,
-		"health_check_path":         "/api/health/",
+		"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-api/1234567890123456",
+		"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-ssr/1234567890123456",
+		"db_url_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
+		"secret_key_secret_arn": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
+		"secrets_kms_key_arn":   "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+		"bastion_key_name":      "test-key",
+		"bastion_public_key":    "",
+		"create_new_key_pair":   false,
+		"container_port":        8000,
+		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
+		"enable_ssr":            false,
+		"health_check_path":     "/api/health/",
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/compute", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -114,28 +117,30 @@ func TestComputeModuleCreatesECSCluster(t *testing.T) {
 func TestComputeModuleCreatesIAMRoles(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/compute")
+	testConfig := common.NewTestConfig("../../modules/compute")
 
 	testVars := map[string]interface{}{
 		"private_subnet_ids":        []string{"subnet-12345", "subnet-67890"},
 		"public_subnet_id":          "subnet-public",
 		"app_security_group_id":     "sg-app123",
 		"bastion_security_group_id": "sg-bastion123",
-		"api_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-api/1234567890123456",
-		"ssr_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-ssr/1234567890123456",
-		"db_url_secret_arn":         "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
-		"secret_key_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
-		"secrets_kms_key_arn":       "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
-		"bastion_key_name":          "test-key",
-		"bastion_public_key":        "",
-		"create_new_key_pair":       false,
-		"container_port":            8000,
-		"domain_name":               fmt.Sprintf("%s.example.com", testConfig.UniqueID),
-		"enable_ssr":                false,
-		"health_check_path":         "/api/health/",
+		"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-api/1234567890123456",
+		"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-ssr/1234567890123456",
+		"db_url_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
+		"secret_key_secret_arn": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
+		"secrets_kms_key_arn":   "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+		"bastion_key_name":      "test-key",
+		"bastion_public_key":    "",
+		"create_new_key_pair":   false,
+		"container_port":        8000,
+		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
+		"enable_ssr":            false,
+		"health_check_path":     "/api/health/",
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/compute", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -157,30 +162,32 @@ func TestComputeModuleCreatesIAMRoles(t *testing.T) {
 func TestComputeModuleCreatesTaskDefinitionWithoutSSR(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/compute")
+	testConfig := common.NewTestConfig("../../modules/compute")
 
 	testVars := map[string]interface{}{
 		"private_subnet_ids":        []string{"subnet-12345", "subnet-67890"},
 		"public_subnet_id":          "subnet-public",
 		"app_security_group_id":     "sg-app123",
 		"bastion_security_group_id": "sg-bastion123",
-		"api_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-api/1234567890123456",
-		"ssr_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-ssr/1234567890123456",
-		"db_url_secret_arn":         "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
-		"secret_key_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
-		"secrets_kms_key_arn":       "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
-		"bastion_key_name":          "test-key",
-		"bastion_public_key":        "",
-		"create_new_key_pair":       false,
-		"container_port":            8000,
-		"domain_name":               fmt.Sprintf("%s.example.com", testConfig.UniqueID),
-		"enable_ssr":                false, // Test without SSR
-		"health_check_path":         "/api/health/",
-		"task_cpu":                  256,
-		"task_memory":               512,
+		"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-api/1234567890123456",
+		"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-ssr/1234567890123456",
+		"db_url_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
+		"secret_key_secret_arn": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
+		"secrets_kms_key_arn":   "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+		"bastion_key_name":      "test-key",
+		"bastion_public_key":    "",
+		"create_new_key_pair":   false,
+		"container_port":        8000,
+		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
+		"enable_ssr":            false, // Test without SSR
+		"health_check_path":     "/api/health/",
+		"task_cpu":              256,
+		"task_memory":           512,
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/compute", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -199,30 +206,32 @@ func TestComputeModuleCreatesTaskDefinitionWithoutSSR(t *testing.T) {
 func TestComputeModuleCreatesTaskDefinitionWithSSR(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/compute")
+	testConfig := common.NewTestConfig("../../modules/compute")
 
 	testVars := map[string]interface{}{
 		"private_subnet_ids":        []string{"subnet-12345", "subnet-67890"},
 		"public_subnet_id":          "subnet-public",
 		"app_security_group_id":     "sg-app123",
 		"bastion_security_group_id": "sg-bastion123",
-		"api_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-api/1234567890123456",
-		"ssr_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-ssr/1234567890123456",
-		"db_url_secret_arn":         "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
-		"secret_key_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
-		"secrets_kms_key_arn":       "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
-		"bastion_key_name":          "test-key",
-		"bastion_public_key":        "",
-		"create_new_key_pair":       false,
-		"container_port":            8000,
-		"domain_name":               fmt.Sprintf("%s.example.com", testConfig.UniqueID),
-		"enable_ssr":                true, // Test with SSR enabled
-		"health_check_path":         "/api/health/",
-		"task_cpu":                  512,
-		"task_memory":               1024,
+		"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-api/1234567890123456",
+		"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-ssr/1234567890123456",
+		"db_url_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
+		"secret_key_secret_arn": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
+		"secrets_kms_key_arn":   "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+		"bastion_key_name":      "test-key",
+		"bastion_public_key":    "",
+		"create_new_key_pair":   false,
+		"container_port":        8000,
+		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
+		"enable_ssr":            true, // Test with SSR enabled
+		"health_check_path":     "/api/health/",
+		"task_cpu":              512,
+		"task_memory":           1024,
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/compute", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -241,28 +250,30 @@ func TestComputeModuleCreatesTaskDefinitionWithSSR(t *testing.T) {
 func TestComputeModuleCreatesBastionHost(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/compute")
+	testConfig := common.NewTestConfig("../../modules/compute")
 
 	testVars := map[string]interface{}{
 		"private_subnet_ids":        []string{"subnet-12345", "subnet-67890"},
 		"public_subnet_id":          "subnet-public",
 		"app_security_group_id":     "sg-app123",
 		"bastion_security_group_id": "sg-bastion123",
-		"api_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-api/1234567890123456",
-		"ssr_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-ssr/1234567890123456",
-		"db_url_secret_arn":         "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
-		"secret_key_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
-		"secrets_kms_key_arn":       "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
-		"bastion_key_name":          "test-key",
-		"bastion_public_key":        "",
-		"create_new_key_pair":       false,
-		"container_port":            8000,
-		"domain_name":               fmt.Sprintf("%s.example.com", testConfig.UniqueID),
-		"enable_ssr":                false,
-		"health_check_path":         "/api/health/",
+		"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-api/1234567890123456",
+		"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-ssr/1234567890123456",
+		"db_url_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
+		"secret_key_secret_arn": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
+		"secrets_kms_key_arn":   "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+		"bastion_key_name":      "test-key",
+		"bastion_public_key":    "",
+		"create_new_key_pair":   false,
+		"container_port":        8000,
+		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
+		"enable_ssr":            false,
+		"health_check_path":     "/api/health/",
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/compute", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -286,8 +297,10 @@ func TestComputeModuleCreatesBastionHost(t *testing.T) {
 }
 
 func TestComputeModuleValidatesResourceConstraints(t *testing.T) {
+	common.SkipIfShortTest(t)
+
 	// This test validates the memory calculation logic
-	testConfig := common.NewTestConfig("../modules/compute")
+	testConfig := common.NewTestConfig("../../modules/compute")
 
 	// Test cases for memory validation
 	testCases := []struct {
@@ -316,23 +329,25 @@ func TestComputeModuleValidatesResourceConstraints(t *testing.T) {
 				"public_subnet_id":          "subnet-public",
 				"app_security_group_id":     "sg-app123",
 				"bastion_security_group_id": "sg-bastion123",
-				"api_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-api/1234567890123456",
-				"ssr_target_group_arn":      "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-ssr/1234567890123456",
-				"db_url_secret_arn":         "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
-				"secret_key_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
-				"secrets_kms_key_arn":       "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
-				"bastion_key_name":          "test-key",
-				"bastion_public_key":        "",
-				"create_new_key_pair":       false,
-				"container_port":            8000,
-				"domain_name":               fmt.Sprintf("%s.example.com", testConfig.UniqueID),
-				"enable_ssr":                false,
-				"health_check_path":         "/api/health/",
-				"task_cpu":                  tc.taskCPU,
-				"task_memory":               tc.taskMemory,
+				"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+					"targetgroup/test-api/1234567890123456",
+				"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+					"targetgroup/test-ssr/1234567890123456",
+				"db_url_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
+				"secret_key_secret_arn": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
+				"secrets_kms_key_arn":   "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+				"bastion_key_name":      "test-key",
+				"bastion_public_key":    "",
+				"create_new_key_pair":   false,
+				"container_port":        8000,
+				"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
+				"enable_ssr":            false,
+				"health_check_path":     "/api/health/",
+				"task_cpu":              tc.taskCPU,
+				"task_memory":           tc.taskMemory,
 			}
 
-			terraformOptions := testConfig.GetModuleTerraformOptions("../modules/compute", testVars)
+			terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
 			defer common.CleanupResources(t, terraformOptions)
 
 			// For valid configurations, apply should succeed

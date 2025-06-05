@@ -124,7 +124,14 @@ jobs:
       - name: Run unit tests for ${{ matrix.module }}
         run: |
           cd terraform/tests
-          go test -short -v -timeout 10m -run Test$(echo ${{ matrix.module }} | sed 's/\b\w/\u&/g')Module.* ./modules/
+          case "${{ matrix.module }}" in
+            "networking") pattern="TestNetworkingModule" ;;
+            "compute") pattern="TestComputeModule" ;;
+            "security") pattern="TestSecurityModule" ;;
+            "database") pattern="TestDatabaseModule" ;;
+            *) pattern="Test${{ matrix.module }}Module" ;;
+          esac
+          go test -short -v -timeout 10m -run "$pattern" ./modules/
 
   # Integration tests (creates AWS resources - only on main branch or manual trigger)
   integration-tests:

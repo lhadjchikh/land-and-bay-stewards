@@ -4,17 +4,18 @@ import (
 	"fmt"
 	"testing"
 
+	"terraform-tests/common"
+
 	"github.com/gruntwork-io/terratest/modules/aws"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/assert"
-	"terraform-tests/common"
 )
 
 func TestNetworkingModuleCreatesVPCAndSubnets(t *testing.T) {
 	common.SkipIfShortTest(t)
 
 	// Setup test configuration
-	testConfig := common.NewTestConfig("../modules/networking")
+	testConfig := common.NewTestConfig("../../modules/networking")
 	cidrBlocks := common.GetVPCCIDRBlocks()
 
 	// Merge CIDR blocks with test config
@@ -23,7 +24,7 @@ func TestNetworkingModuleCreatesVPCAndSubnets(t *testing.T) {
 		testVars[k] = v
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/networking", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 
 	// Clean up resources with defer to ensure cleanup happens even if test fails
 	defer common.CleanupResources(t, terraformOptions)
@@ -46,7 +47,7 @@ func TestNetworkingModuleCreatesVPCAndSubnets(t *testing.T) {
 func TestNetworkingModuleCreatesPublicSubnets(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/networking")
+	testConfig := common.NewTestConfig("../../modules/networking")
 	cidrBlocks := common.GetVPCCIDRBlocks()
 
 	testVars := make(map[string]interface{})
@@ -55,7 +56,7 @@ func TestNetworkingModuleCreatesPublicSubnets(t *testing.T) {
 	}
 	testVars["create_public_subnets"] = true
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/networking", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -82,7 +83,7 @@ func TestNetworkingModuleCreatesPublicSubnets(t *testing.T) {
 func TestNetworkingModuleCreatesPrivateSubnets(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/networking")
+	testConfig := common.NewTestConfig("../../modules/networking")
 	cidrBlocks := common.GetVPCCIDRBlocks()
 
 	testVars := make(map[string]interface{})
@@ -91,7 +92,7 @@ func TestNetworkingModuleCreatesPrivateSubnets(t *testing.T) {
 	}
 	testVars["create_private_subnets"] = true
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/networking", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -114,7 +115,7 @@ func TestNetworkingModuleCreatesPrivateSubnets(t *testing.T) {
 func TestNetworkingModuleCreatesDatabaseSubnets(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/networking")
+	testConfig := common.NewTestConfig("../../modules/networking")
 	cidrBlocks := common.GetVPCCIDRBlocks()
 
 	testVars := make(map[string]interface{})
@@ -123,7 +124,7 @@ func TestNetworkingModuleCreatesDatabaseSubnets(t *testing.T) {
 	}
 	testVars["create_db_subnets"] = true
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/networking", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -146,7 +147,7 @@ func TestNetworkingModuleCreatesDatabaseSubnets(t *testing.T) {
 func TestNetworkingModuleCreatesInternetGateway(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/networking")
+	testConfig := common.NewTestConfig("../../modules/networking")
 	cidrBlocks := common.GetVPCCIDRBlocks()
 
 	testVars := make(map[string]interface{})
@@ -154,7 +155,7 @@ func TestNetworkingModuleCreatesInternetGateway(t *testing.T) {
 		testVars[k] = v
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/networking", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -176,7 +177,7 @@ func TestNetworkingModuleCreatesInternetGateway(t *testing.T) {
 func TestNetworkingModuleCreatesVPCEndpoints(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/networking")
+	testConfig := common.NewTestConfig("../../modules/networking")
 	cidrBlocks := common.GetVPCCIDRBlocks()
 
 	testVars := make(map[string]interface{})
@@ -186,7 +187,7 @@ func TestNetworkingModuleCreatesVPCEndpoints(t *testing.T) {
 	testVars["create_vpc_endpoints"] = true
 	testVars["create_private_subnets"] = true
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/networking", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -207,7 +208,7 @@ func TestNetworkingModuleCreatesVPCEndpoints(t *testing.T) {
 func TestNetworkingModuleSkipsResourcesWhenDisabled(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/networking")
+	testConfig := common.NewTestConfig("../../modules/networking")
 	cidrBlocks := common.GetVPCCIDRBlocks()
 
 	testVars := make(map[string]interface{})
@@ -220,7 +221,7 @@ func TestNetworkingModuleSkipsResourcesWhenDisabled(t *testing.T) {
 	testVars["create_db_subnets"] = false
 	testVars["create_vpc_endpoints"] = false
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/networking", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
@@ -242,7 +243,7 @@ func TestNetworkingModuleSkipsResourcesWhenDisabled(t *testing.T) {
 func TestNetworkingModuleValidatesResourceNaming(t *testing.T) {
 	common.SkipIfShortTest(t)
 
-	testConfig := common.NewTestConfig("../modules/networking")
+	testConfig := common.NewTestConfig("../../modules/networking")
 	cidrBlocks := common.GetVPCCIDRBlocks()
 
 	testVars := make(map[string]interface{})
@@ -250,7 +251,7 @@ func TestNetworkingModuleValidatesResourceNaming(t *testing.T) {
 		testVars[k] = v
 	}
 
-	terraformOptions := testConfig.GetModuleTerraformOptions("../modules/networking", testVars)
+	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/networking", testVars)
 	defer common.CleanupResources(t, terraformOptions)
 
 	terraform.InitAndApply(t, terraformOptions)
