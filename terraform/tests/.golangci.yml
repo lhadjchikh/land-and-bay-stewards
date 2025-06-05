@@ -5,9 +5,11 @@ run:
   timeout: 5m
   tests: true
   modules-download-mode: readonly
+  go: "1.24"
 
 output:
-  format: colored-line-number
+  formats:
+    - format: colored-line-number
   print-issued-lines: true
   print-linter-name: true
 
@@ -19,21 +21,16 @@ linters-settings:
     local-prefixes: terraform-tests
 
   govet:
-    check-shadowing: true
-    enable-all: true
+    enable:
+      - shadow # Enable shadow checking
     disable:
       - fieldalignment # Too strict for test code
 
   staticcheck:
-    go: "1.21"
     checks: ["all"]
 
   gosimple:
-    go: "1.21"
     checks: ["all"]
-
-  unused:
-    go: "1.21"
 
   misspell:
     locale: US
@@ -72,18 +69,13 @@ linters:
     - errcheck
     - ineffassign
     - typecheck
-    - deadcode
-    - varcheck
-    - structcheck
 
   disable:
     - exhaustive # Too strict for test scenarios
-    - exhaustivestruct # Too strict for test data
     - gochecknoglobals # Tests often use global variables
     - gochecknoinits # Init functions are common in tests
     - goconst # Test strings don't need to be constants
     - godot # Don't require periods in test comments
-    - gomnd # Magic numbers are acceptable in tests
     - testpackage # Allow tests in same package
 
 issues:
@@ -98,7 +90,6 @@ issues:
     - path: test_helpers\.go
       linters:
         - unused
-        - deadcode
 
     # Allow complex test functions
     - path: _test\.go
