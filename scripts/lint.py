@@ -381,7 +381,12 @@ def run_go_linters(project_root: Path) -> tuple[bool, bool]:
                 cwd=module_dir,
             )
             if install_result:
-                staticcheck_result = run_command(["staticcheck", "./..."], cwd=module_dir)
+                # Try running staticcheck via go run if not in PATH
+                print(f"   🧹 Running staticcheck via go run")
+                staticcheck_result = run_command(
+                    ["go", "run", "honnef.co/go/tools/cmd/staticcheck@latest", "./..."], 
+                    cwd=module_dir
+                )
                 success &= staticcheck_result
 
         # Run golangci-lint if available
