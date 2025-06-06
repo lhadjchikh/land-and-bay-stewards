@@ -825,58 +825,99 @@ terraform/
 │   │   └── full_stack_test.go       # End-to-end infrastructure tests
 │   ├── go.mod                       # Go dependencies (SDK v2)
 │   ├── go.sum                       # Dependency checksums
+│   ├── Makefile                     # Test runner commands
 │   └── README.md                    # Testing documentation
-├── main.tf                          # Main Terraform configuration
-├── variables.tf                     # Input variables
-├── outputs.tf                       # Output values
-├── backend.tf                       # Remote state configuration
-├── versions.tf                      # Provider version constraints
-├── db_setup.sh                      # Database setup script (executable)
-├── setup_remote_state.sh            # Remote state setup script
-├── modules/
-│   ├── compute/
-│   │   ├── main.tf                  # ECS, ECR, Bastion host
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── database/
-│   │   ├── main.tf                  # RDS, Parameter groups
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   ├── versions.tf
-│   │   └── README.md                # Database module documentation
-│   ├── dns/
-│   │   ├── main.tf                  # Route53 records
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── loadbalancer/
-│   │   ├── main.tf                  # ALB, Target groups, Listeners
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── monitoring/
-│   │   ├── main.tf                  # CloudWatch, S3 logs, Budgets
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── networking/
-│   │   ├── main.tf                  # VPC, Subnets, Route tables
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── secrets/
-│   │   ├── main.tf                  # Secrets Manager, KMS
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   └── security/
-│       ├── main.tf                  # Security groups, WAF
-│       ├── variables.tf
-│       ├── outputs.tf
-│       └── versions.tf
-└── terraform.tfvars                 # Variable values (gitignored)
 ```
+
+### Running Tests
+
+#### Quick Validation (No AWS Resources)
+
+```bash
+cd terraform/tests
+go test -short ./...    # Validates test logic, no AWS costs
+```
+
+#### Local Development Testing
+
+```bash
+# Test individual modules with AWS resources
+make test-networking    # Test VPC, subnets (~$1, 15 min)
+make test-compute      # Test ECS, ECR (~$1, 20 min)
+make test-security     # Test security groups (~$1, 10 min)
+make test-database     # Test RDS (~$1, 20 min)
+
+# Run all module tests (~$4, 30-45 min)
+make test-unit
+```
+
+#### Full Integration Testing
+
+```bash
+# Creates complete infrastructure (~$3-5, 45 min)
+make test-integration
+```
+
+**📖 See [tests/README.md](tests/README.md) for comprehensive testing documentation including:**
+
+- Local test setup and configuration
+- Cost optimization strategies
+- Debugging failed tests
+- Test patterns and best practices
+- CI/CD integration
+- AWS permissions required
+  ├── main.tf # Main Terraform configuration
+  ├── variables.tf # Input variables
+  ├── outputs.tf # Output values
+  ├── backend.tf # Remote state configuration
+  ├── versions.tf # Provider version constraints
+  ├── db_setup.sh # Database setup script (executable)
+  ├── setup_remote_state.sh # Remote state setup script
+  ├── modules/
+  │ ├── compute/
+  │ │ ├── main.tf # ECS, ECR, Bastion host
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── database/
+  │ │ ├── main.tf # RDS, Parameter groups
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ ├── versions.tf
+  │ │ └── README.md # Database module documentation
+  │ ├── dns/
+  │ │ ├── main.tf # Route53 records
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── loadbalancer/
+  │ │ ├── main.tf # ALB, Target groups, Listeners
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── monitoring/
+  │ │ ├── main.tf # CloudWatch, S3 logs, Budgets
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── networking/
+  │ │ ├── main.tf # VPC, Subnets, Route tables
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── secrets/
+  │ │ ├── main.tf # Secrets Manager, KMS
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ └── security/
+  │ ├── main.tf # Security groups, WAF
+  │ ├── variables.tf
+  │ ├── outputs.tf
+  │ └── versions.tf
+  └── terraform.tfvars # Variable values (gitignored)
+
+````
 
 ## Security Considerations
 
@@ -936,7 +977,7 @@ go test -v ./modules/security_test.go
 
 # Run integration tests
 go test -v ./integration/
-```
+````
 
 **Test Features:**
 

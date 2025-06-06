@@ -45,9 +45,9 @@ Test complete infrastructure deployments:
 
 ### Prerequisites
 
-1. **Go 1.23+** installed
+1. **Go 1.24+** installed
 2. **AWS CLI** configured with appropriate credentials
-3. **Terraform** installed
+3. **Terraform** installed (version 1.12.1+)
 4. **Make** (optional, for convenience commands)
 
 ### Setup
@@ -61,7 +61,177 @@ go mod download
 
 # Verify AWS configuration
 aws sts get-caller-identity
+
+# Verify Terraform installation
+terraform version
 ```
+
+## 💻 Running Tests Locally
+
+### Quick Test (No AWS Resources)
+
+The fastest way to verify tests work without creating AWS resources:
+
+```bash
+# Run all tests in short mode (skips AWS resource creation)
+go test -short ./...
+
+# Or with make
+make test-all-short
+```
+
+**What this does:**
+
+- ✅ Compiles all test code
+- ✅ Validates test logic and structure
+- ✅ Skips actual AWS resource creation
+- ✅ Runs in ~30 seconds
+- ✅ No AWS costs incurred
+
+### Local Development Testing
+
+For comprehensive testing during development:
+
+```bash
+# 1. Test a specific module without AWS resources (free)
+go test -short -v -run TestNetworkingModule ./modules/
+
+# 2. Test a specific function in detail (free)
+go test -v -run TestNetworkingModuleCreatesVPC ./modules/
+
+# 3. Test with actual AWS resources (~$1, 15-20 minutes)
+go test -v -timeout 30m -run TestNetworkingModuleCreatesVPC ./modules/
+
+# 4. Test all modules with AWS resources (~$4, 30-45 minutes)
+make test-unit
+```
+
+### Testing Individual Modules
+
+```bash
+# Test networking module (~$1, 15 minutes)
+make test-networking
+# Or: go test -v -timeout 20m -run TestNetworkingModule ./modules/
+
+# Test compute module (~$1, 20 minutes)
+make test-compute
+# Or: go test -v -timeout 20m -run TestComputeModule ./modules/
+
+# Test security module (~$1, 10 minutes)
+make test-security
+# Or: go test -v -timeout 20m -run TestSecurityModule ./modules/
+
+# Test database module (~$1, 20 minutes)
+make test-database
+# Or: go test -v -timeout 20m -run TestDatabaseModule ./modules/
+```
+
+### Full Integration Testing
+
+**⚠️ Creates complete AWS infrastructure (~$3-5 per run)**
+
+```bash
+# Test complete infrastructure deployment
+make test-integration
+
+# Or test specific integration scenarios
+go test -v -timeout 45m -run TestFullStackDeploymentWithoutSSR ./integration/
+go test -v -timeout 45m -run TestFullStackDeploymentWithSSR ./integration/
+```
+
+### Local Test Configuration
+
+#### Environment Setup
+
+```bash
+# Required: AWS credentials
+export AWS_REGION=us-east-1
+export AWS_PROFILE=your-dev-profile
+
+# Optional: Custom test settings
+export TEST_TIMEOUT=30m
+export TERRATEST_TERRAFORM=terraform
+
+# Verify setup
+aws sts get-caller-identity
+terraform version
+```
+
+#### Test Isolation
+
+Each test run creates uniquely named resources:
+
+```bash
+# Example resource names created during tests:
+# - VPC: landandbay-test-12345-vpc
+# - Cluster: landandbay-test-12345-cluster
+# - Database: landandbay-test-12345-postgres
+```
+
+#### Cleanup
+
+Tests automatically clean up resources:
+
+```bash
+# Automatic cleanup happens in defer statements
+defer common.CleanupResources(t, terraformOptions)
+
+# Manual cleanup if needed
+make clean
+
+# Check for leftover resources
+aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*"
+```
+
+### Debugging Failed Tests
+
+```bash
+# Run with maximum verbosity
+go test -v -timeout 30m -run TestSpecificFailingTest ./modules/
+
+# Debug Terraform state
+export TF_LOG=DEBUG
+go test -v -run TestNetworkingModule ./modules/
+
+# Keep resources for manual inspection (remove defer cleanup)
+# Comment out: defer common.CleanupResources(t, terraformOptions)
+```
+
+### Cost Optimization for Local Testing
+
+1. **Use Short Mode**: `go test -short ./...` (free)
+2. **Test Individual Modules**: Each module costs ~$1 per run
+3. **Avoid Frequent Integration Tests**: Full stack tests cost ~$3-5 per run
+4. **Use Smaller Instances**: Tests use `t4g.micro` and minimal storage
+5. **Automatic Cleanup**: Resources destroyed after 30 minutes max
+
+**💡 Cost Breakdown:**
+
+- **Security Module**: ~$1 (WAF, security groups, 10 min)
+- **Networking Module**: ~$1 (VPC endpoints, minimal data transfer, 15 min)
+- **Compute Module**: ~$1 (t4g.nano bastion, ECS cluster, 20 min)
+- **Database Module**: ~$1 (db.t4g.micro RDS, 20GB storage, 20 min)
+- **Integration Test**: ~$3-5 (all resources + ALB, 45 min)
+
+### Local vs CI Testing
+
+| Mode              | Resources Created       | Time   | Cost       | Use Case              |
+| ----------------- | ----------------------- | ------ | ---------- | --------------------- |
+| `go test -short`  | None                    | 30s    | $0         | Quick validation      |
+| Individual module | Single module resources | 10-20m | ~$1        | Development           |
+| All modules       | All individual modules  | 30-45m | ~$4        | Pre-commit validation |
+| Integration test  | Full infrastructure     | 45m    | ~$3-5      | Pre-production        |
+| CI/CD             | Based on trigger        | Varies | Controlled | Automated validation  |
+
+**Cost Calculation Method:**
+
+- Based on AWS us-east-1 pricing (December 2024)
+- Includes actual resource costs (RDS, WAF, bastion instance, ALB)
+- Minimal data transfer and API call charges included
+- 10-20% safety margin for regional variations and overruns
+- Free tier eligible resources (VPC, subnets, security groups) excluded
+
+**Example**: Database module uses db.t4g.micro ($0.016/hour) + 20GB gp3 storage ($0.08/month) for 20 minutes = ~$0.006 + safety margin = ~$1 total.
 
 ### Running Tests
 

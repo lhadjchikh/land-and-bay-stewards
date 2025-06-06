@@ -229,31 +229,53 @@ npm test
 
 The Terraform infrastructure includes comprehensive testing using Go and Terratest with AWS SDK v2:
 
+#### Quick Validation (No AWS Resources)
+
 ```bash
 cd terraform/tests
+go test -short ./...    # ✅ Free, 30 seconds, validates all test logic
+```
 
-# Run all tests (creates real AWS resources)
-go test ./...
+#### Local Development Testing
 
-# Run tests without creating AWS resources
-go test -short ./...
+```bash
+# Test individual modules (creates real AWS resources)
+make test-networking    # VPC, subnets (~$1, 15m)
+make test-compute      # ECS, ECR (~$1, 20m)
+make test-security     # Security groups (~$1, 10m)
+make test-database     # RDS instance (~$1, 20m)
 
-# Run specific module tests
-go test -v ./modules/networking_test.go
-go test -v ./modules/compute_test.go
-go test -v ./modules/security_test.go
+# Test all modules
+make test-unit         # All modules (~$4, 30-45m)
 
-# Run integration tests
-go test -v ./integration/
+# Full integration testing (complete infrastructure)
+make test-integration  # Full stack (~$3-5, 45m)
+```
+
+#### Advanced Testing
+
+```bash
+# Test specific functions
+go test -v -run TestNetworkingModuleCreatesVPC ./modules/
+
+# Debug with verbose Terraform logging
+export TF_LOG=DEBUG
+go test -v -run TestSpecificTest ./modules/
+
+# Manual testing (comment out cleanup for inspection)
+# defer common.CleanupResources(t, terraformOptions)
 ```
 
 **Features:**
 
-- AWS SDK Go v2 integration for modern, efficient API calls
-- Unit tests for each Terraform module (networking, compute, security, database)
-- Integration tests for full stack deployments
-- Automatic resource cleanup after tests
-- Context-based API calls with proper timeout handling
+- **Modern AWS SDK v2**: Context-based API calls with proper timeout handling
+- **Module Tests**: Unit tests for networking, compute, security, database modules
+- **Integration Tests**: End-to-end infrastructure deployment validation
+- **Auto Cleanup**: Automatic resource destruction after tests (max 30min)
+- **Cost Optimized**: Uses minimal instance sizes and storage for testing
+- **Isolated**: Unique resource naming prevents conflicts
+
+📖 **[See terraform/tests/README.md](terraform/tests/README.md) for complete testing documentation**
 
 ## 🔧 Development Tools
 
