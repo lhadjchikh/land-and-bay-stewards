@@ -55,8 +55,8 @@ RUN chown nextjs:nodejs .next
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy the healthcheck.js file (already exists in the source directory)
-COPY --chown=nextjs:nodejs healthcheck.js /app/healthcheck.js
+# Copy health check files to avoid any conflicts
+COPY --chown=nextjs:nodejs healthcheck*.js /app/
 
 USER nextjs
 
