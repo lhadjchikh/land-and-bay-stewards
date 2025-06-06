@@ -273,7 +273,7 @@ resource "aws_ecs_task_definition" "app" {
       healthCheck = {
         command = [
           "CMD-SHELL",
-          "node /app/healthcheck.js"
+          "node /app/healthcheck-lenient.js"
         ],
         interval    = 30,
         timeout     = 10,
