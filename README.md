@@ -14,7 +14,8 @@ A comprehensive web application for managing policy campaigns, tracking legislat
 ## 🌟 Features
 
 - **Policy Campaign Management**: Create and manage advocacy campaigns with legislative tracking
-- **Endorser Organization**: Collect and display endorsements from farmers, watermen, businesses, and nonprofits
+- **Stakeholder Management**: Manage organizations and individuals (farmers, watermen, businesses, nonprofits)
+- **Endorsement Tracking**: Collect and display campaign endorsements from stakeholders
 - **Legislator Tracking**: Monitor representatives and senators with bill sponsorship data
 - **Geographic Data**: PostGIS integration for location-based features
 - **Server-Side Rendering**: Optional Next.js SSR for improved SEO and performance
@@ -62,11 +63,12 @@ This project uses a modern, scalable architecture:
 ├── backend/                 # Django API server
 │   ├── landandbay/         # Main Django project
 │   │   ├── campaigns/      # Policy campaigns app
-│   │   ├── endorsers/      # Endorsers management app
 │   │   ├── legislators/    # Legislators tracking app
 │   │   ├── regions/        # Geographic regions app
 │   │   ├── api/           # API endpoints and schemas
 │   │   └── core/          # Core settings and configuration
+│   ├── stakeholders/       # Stakeholder management app
+│   ├── endorsements/       # Campaign endorsements app
 │   ├── scripts/           # Backend-specific utilities
 │   ├── manage.py          # Django management script
 │   └── pyproject.toml     # Python dependencies (Poetry)
@@ -406,7 +408,8 @@ The Django backend provides a comprehensive REST API:
 ### Endpoints
 
 - **Campaigns**: `/api/campaigns/` - Policy campaign management
-- **Endorsers**: `/api/endorsers/` - Endorser information
+- **Stakeholders**: `/api/stakeholders/` - Stakeholder information and management
+- **Endorsements**: `/api/endorsements/` - Campaign endorsement relationships
 - **Legislators**: `/api/legislators/` - Representative and senator data
 - **Health**: `/api/health/` - Application health status
 

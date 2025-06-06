@@ -19,8 +19,9 @@ def create_test_data() -> int:
     try:
         # Import models after Django is initialized
         from landandbay.campaigns.models import PolicyCampaign
-        from landandbay.endorsers.models import Endorser
+        from landandbay.endorsements.models import Endorsement
         from landandbay.legislators.models import Legislator
+        from landandbay.stakeholders.models import Stakeholder
 
         # Create a test campaign if none exists
         if not PolicyCampaign.objects.exists():
@@ -31,19 +32,29 @@ def create_test_data() -> int:
             )
             print("Created test campaign")
 
-        # Create a test endorser if none exists
-        if not Endorser.objects.exists():
-            Endorser.objects.create(
-                name="Test Endorser",
+        # Create a test stakeholder if none exists
+        if not Stakeholder.objects.exists():
+            stakeholder = Stakeholder.objects.create(
+                name="Test Stakeholder",
                 organization="Test Organization",
                 role="Test Role",
                 email="test@example.com",
                 state="MD",
                 county="Test County",
                 type="other",
-                campaign=PolicyCampaign.objects.first(),
             )
-            print("Created test endorser")
+            print("Created test stakeholder")
+
+            # Create a test endorsement if none exists
+            campaign = PolicyCampaign.objects.first()
+            if campaign and not Endorsement.objects.exists():
+                Endorsement.objects.create(
+                    stakeholder=stakeholder,
+                    campaign=campaign,
+                    statement="Test endorsement statement",
+                    public_display=True,
+                )
+                print("Created test endorsement")
 
         # Create a test legislator if none exists
         if not Legislator.objects.exists():

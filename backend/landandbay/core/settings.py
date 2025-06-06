@@ -43,12 +43,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Use explicit app names to fix database table names
+    "landandbay.core",
     "landandbay.campaigns.apps.CampaignsConfig",
-    "landandbay.endorsers.apps.EndorsersConfig",
     "landandbay.legislators.apps.LegislatorsConfig",
     "landandbay.regions.apps.RegionsConfig",
-    "landandbay.core",
+    # New separate apps for stakeholders and endorsements
+    "landandbay.stakeholders",
+    "landandbay.endorsements",
 ]
 
 # Configure database table names to maintain backward compatibility

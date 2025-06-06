@@ -3,12 +3,13 @@ from ninja import NinjaAPI
 
 from landandbay.core.views import health_check as health_check_view
 
-from . import campaigns, endorsers, legislators
+from . import campaigns, endorsements, legislators, stakeholders
 
 api = NinjaAPI(version="1.0")
 
 api.add_router("/campaigns/", campaigns.router)
-api.add_router("/endorsers/", endorsers.router)
+api.add_router("/stakeholders/", stakeholders.router)
+api.add_router("/endorsements/", endorsements.router)
 api.add_router("/legislators/", legislators.router)
 
 
