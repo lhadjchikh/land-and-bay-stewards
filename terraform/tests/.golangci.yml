@@ -1,0 +1,115 @@
+# golangci-lint configuration for Terraform tests
+# See: https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+  go: "1.24"
+
+output:
+  formats:
+    - format: colored-line-number
+  print-issued-lines: true
+  print-linter-name: true
+
+linters-settings:
+  gofmt:
+    simplify: true
+
+  goimports:
+    local-prefixes: terraform-tests
+
+  govet:
+    enable:
+      - shadow # Enable shadow checking
+    disable:
+      - fieldalignment # Too strict for test code
+
+  staticcheck:
+    checks: ["all"]
+
+  gosimple:
+    checks: ["all"]
+
+  misspell:
+    locale: US
+
+  lll:
+    line-length: 120
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - performance
+      - style
+    disabled-checks:
+      - commentFormatting # Allow flexible comment formatting in tests
+      - whyNoLint # Don't require explanations for nolint comments
+
+  gosec:
+    severity: medium
+    confidence: medium
+    excludes:
+      - G204 # Subprocess launched with variable - common in tests
+      - G304 # File path provided as taint input - test files are controlled
+
+linters:
+  enable:
+    - gofmt
+    - goimports
+    - govet
+    - staticcheck
+    - gosimple
+    - unused
+    - misspell
+    - lll
+    - gocritic
+    - gosec
+    - errcheck
+    - ineffassign
+    - typecheck
+
+  disable:
+    - exhaustive # Too strict for test scenarios
+    - gochecknoglobals # Tests often use global variables
+    - gochecknoinits # Init functions are common in tests
+    - goconst # Test strings don't need to be constants
+    - godot # Don't require periods in test comments
+    - testpackage # Allow tests in same package
+
+issues:
+  exclude-rules:
+    # Allow long lines in test data and comments
+    - path: _test\.go
+      linters:
+        - lll
+      text: "(// |/\\*)"
+
+    # Allow unused parameters in test helpers
+    - path: test_helpers\.go
+      linters:
+        - unused
+
+    # Allow complex test functions
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - gocognit
+        - funlen
+
+    # Allow deep nesting in test setup
+    - path: _test\.go
+      linters:
+        - nestif
+
+  exclude:
+    # Exclude some default rules that are too strict for tests
+    - "Error return value of .* is not checked" # Common in cleanup code
+    - "should have a package comment" # Not required for test packages
+
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+severity:
+  default-severity: warning

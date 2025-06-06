@@ -1,0 +1,193 @@
+name: Go Lint
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/go.sum"
+      - ".github/workflows/lint_go.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/*.go"
+      - "**/go.mod"
+      - "**/go.sum"
+      - ".github/workflows/lint_go.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GO_VERSION: "1.24"
+
+jobs:
+  go-lint:
+    name: Go Linting
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Find all directories containing Go modules
+        go-project:
+          - name: "Terraform Tests"
+            path: "terraform/tests"
+            module: "terraform-tests"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+          cache: false # We'll handle caching manually for multiple modules
+
+      - name: Setup Go module cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ matrix.go-project.module }}-${{ hashFiles(format('{0}/go.sum', matrix.go-project.path)) }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-${{ matrix.go-project.module }}-
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-
+
+      - name: Verify Go module - ${{ matrix.go-project.name }}
+        run: |
+          cd ${{ matrix.go-project.path }}
+
+          # Check if go.mod exists
+          if [ ! -f go.mod ]; then
+            echo "❌ go.mod not found in ${{ matrix.go-project.path }}"
+            exit 1
+          fi
+
+          echo "✅ Found go.mod in ${{ matrix.go-project.path }}"
+
+      - name: Download dependencies - ${{ matrix.go-project.name }}
+        run: |
+          cd ${{ matrix.go-project.path }}
+          go mod download
+          go mod verify
+
+      - name: Check Go formatting - ${{ matrix.go-project.name }}
+        run: |
+          cd ${{ matrix.go-project.path }}
+
+          echo "Checking Go code formatting..."
+          unformatted=$(gofmt -l .)
+
+          if [ -n "$unformatted" ]; then
+            echo "❌ The following files are not properly formatted:"
+            echo "$unformatted"
+            echo ""
+            echo "Please run 'gofmt -w .' in ${{ matrix.go-project.path }} to fix formatting"
+            exit 1
+          else
+            echo "✅ All Go files are properly formatted"
+          fi
+
+      - name: Run go vet - ${{ matrix.go-project.name }}
+        run: |
+          cd ${{ matrix.go-project.path }}
+
+          echo "Running go vet..."
+          go vet ./...
+          echo "✅ go vet passed"
+
+      - name: Run staticcheck - ${{ matrix.go-project.name }}
+        run: |
+          cd ${{ matrix.go-project.path }}
+
+          # Install staticcheck if not available
+          if ! command -v staticcheck &> /dev/null; then
+            echo "Installing staticcheck..."
+            go install honnef.co/go/tools/cmd/staticcheck@latest
+          fi
+
+          echo "Running staticcheck..."
+          staticcheck ./...
+          echo "✅ staticcheck passed"
+
+      - name: Run golangci-lint - ${{ matrix.go-project.name }}
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          working-directory: ${{ matrix.go-project.path }}
+          args: --timeout=5m
+          skip-cache: false
+          skip-pkg-cache: false
+          skip-build-cache: false
+
+      - name: Check for ineffective assignments - ${{ matrix.go-project.name }}
+        run: |
+          cd ${{ matrix.go-project.path }}
+
+          # Install ineffassign if not available
+          if ! command -v ineffassign &> /dev/null; then
+            echo "Installing ineffassign..."
+            go install github.com/gordonklaus/ineffassign@latest
+          fi
+
+          echo "Checking for ineffective assignments..."
+          ineffassign ./...
+          echo "✅ No ineffective assignments found"
+
+      - name: Check for misspellings - ${{ matrix.go-project.name }}
+        run: |
+          cd ${{ matrix.go-project.path }}
+
+          # Install misspell if not available
+          if ! command -v misspell &> /dev/null; then
+            echo "Installing misspell..."
+            go install github.com/client9/misspell/cmd/misspell@latest
+          fi
+
+          echo "Checking for misspellings..."
+          misspell -error .
+          echo "✅ No misspellings found"
+
+      - name: Check Go module tidiness - ${{ matrix.go-project.name }}
+        run: |
+          cd ${{ matrix.go-project.path }}
+
+          echo "Checking if go.mod is tidy..."
+          go mod tidy
+
+          # Check if go.mod or go.sum changed
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "❌ go.mod or go.sum is not tidy"
+            echo "Please run 'go mod tidy' in ${{ matrix.go-project.path }}"
+            exit 1
+          else
+            echo "✅ go.mod and go.sum are tidy"
+          fi
+
+      - name: Security scan with gosec - ${{ matrix.go-project.name }}
+        run: |
+          cd ${{ matrix.go-project.path }}
+
+          # Install gosec if not available
+          if ! command -v gosec &> /dev/null; then
+            echo "Installing gosec..."
+            go install github.com/securego/gosec/v2/cmd/gosec@latest
+          fi
+
+          echo "Running security scan..."
+          # Run gosec but don't fail on findings, just report them
+          gosec -fmt json -out gosec-report.json -stdout -verbose=text ./... || true
+
+          # Check if there are any high severity issues
+          if [ -f gosec-report.json ]; then
+            high_issues=$(jq -r '.Issues[]? | select(.severity == "HIGH") | .file' gosec-report.json 2>/dev/null || echo "")
+            if [ -n "$high_issues" ]; then
+              echo "⚠️ High severity security issues found:"
+              jq -r '.Issues[]? | select(.severity == "HIGH") | "\(.file):\(.line) - \(.details)"' gosec-report.json
+              echo "Please review these security findings"
+            else
+              echo "✅ No high severity security issues found"
+            fi
+          fi

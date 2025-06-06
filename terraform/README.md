@@ -807,63 +807,117 @@ Connection timeout when accessing database
 - ALB security group can send traffic to app on port 8000
 - App security group accepts traffic from ALB security group on port 8000
 
-## File Structure
+## Testing Framework
 
-Your complete project structure should look like this:
+The infrastructure includes a comprehensive testing suite built with Go and Terratest:
 
 ```
 terraform/
-├── main.tf                          # Main Terraform configuration
-├── variables.tf                     # Input variables
-├── outputs.tf                       # Output values
-├── backend.tf                       # Remote state configuration
-├── versions.tf                      # Provider version constraints
-├── db_setup.sh                      # Database setup script (executable)
-├── setup_remote_state.sh            # Remote state setup script
-├── modules/
-│   ├── compute/
-│   │   ├── main.tf                  # ECS, ECR, Bastion host
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── database/
-│   │   ├── main.tf                  # RDS, Parameter groups
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   ├── versions.tf
-│   │   └── README.md                # Database module documentation
-│   ├── dns/
-│   │   ├── main.tf                  # Route53 records
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── loadbalancer/
-│   │   ├── main.tf                  # ALB, Target groups, Listeners
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── monitoring/
-│   │   ├── main.tf                  # CloudWatch, S3 logs, Budgets
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── networking/
-│   │   ├── main.tf                  # VPC, Subnets, Route tables
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   ├── secrets/
-│   │   ├── main.tf                  # Secrets Manager, KMS
-│   │   ├── variables.tf
-│   │   ├── outputs.tf
-│   │   └── versions.tf
-│   └── security/
-│       ├── main.tf                  # Security groups, WAF
-│       ├── variables.tf
-│       ├── outputs.tf
-│       └── versions.tf
-└── terraform.tfvars                 # Variable values (gitignored)
+├── tests/
+│   ├── common/
+│   │   └── test_helpers.go          # AWS SDK v2 test utilities
+│   ├── modules/
+│   │   ├── networking_test.go       # VPC, subnets, routing tests
+│   │   ├── compute_test.go          # ECS, ECR, bastion tests
+│   │   ├── security_test.go         # Security groups, WAF tests
+│   │   └── database_test.go         # RDS, parameter groups tests
+│   ├── integration/
+│   │   └── full_stack_test.go       # End-to-end infrastructure tests
+│   ├── go.mod                       # Go dependencies (SDK v2)
+│   ├── go.sum                       # Dependency checksums
+│   ├── Makefile                     # Test runner commands
+│   └── README.md                    # Testing documentation
 ```
+
+### Running Tests
+
+#### Quick Validation (No AWS Resources)
+
+```bash
+cd terraform/tests
+go test -short ./...    # Validates test logic, no AWS costs
+```
+
+#### Local Development Testing
+
+```bash
+# Test individual modules with AWS resources
+make test-networking    # Test VPC, subnets (~$1, 15 min)
+make test-compute      # Test ECS, ECR (~$1, 20 min)
+make test-security     # Test security groups (~$1, 10 min)
+make test-database     # Test RDS (~$1, 20 min)
+
+# Run all module tests (~$4, 30-45 min)
+make test-unit
+```
+
+#### Full Integration Testing
+
+```bash
+# Creates complete infrastructure (~$3-5, 45 min)
+make test-integration
+```
+
+**📖 See [tests/README.md](tests/README.md) for comprehensive testing documentation including:**
+
+- Local test setup and configuration
+- Cost optimization strategies
+- Debugging failed tests
+- Test patterns and best practices
+- CI/CD integration
+- AWS permissions required
+  ├── main.tf # Main Terraform configuration
+  ├── variables.tf # Input variables
+  ├── outputs.tf # Output values
+  ├── backend.tf # Remote state configuration
+  ├── versions.tf # Provider version constraints
+  ├── db_setup.sh # Database setup script (executable)
+  ├── setup_remote_state.sh # Remote state setup script
+  ├── modules/
+  │ ├── compute/
+  │ │ ├── main.tf # ECS, ECR, Bastion host
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── database/
+  │ │ ├── main.tf # RDS, Parameter groups
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ ├── versions.tf
+  │ │ └── README.md # Database module documentation
+  │ ├── dns/
+  │ │ ├── main.tf # Route53 records
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── loadbalancer/
+  │ │ ├── main.tf # ALB, Target groups, Listeners
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── monitoring/
+  │ │ ├── main.tf # CloudWatch, S3 logs, Budgets
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── networking/
+  │ │ ├── main.tf # VPC, Subnets, Route tables
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ ├── secrets/
+  │ │ ├── main.tf # Secrets Manager, KMS
+  │ │ ├── variables.tf
+  │ │ ├── outputs.tf
+  │ │ └── versions.tf
+  │ └── security/
+  │ ├── main.tf # Security groups, WAF
+  │ ├── variables.tf
+  │ ├── outputs.tf
+  │ └── versions.tf
+  └── terraform.tfvars # Variable values (gitignored)
+
+````
 
 ## Security Considerations
 
@@ -904,11 +958,52 @@ terraform/
 3. **Database Issues**: Use bastion host for direct troubleshooting
 4. **Security Issues**: Review WAF logs and security group rules
 
+### Testing the Infrastructure
+
+The infrastructure includes comprehensive tests using Terratest and AWS SDK Go v2:
+
+```bash
+# Run all tests (creates real AWS resources)
+cd terraform/tests
+go test ./...
+
+# Run tests without creating AWS resources
+go test -short ./...
+
+# Run specific module tests
+go test -v ./modules/networking_test.go
+go test -v ./modules/compute_test.go
+go test -v ./modules/security_test.go
+
+# Run integration tests
+go test -v ./integration/
+````
+
+**Test Features:**
+
+- AWS SDK Go v2 integration for modern, efficient API calls
+- Comprehensive unit tests for each Terraform module
+- Integration tests for full stack deployments
+- Automatic resource cleanup after tests
+- Context-based API calls with proper timeout handling
+- Type-safe AWS resource validation
+
+See `terraform/tests/README.md` for detailed testing documentation.
+
 ### Version Information
+
+**Infrastructure:**
 
 - **Terraform**: >= 1.12.0
 - **AWS Provider**: ~> 5.99.0
 - **PostgreSQL**: 16.9
 - **Node.js/Container Runtime**: As specified in application
+
+**Testing Framework:**
+
+- **Go**: 1.23+
+- **Terratest**: v0.49.0
+- **AWS SDK Go v2**: v1.36.3
+- **Testify**: v1.10.0
 
 This infrastructure configuration provides a robust, secure, and scalable foundation for the Land and Bay Stewards application with comprehensive documentation and troubleshooting guidance.

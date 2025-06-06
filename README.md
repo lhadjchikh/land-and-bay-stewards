@@ -67,6 +67,7 @@ This project uses a modern, scalable architecture:
 │   │   ├── regions/        # Geographic regions app
 │   │   ├── api/           # API endpoints and schemas
 │   │   └── core/          # Core settings and configuration
+│   ├── scripts/           # Backend-specific utilities
 │   ├── manage.py          # Django management script
 │   └── pyproject.toml     # Python dependencies (Poetry)
 ├── frontend/               # React TypeScript application
@@ -84,8 +85,11 @@ This project uses a modern, scalable architecture:
 │   └── tests/            # Integration tests
 ├── terraform/            # Infrastructure as Code
 │   ├── modules/          # Reusable Terraform modules
+│   ├── tests/            # Terraform unit and integration tests
 │   ├── main.tf          # Main infrastructure configuration
 │   └── variables.tf     # Configuration variables
+├── scripts/              # Project-wide automation scripts
+│   └── lint.py          # Cross-language linting and formatting
 ├── .github/workflows/    # CI/CD pipelines
 └── docker-compose.yml   # Local development environment
 ```
@@ -221,6 +225,58 @@ cd ssr
 npm test
 ```
 
+### Infrastructure Tests
+
+The Terraform infrastructure includes comprehensive testing using Go and Terratest with AWS SDK v2:
+
+#### Quick Validation (No AWS Resources)
+
+```bash
+cd terraform/tests
+go test -short ./...    # ✅ Free, 30 seconds, validates all test logic
+```
+
+#### Local Development Testing
+
+```bash
+# Test individual modules (creates real AWS resources)
+make test-networking    # VPC, subnets (~$1, 15m)
+make test-compute      # ECS, ECR (~$1, 20m)
+make test-security     # Security groups (~$1, 10m)
+make test-database     # RDS instance (~$1, 20m)
+
+# Test all modules
+make test-unit         # All modules (~$4, 30-45m)
+
+# Full integration testing (complete infrastructure)
+make test-integration  # Full stack (~$3-5, 45m)
+```
+
+#### Advanced Testing
+
+```bash
+# Test specific functions
+go test -v -run TestNetworkingModuleCreatesVPC ./modules/
+
+# Debug with verbose Terraform logging
+export TF_LOG=DEBUG
+go test -v -run TestSpecificTest ./modules/
+
+# Manual testing (comment out cleanup for inspection)
+# defer common.CleanupResources(t, terraformOptions)
+```
+
+**Features:**
+
+- **Modern AWS SDK v2**: Context-based API calls with proper timeout handling
+- **Module Tests**: Unit tests for networking, compute, security, database modules
+- **Integration Tests**: End-to-end infrastructure deployment validation
+- **Auto Cleanup**: Automatic resource destruction after tests (max 30min)
+- **Cost Optimized**: Uses minimal instance sizes and storage for testing
+- **Isolated**: Unique resource naming prevents conflicts
+
+📖 **[See terraform/tests/README.md](terraform/tests/README.md) for complete testing documentation**
+
 ## 🔧 Development Tools
 
 ### Code Quality
@@ -228,21 +284,43 @@ npm test
 The project enforces high code quality standards:
 
 - **Python**: Black formatting, Ruff linting, type hints
+- **Go**: gofmt, go vet, staticcheck, golangci-lint (for Terraform tests)
 - **TypeScript/JavaScript**: ESLint, Prettier formatting
-- **Shell Scripts**: ShellCheck validation
+- **Shell Scripts**: ShellCheck validation and shfmt formatting
 - **Terraform**: TFLint validation and formatting
 
-Run all linters:
+### Quick Setup
+
+**First-time setup** (installs all tools and configures environment):
 
 ```bash
-# Backend linting
+# Auto-detect your OS and set up everything
+python scripts/setup_dev_env.py
+
+# Or specify your OS
+python scripts/setup_dev_env.py --os macos    # macOS
+python scripts/setup_dev_env.py --os linux    # Linux
+python scripts/setup_dev_env.py --os windows  # Windows
+```
+
+**Daily linting** (after setup):
+
+```bash
+# Run all linters across the entire project
+python scripts/lint.py
+```
+
+### Manual Setup
+
+If you prefer manual setup, see [DEVELOPMENT_SETUP.md](DEVELOPMENT_SETUP.md) for detailed instructions.
+
+### Individual Component Linting
+
+```bash
+# Individual component linting (if needed)
 cd backend && poetry run black . && poetry run ruff check .
-
-# Frontend linting
 cd frontend && npm run lint:fix && npm run format
-
-# Or use the automated script
-cd backend && poetry run lint
+cd terraform/tests && make lint
 ```
 
 ### Environment Configuration

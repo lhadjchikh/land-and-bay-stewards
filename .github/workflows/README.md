@@ -9,7 +9,7 @@ This project uses a structured CI/CD pipeline with the following key workflows:
 
 ### Test Workflows
 
-#### Frontend Tests (`frontend-tests.yml`)
+#### Frontend Tests (`test_frontend.yml`)
 
 - Triggered by changes to files in the `frontend/` directory
 - Runs on multiple Node.js versions (18.x and 20.x)
@@ -19,19 +19,36 @@ This project uses a structured CI/CD pipeline with the following key workflows:
 - Checks for TypeScript errors (if applicable)
 - Can be manually triggered with `workflow_dispatch`
 
-#### Backend Tests (`backend-tests.yml`)
+#### Backend Tests (`test_backend.yml`)
 
 - Triggered by changes to files in the `backend/` directory, `docker-compose.yml`, or `Dockerfile`
 - Sets up Docker and PostgreSQL
 - Runs the Django tests inside a Docker container
 - Can be manually triggered with `workflow_dispatch`
 
-#### Full Stack Integration Tests (`full-stack-tests.yml`)
+#### Full Stack Integration Tests (`test_fullstack.yml`)
 
 - Runs on pushes to main branch, pull requests that affect both frontend and backend, or manual triggers
 - Focuses specifically on end-to-end tests that verify frontend and backend integration
 - Starts the complete application stack in Docker
 - Runs the E2E tests from the frontend against the live backend
+
+#### Terraform Tests (`test_terraform.yml`)
+
+- Triggered by changes to files in the `terraform/` directory
+- Validates Terraform configurations and formatting
+- Runs comprehensive unit tests for individual modules (networking, compute, security, database)
+- Runs integration tests that validate module interactions
+- **Cost-aware testing**: Creates AWS resources only on main branch pushes or manual triggers
+- Includes automatic resource cleanup and cost monitoring
+- Supports manual testing scenarios with configurable options
+
+**Test Types:**
+
+- **Unit Tests**: Fast tests without AWS resources (networking, compute, security, database modules)
+- **Integration Tests (Short)**: Module interaction tests without AWS resources
+- **Integration Tests (Full)**: Complete infrastructure deployment with real AWS resources
+- **Cost Monitoring**: Checks for leftover resources and creates alerts
 
 ### Deployment Workflow (`deploy-to-ecs.yml`)
 
@@ -58,6 +75,8 @@ This project uses a structured CI/CD pipeline with the following key workflows:
 Frontend Tests ─┐
 Backend Tests ──┼─► Deploy to ECS ─► Amazon ECS
 Full Stack Tests┘
+
+Terraform Tests ─► Infrastructure Changes ─► AWS Resources
 ```
 
 ## Manual Triggers
