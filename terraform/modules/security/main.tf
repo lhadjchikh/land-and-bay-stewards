@@ -139,6 +139,17 @@ resource "aws_security_group_rule" "alb_to_app" {
   description              = "ALB to application containers on port 8000"
 }
 
+# Allow ALB to send traffic to SSR containers
+resource "aws_security_group_rule" "alb_to_app_ssr" {
+  type                     = "egress"
+  from_port                = 3000
+  to_port                  = 3000
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.app_sg.id
+  security_group_id        = aws_security_group.alb_sg.id
+  description              = "ALB to SSR container on port 3000"
+}
+
 # Allow App containers to receive traffic from ALB
 resource "aws_security_group_rule" "app_from_alb" {
   type                     = "ingress"
@@ -148,6 +159,17 @@ resource "aws_security_group_rule" "app_from_alb" {
   source_security_group_id = aws_security_group.alb_sg.id
   security_group_id        = aws_security_group.app_sg.id
   description              = "Accept traffic from ALB on port 8000"
+}
+
+# Allow App containers to receive SSR traffic from ALB
+resource "aws_security_group_rule" "app_from_alb_ssr" {
+  type                     = "ingress"
+  from_port                = 3000
+  to_port                  = 3000
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.alb_sg.id
+  security_group_id        = aws_security_group.app_sg.id
+  description              = "Accept traffic from ALB on port 3000"
 }
 
 # Database Security Group
