@@ -16,16 +16,23 @@ module "networking" {
   # VPC settings
   create_vpc = var.create_vpc
   vpc_id     = var.vpc_id
+  vpc_cidr   = var.vpc_cidr
 
   # Subnet settings
   create_public_subnets = var.create_public_subnets
   public_subnet_ids     = var.public_subnet_ids
+  public_subnet_a_cidr  = var.public_subnet_a_cidr
+  public_subnet_b_cidr  = var.public_subnet_b_cidr
 
   create_private_subnets = var.create_private_subnets
   private_subnet_ids     = var.private_subnet_ids
+  private_subnet_a_cidr  = var.private_subnet_a_cidr
+  private_subnet_b_cidr  = var.private_subnet_b_cidr
 
-  create_db_subnets = var.create_db_subnets
-  db_subnet_ids     = var.db_subnet_ids
+  create_db_subnets        = var.create_db_subnets
+  db_subnet_ids            = var.db_subnet_ids
+  private_db_subnet_a_cidr = var.private_db_subnet_a_cidr
+  private_db_subnet_b_cidr = var.private_db_subnet_b_cidr
 }
 
 # Security Module
@@ -70,9 +77,9 @@ module "database" {
   aws_region                 = var.aws_region
   db_subnet_ids              = module.networking.private_db_subnet_ids
   db_security_group_id       = module.security.db_security_group_id
-  db_allocated_storage       = 20
-  db_engine_version          = "16.9"
-  db_instance_class          = "db.t4g.micro"
+  db_allocated_storage       = var.db_allocated_storage
+  db_engine_version          = var.db_engine_version
+  db_instance_class          = var.db_instance_class
   db_name                    = var.db_name
   db_username                = var.db_username
   db_password                = var.db_password

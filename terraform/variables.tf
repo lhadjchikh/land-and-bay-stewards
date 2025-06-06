@@ -38,10 +38,31 @@ variable "create_public_subnets" {
   default     = true
 }
 
+# CIDR blocks for new VPC and subnets. These are ignored when using
+# existing networking resources but allow tests and custom deployments
+# to override the defaults.
+variable "vpc_cidr" {
+  description = "CIDR block for the VPC when create_vpc is true"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
 variable "public_subnet_ids" {
   description = "IDs of existing public subnets to use (if create_public_subnets is false)"
   type        = list(string)
   default     = []
+}
+
+variable "public_subnet_a_cidr" {
+  description = "CIDR block for public subnet in AZ a when create_public_subnets is true"
+  type        = string
+  default     = "10.0.1.0/24"
+}
+
+variable "public_subnet_b_cidr" {
+  description = "CIDR block for public subnet in AZ b when create_public_subnets is true"
+  type        = string
+  default     = "10.0.2.0/24"
 }
 
 variable "create_private_subnets" {
@@ -56,6 +77,18 @@ variable "private_subnet_ids" {
   default     = []
 }
 
+variable "private_subnet_a_cidr" {
+  description = "CIDR block for private app subnet in AZ a when create_private_subnets is true"
+  type        = string
+  default     = "10.0.3.0/24"
+}
+
+variable "private_subnet_b_cidr" {
+  description = "CIDR block for private app subnet in AZ b when create_private_subnets is true"
+  type        = string
+  default     = "10.0.4.0/24"
+}
+
 variable "create_db_subnets" {
   description = "Whether to create new private database subnets (true) or use existing ones (false)"
   type        = bool
@@ -66,6 +99,18 @@ variable "db_subnet_ids" {
   description = "IDs of existing private database subnets to use (if create_db_subnets is false)"
   type        = list(string)
   default     = []
+}
+
+variable "private_db_subnet_a_cidr" {
+  description = "CIDR block for private database subnet in AZ a when create_db_subnets is true"
+  type        = string
+  default     = "10.0.5.0/24"
+}
+
+variable "private_db_subnet_b_cidr" {
+  description = "CIDR block for private database subnet in AZ b when create_db_subnets is true"
+  type        = string
+  default     = "10.0.6.0/24"
 }
 
 # Database Variables
@@ -104,6 +149,24 @@ variable "app_db_password" {
   default     = "" # Will be auto-generated if empty
 }
 
+variable "db_allocated_storage" {
+  description = "Allocated storage for the database in GB"
+  type        = number
+  default     = 20
+}
+
+variable "db_engine_version" {
+  description = "Version of PostgreSQL to use"
+  type        = string
+  default     = "16.9"
+}
+
+variable "db_instance_class" {
+  description = "Instance class for the database"
+  type        = string
+  default     = "db.t4g.micro"
+}
+
 variable "auto_setup_database" {
   description = "Whether to automatically run database setup after RDS creation"
   type        = bool
@@ -125,6 +188,7 @@ variable "acm_certificate_arn" {
   description = "The ARN of the ACM certificate to use for HTTPS"
   type        = string
 }
+
 
 # Monitoring Variables
 variable "alert_email" {
