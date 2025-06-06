@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
@@ -43,12 +44,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    # Use explicit app names to fix database table names
+    "landandbay.core",
     "landandbay.campaigns.apps.CampaignsConfig",
-    "landandbay.endorsers.apps.EndorsersConfig",
     "landandbay.legislators.apps.LegislatorsConfig",
     "landandbay.regions.apps.RegionsConfig",
-    "landandbay.core",
+    # New separate apps for stakeholders and endorsements
+    "landandbay.stakeholders",
+    "landandbay.endorsements",
 ]
 
 # Configure database table names to maintain backward compatibility
@@ -97,6 +99,16 @@ if os.getenv("DATABASE_URL"):
     # If using PostgreSQL, make sure to use the PostGIS backend
     if db_config.get("ENGINE") == "django.db.backends.postgresql":
         db_config["ENGINE"] = "django.contrib.gis.db.backends.postgis"
+
+    # For tests, use admin user to create test databases with PostGIS extension
+    if "test" in sys.argv:
+        # Use admin credentials for test database creation
+        db_config.update(
+            {
+                "USER": "landandbay_admin",
+                "PASSWORD": "admin_password",
+            },
+        )
 
     DATABASES = {
         "default": db_config,

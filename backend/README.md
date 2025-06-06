@@ -5,7 +5,7 @@
 [![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/backend-tests.yml)
 
 This is the Django backend for the Land and Bay Stewards (landandbay.org) project. It provides a REST API for managing
-policy campaigns, endorsers, and legislators.
+policy campaigns, stakeholders, endorsements, and legislators.
 
 ## Technology Stack
 
@@ -22,7 +22,8 @@ policy campaigns, endorsers, and legislators.
 The backend is organized into several Django apps:
 
 - **campaigns**: Policy campaigns and related bills
-- **endorsers**: Organizations and individuals endorsing policy campaigns
+- **stakeholders**: Organizations and individuals who can endorse campaigns
+- **endorsements**: Relationships between stakeholders and campaigns
 - **legislators**: Representatives and senators
 - **regions**: Geographic regions (states, counties, etc.)
 - **api**: Django Ninja API endpoints and schemas
@@ -35,9 +36,10 @@ backend/
 │   ├── api/                    # API endpoints
 │   ├── campaigns/              # Campaign models and views
 │   ├── core/                   # Core project settings and configuration
-│   ├── endorsers/              # Endorser models and views
 │   ├── legislators/            # Legislator models and views
 │   └── regions/                # Region models and views
+├── stakeholders/               # Stakeholder models and admin (separate app)
+├── endorsements/               # Endorsement models and admin (separate app)
 ├── manage.py                   # Django management script
 ├── pyproject.toml              # Poetry dependencies and tool configuration
 └── poetry.lock                 # Locked dependencies
@@ -89,7 +91,8 @@ This will start both the backend and frontend applications, along with a PostGIS
 The API is available at `/api/` with the following routers:
 
 - `/api/campaigns/`: Policy campaign endpoints
-- `/api/endorsers/`: Endorser endpoints
+- `/api/stakeholders/`: Stakeholder management endpoints
+- `/api/endorsements/`: Campaign endorsement endpoints
 - `/api/legislators/`: Legislator endpoints
 
 ## Code Quality

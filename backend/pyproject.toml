@@ -39,7 +39,10 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "C90", "N", "B", "UP", "ANN", "A", "COM", "C4", "DTZ", "T10", "T20", "PT", "Q", "SIM", "ARG", "ERA"]
-ignore = ["ARG001"]
+ignore = [
+    "ARG001",  # Unused function argument - common in Django views/handlers
+    "PT027",   # Use pytest.raises instead of unittest assertRaises - Django uses unittest
+]
 
 # Disable specific rules for certain paths
 [tool.ruff.lint.per-file-ignores]
