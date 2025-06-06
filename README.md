@@ -411,7 +411,7 @@ The Django backend provides a comprehensive REST API:
 - **Stakeholders**: `/api/stakeholders/` - Stakeholder information and management
 - **Endorsements**: `/api/endorsements/` - Campaign endorsement relationships
 - **Legislators**: `/api/legislators/` - Representative and senator data
-- **Health**: `/api/health/` - Application health status
+- **Health**: `/health/` - Application health status
 
 ### API Features
 

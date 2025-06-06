@@ -10,25 +10,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestSecurityModuleValidation runs validation-only tests that don't require AWS credentials
+func TestSecurityModuleValidation(t *testing.T) {
+	common.ValidateModuleStructure(t, "security")
+}
+
 func TestSecurityModuleCreatesALBSecurityGroup(t *testing.T) {
-	common.SkipIfShortTest(t)
-
-	testConfig := common.NewTestConfig("../../modules/security")
-
-	testVars := map[string]interface{}{
-		"vpc_id":                "vpc-12345678",
-		"allowed_bastion_cidrs": []string{"10.0.0.0/8"},
-		"database_subnet_cidrs": []string{"10.0.5.0/24", "10.0.6.0/24"},
-	}
-
-	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/security", testVars)
-	defer common.CleanupResources(t, terraformOptions)
+	testConfig, terraformOptions := common.SetupModuleTest(t, "security", common.GetDefaultSecurityTestVars())
 
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Validate ALB security group
-	albSGID := terraform.Output(t, terraformOptions, "alb_security_group_id")
-	assert.NotEmpty(t, albSGID)
+	albSGID := common.ValidateTerraformOutput(t, terraformOptions, "alb_security_group_id")
 
 	sg := common.GetSecurityGroupById(t, albSGID, testConfig.AWSRegion)
 	assert.Equal(t, "vpc-12345678", *sg.VpcId)

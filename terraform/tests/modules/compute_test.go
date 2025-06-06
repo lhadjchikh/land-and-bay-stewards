@@ -10,54 +10,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestComputeModuleValidation runs validation-only tests that don't require AWS credentials
+func TestComputeModuleValidation(t *testing.T) {
+	common.ValidateModuleStructure(t, "compute")
+}
+
 func TestComputeModuleCreatesECRRepositories(t *testing.T) {
-	common.SkipIfShortTest(t)
-
 	testConfig := common.NewTestConfig("../../modules/compute")
+	testVars := common.GetDefaultComputeTestVars(testConfig)
 
-	// Mock dependencies that compute module needs
-	testVars := map[string]interface{}{
-		// Required VPC/networking outputs (these would come from networking module)
-		"private_subnet_ids":        []string{"subnet-12345", "subnet-67890"},
-		"public_subnet_id":          "subnet-public",
-		"app_security_group_id":     "sg-app123",
-		"bastion_security_group_id": "sg-bastion123",
+	// Override defaults for this specific test
+	testVars["task_cpu"] = 256
+	testVars["task_memory"] = 512
+	testVars["desired_count"] = 1
 
-		// Required load balancer outputs
-		"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-api/1234567890123456",
-		"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-ssr/1234567890123456",
-
-		// Required secrets outputs
-		"db_url_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
-		"secret_key_secret_arn": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
-		"secrets_kms_key_arn":   "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
-
-		// Bastion configuration
-		"bastion_key_name":    "test-key",
-		"bastion_public_key":  "",
-		"create_new_key_pair": false,
-
-		// Application configuration
-		"container_port":    8000,
-		"domain_name":       fmt.Sprintf("%s.example.com", testConfig.UniqueID),
-		"enable_ssr":        false,
-		"health_check_path": "/api/health/",
-		"task_cpu":          256,
-		"task_memory":       512,
-		"desired_count":     1,
-	}
-
-	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
-	defer common.CleanupResources(t, terraformOptions)
+	_, terraformOptions := common.SetupModuleTest(t, "compute", testVars)
 
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Validate ECR repositories were created
-	apiRepoURL := terraform.Output(t, terraformOptions, "api_ecr_repository_url")
-	ssrRepoURL := terraform.Output(t, terraformOptions, "ssr_ecr_repository_url")
-
-	assert.NotEmpty(t, apiRepoURL)
-	assert.NotEmpty(t, ssrRepoURL)
+	apiRepoURL := common.ValidateTerraformOutput(t, terraformOptions, "api_ecr_repository_url")
+	ssrRepoURL := common.ValidateTerraformOutput(t, terraformOptions, "ssr_ecr_repository_url")
 
 	// Validate repository names follow convention
 	expectedAPIRepoName := fmt.Sprintf("%s-api", testConfig.Prefix)
@@ -94,7 +67,7 @@ func TestComputeModuleCreatesECSCluster(t *testing.T) {
 		"container_port":        8000,
 		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
 		"enable_ssr":            false,
-		"health_check_path":     "/api/health/",
+		"health_check_path":     "/health/",
 	}
 
 	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
@@ -137,7 +110,7 @@ func TestComputeModuleCreatesIAMRoles(t *testing.T) {
 		"container_port":        8000,
 		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
 		"enable_ssr":            false,
-		"health_check_path":     "/api/health/",
+		"health_check_path":     "/health/",
 	}
 
 	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
@@ -182,7 +155,7 @@ func TestComputeModuleCreatesTaskDefinitionWithoutSSR(t *testing.T) {
 		"container_port":        8000,
 		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
 		"enable_ssr":            false, // Test without SSR
-		"health_check_path":     "/api/health/",
+		"health_check_path":     "/health/",
 		"task_cpu":              256,
 		"task_memory":           512,
 	}
@@ -226,7 +199,7 @@ func TestComputeModuleCreatesTaskDefinitionWithSSR(t *testing.T) {
 		"container_port":        8000,
 		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
 		"enable_ssr":            true, // Test with SSR enabled
-		"health_check_path":     "/api/health/",
+		"health_check_path":     "/health/",
 		"task_cpu":              512,
 		"task_memory":           1024,
 	}
@@ -270,7 +243,7 @@ func TestComputeModuleCreatesBastionHost(t *testing.T) {
 		"container_port":        8000,
 		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
 		"enable_ssr":            false,
-		"health_check_path":     "/api/health/",
+		"health_check_path":     "/health/",
 	}
 
 	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/compute", testVars)
@@ -342,7 +315,7 @@ func TestComputeModuleValidatesResourceConstraints(t *testing.T) {
 				"container_port":        8000,
 				"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
 				"enable_ssr":            false,
-				"health_check_path":     "/api/health/",
+				"health_check_path":     "/health/",
 				"task_cpu":              tc.taskCPU,
 				"task_memory":           tc.taskMemory,
 			}

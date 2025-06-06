@@ -150,7 +150,7 @@ variable "enable_ssr" {
 }
 
 variable "health_check_path" {
-  description = "Path for API health checks"
+  description = "Path for container health checks"
   type        = string
-  default     = "/api/health/"
+  default     = "/health/"
 }

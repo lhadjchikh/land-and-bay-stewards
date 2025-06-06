@@ -15,6 +15,6 @@ api.add_router("/legislators/", legislators.router)
 
 @api.get("/health/", tags=["Health"])
 def api_health_check(request: HttpRequest) -> JsonResponse:
-    """Health check endpoint for API monitoring and container health checks"""
+    """Health check endpoint for API monitoring and external tools"""
     # Re-use the Django view health check function
     return health_check_view(request)

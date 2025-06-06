@@ -151,7 +151,7 @@ func (tc *TestConfig) getModuleSpecificVars(
 			"container_port":            8000,
 			"domain_name":               fmt.Sprintf("%s.example.com", tc.UniqueID),
 			"enable_ssr":                false,
-			"health_check_path":         "/api/health/",
+			"health_check_path":         "/health/",
 			"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
 				"targetgroup/test-api/1234567890123456",
 			"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
@@ -328,4 +328,118 @@ func SkipIfShortTest(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skipping test that requires AWS resources in short mode")
 	}
+}
+
+// ValidateModuleStructure validates that a Terraform module has the expected file structure
+func ValidateModuleStructure(t *testing.T, moduleName string) {
+	if !testing.Short() {
+		t.Skip("Skipping validation-only test in full mode")
+	}
+
+	moduleDir := fmt.Sprintf("../../modules/%s", moduleName)
+	requiredFiles := []string{"main.tf", "variables.tf", "outputs.tf", "versions.tf"}
+
+	for _, file := range requiredFiles {
+		assert.FileExists(t, fmt.Sprintf("%s/%s", moduleDir, file))
+	}
+
+	t.Logf("%s module structure validation passed", moduleName)
+}
+
+// SetupModuleTest sets up a module test with common configuration and cleanup
+func SetupModuleTest(
+	t *testing.T,
+	moduleName string,
+	testVars map[string]interface{},
+) (*TestConfig, *terraform.Options) {
+	SkipIfShortTest(t)
+
+	testConfig := NewTestConfig(fmt.Sprintf("../../modules/%s", moduleName))
+	terraformOptions := testConfig.GetModuleTerraformOptions(fmt.Sprintf("../../modules/%s", moduleName), testVars)
+
+	// Setup cleanup using t.Cleanup for better test isolation
+	t.Cleanup(func() {
+		CleanupResources(t, terraformOptions)
+	})
+
+	return testConfig, terraformOptions
+}
+
+// GetDefaultComputeTestVars returns default test variables for compute module
+func GetDefaultComputeTestVars(testConfig *TestConfig) map[string]interface{} {
+	return map[string]interface{}{
+		"private_subnet_ids":        []string{"subnet-12345", "subnet-67890"},
+		"public_subnet_id":          "subnet-public",
+		"app_security_group_id":     "sg-app123",
+		"bastion_security_group_id": "sg-bastion123",
+		"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-api/1234567890123456",
+		"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
+			"targetgroup/test-ssr/1234567890123456",
+		"db_url_secret_arn":     "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-db-url",
+		"secret_key_secret_arn": "arn:aws:secretsmanager:us-east-1:123456789012:secret:test-secret-key",
+		"secrets_kms_key_arn":   "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012",
+		"bastion_key_name":      "test-key",
+		"bastion_public_key":    "",
+		"create_new_key_pair":   false,
+		"container_port":        8000,
+		"domain_name":           fmt.Sprintf("%s.example.com", testConfig.UniqueID),
+		"enable_ssr":            false,
+		"health_check_path":     "/health/",
+	}
+}
+
+// GetDefaultDatabaseTestVars returns default test variables for database module
+func GetDefaultDatabaseTestVars() map[string]interface{} {
+	return map[string]interface{}{
+		"db_subnet_ids":              []string{"subnet-db1", "subnet-db2"},
+		"db_security_group_id":       "sg-database123",
+		"db_allocated_storage":       20,
+		"db_engine_version":          "16.9",
+		"db_instance_class":          "db.t4g.micro",
+		"db_name":                    "testdb",
+		"db_username":                "testuser",
+		"db_password":                "testpassword123!",
+		"app_db_username":            "appuser",
+		"use_secrets_manager":        false,
+		"db_backup_retention_period": 7,
+		"auto_setup_database":        false,
+	}
+}
+
+// GetDefaultSecurityTestVars returns default test variables for security module
+func GetDefaultSecurityTestVars() map[string]interface{} {
+	return map[string]interface{}{
+		"vpc_id":                "vpc-12345678",
+		"allowed_bastion_cidrs": []string{"10.0.0.0/8"},
+		"database_subnet_cidrs": []string{"10.0.5.0/24", "10.0.6.0/24"},
+	}
+}
+
+// ValidateTerraformOutput validates that a terraform output exists and is not empty
+func ValidateTerraformOutput(t *testing.T, terraformOptions *terraform.Options, outputName string) string {
+	output := terraform.Output(t, terraformOptions, outputName)
+	assert.NotEmpty(t, output, fmt.Sprintf("Terraform output '%s' should not be empty", outputName))
+	return output
+}
+
+// ValidateTerraformOutputList validates that a terraform output list exists and has expected length
+func ValidateTerraformOutputList(
+	t *testing.T,
+	terraformOptions *terraform.Options,
+	outputName string,
+	expectedLength int,
+) []string {
+	outputs := terraform.OutputList(t, terraformOptions, outputName)
+	if expectedLength > 0 {
+		assert.Len(
+			t,
+			outputs,
+			expectedLength,
+			fmt.Sprintf("Terraform output list '%s' should have %d items", outputName, expectedLength),
+		)
+	} else {
+		assert.NotEmpty(t, outputs, fmt.Sprintf("Terraform output list '%s' should not be empty", outputName))
+	}
+	return outputs
 }

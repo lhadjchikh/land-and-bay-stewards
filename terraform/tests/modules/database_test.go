@@ -10,42 +10,23 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestDatabaseModuleValidation runs validation-only tests that don't require AWS credentials
+func TestDatabaseModuleValidation(t *testing.T) {
+	common.ValidateModuleStructure(t, "database")
+}
+
 func TestDatabaseModuleCreatesRDSInstance(t *testing.T) {
-	common.SkipIfShortTest(t)
-
-	testConfig := common.NewTestConfig("../../modules/database")
-
-	testVars := map[string]interface{}{
-		// Required networking dependencies
-		"db_subnet_ids":        []string{"subnet-db1", "subnet-db2"},
-		"db_security_group_id": "sg-database123",
-
-		// Database configuration
-		"db_allocated_storage":       20,
-		"db_engine_version":          "16.9",
-		"db_instance_class":          "db.t4g.micro",
-		"db_name":                    "testdb",
-		"db_username":                "testuser",
-		"db_password":                "testpassword123!",
-		"app_db_username":            "appuser",
-		"use_secrets_manager":        false, // Simplify for testing
-		"db_backup_retention_period": 7,
-		"auto_setup_database":        false, // Don't run setup scripts in tests
-	}
-
-	terraformOptions := testConfig.GetModuleTerraformOptions("../../modules/database", testVars)
-	defer common.CleanupResources(t, terraformOptions)
+	testConfig, terraformOptions := common.SetupModuleTest(t, "database", common.GetDefaultDatabaseTestVars())
 
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Validate RDS instance outputs
-	dbInstanceID := terraform.Output(t, terraformOptions, "db_instance_id")
-	dbInstanceEndpoint := terraform.Output(t, terraformOptions, "db_instance_endpoint")
+	dbInstanceID := common.ValidateTerraformOutput(t, terraformOptions, "db_instance_id")
+	common.ValidateTerraformOutput(t, terraformOptions, "db_instance_endpoint")
+
 	dbInstanceName := terraform.Output(t, terraformOptions, "db_instance_name")
 	dbInstancePort := terraform.Output(t, terraformOptions, "db_instance_port")
 
-	assert.NotEmpty(t, dbInstanceID)
-	assert.NotEmpty(t, dbInstanceEndpoint)
 	assert.Equal(t, "testdb", dbInstanceName)
 	assert.Equal(t, "5432", dbInstancePort)
 
