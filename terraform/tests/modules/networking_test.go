@@ -11,6 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// TestNetworkingModuleValidation runs validation-only tests that don't require AWS credentials
+func TestNetworkingModuleValidation(t *testing.T) {
+	common.ValidateModuleStructure(t, "networking")
+}
+
 func TestNetworkingModuleCreatesVPCAndSubnets(t *testing.T) {
 	common.SkipIfShortTest(t)
 
