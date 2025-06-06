@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
@@ -98,6 +99,16 @@ if os.getenv("DATABASE_URL"):
     # If using PostgreSQL, make sure to use the PostGIS backend
     if db_config.get("ENGINE") == "django.db.backends.postgresql":
         db_config["ENGINE"] = "django.contrib.gis.db.backends.postgis"
+
+    # For tests, use admin user to create test databases with PostGIS extension
+    if "test" in sys.argv:
+        # Use admin credentials for test database creation
+        db_config.update(
+            {
+                "USER": "landandbay_admin",
+                "PASSWORD": "admin_password",
+            },
+        )
 
     DATABASES = {
         "default": db_config,
