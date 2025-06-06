@@ -47,13 +47,13 @@ const req = http.request(options, (res) => {
           process.exit(1);
         }
       } catch (e) {
-        console.log(
+        console.error(
           `❌ Health check failed - Invalid JSON response: ${e.message}`,
         );
         process.exit(1);
       }
     } else {
-      console.log(`❌ Health check failed with status: ${res.statusCode}`);
+      console.error(`❌ Health check failed with status: ${res.statusCode}`);
       process.exit(1);
     }
   });
@@ -61,13 +61,13 @@ const req = http.request(options, (res) => {
 
 // Handle connection errors
 req.on("error", (err) => {
-  console.log(`❌ Health check failed: ${err.message}`);
+  console.error(`❌ Health check failed: ${err.message}`);
   process.exit(1);
 });
 
 // Handle timeouts
 req.on("timeout", () => {
-  console.log("❌ Health check timed out");
+  console.error("❌ Health check timed out");
   req.destroy();
   process.exit(1);
 });
