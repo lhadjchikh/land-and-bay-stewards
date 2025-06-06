@@ -314,6 +314,7 @@ func TestFullStackHealthCheckEndpoints(t *testing.T) {
 
 	// Get ALB DNS name
 	albDNSName := terraform.Output(t, terraformOptions, "alb_dns_name")
+	// Use /api/health/ for external API monitoring (correct usage for integration tests)
 	healthCheckURL := fmt.Sprintf("http://%s/api/health/", albDNSName)
 
 	// Test health check endpoint (would need actual containers)

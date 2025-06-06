@@ -151,7 +151,7 @@ func (tc *TestConfig) getModuleSpecificVars(
 			"container_port":            8000,
 			"domain_name":               fmt.Sprintf("%s.example.com", tc.UniqueID),
 			"enable_ssr":                false,
-			"health_check_path":         "/api/health/",
+			"health_check_path":         "/health/",
 			"api_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
 				"targetgroup/test-api/1234567890123456",
 			"ssr_target_group_arn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:" +
