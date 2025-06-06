@@ -173,6 +173,12 @@ variable "auto_setup_database" {
   default     = false # Default to manual for safety
 }
 
+variable "prevent_destroy" {
+  description = "Whether to prevent destruction of database resources (set to false for testing)"
+  type        = bool
+  default     = true
+}
+
 # DNS and SSL Variables
 variable "route53_zone_id" {
   description = "The Route 53 zone ID to create records in"

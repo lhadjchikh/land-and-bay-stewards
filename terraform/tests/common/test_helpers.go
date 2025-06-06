@@ -314,6 +314,9 @@ func GetIntegrationTestVars() map[string]interface{} {
 		testVars[k] = v
 	}
 
+	// Add test-specific settings
+	testVars["prevent_destroy"] = false // Allow destruction in tests
+
 	return testVars
 }
 
