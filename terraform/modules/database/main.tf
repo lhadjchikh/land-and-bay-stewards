@@ -1,5 +1,14 @@
 # Database Module
 
+# Local values for conditional resources
+locals {
+  # Extract PostgreSQL major version for parameter group naming
+  pg_version = split(".", var.db_engine_version)[0]
+
+  # Parameter group names based on prevent_destroy setting
+  parameter_group_name = var.prevent_destroy ? aws_db_parameter_group.postgres[0].name : aws_db_parameter_group.postgres_testing[0].name
+}
+
 # KMS key for RDS encryption
 resource "aws_kms_key" "rds" {
   description             = "KMS key for RDS encryption"
@@ -68,9 +77,6 @@ locals {
 
   # Set a default value for app_username if not specified
   app_username = var.app_db_username == "" ? "app_user" : var.app_db_username
-
-  # Extract PostgreSQL major version for parameter group naming
-  pg_version = split(".", var.db_engine_version)[0]
 }
 
 # RDS PostgreSQL Instance
@@ -86,7 +92,7 @@ resource "aws_db_instance" "postgres" {
   password          = local.master_password
   # Use the regular parameter group for basic parameters
   # Note: Static parameters are defined in postgres_static but not associated with the instance
-  parameter_group_name         = aws_db_parameter_group.postgres.name
+  parameter_group_name         = local.parameter_group_name
   db_subnet_group_name         = aws_db_subnet_group.main.name
   vpc_security_group_ids       = [var.db_security_group_id]
   skip_final_snapshot          = false
@@ -107,12 +113,9 @@ resource "aws_db_instance" "postgres" {
   }
 }
 
-# PostgreSQL Parameter Group
-# Note: This module separates dynamic and static parameters to prevent apply errors
-# - Dynamic parameters (those that can be applied immediately) are defined in this resource
-# - Static parameters (requiring restart) are defined in separate resources below
-# - After applying changes to static parameters, a manual DB restart is required
+# PostgreSQL Parameter Group - Production (with prevent_destroy)
 resource "aws_db_parameter_group" "postgres" {
+  count  = var.prevent_destroy ? 1 : 0
   name   = "${var.prefix}-pg-${local.pg_version}"
   family = "postgres${local.pg_version}"
 
@@ -120,16 +123,25 @@ resource "aws_db_parameter_group" "postgres" {
     Name = "${var.prefix}-pg-${local.pg_version}"
   }
 
-  # Use a lifecycle configuration that maintains stability while allowing parameter changes
   lifecycle {
     prevent_destroy = true
   }
 }
 
-# Include static parameters directly in the parameter group, but with apply_method="pending-reboot"
-# IMPORTANT: Static parameters require a database restart to take effect!
-# After applying, you'll need to manually restart the RDS instance or wait for the next maintenance window
+# PostgreSQL Parameter Group - Testing (without prevent_destroy)
+resource "aws_db_parameter_group" "postgres_testing" {
+  count  = var.prevent_destroy ? 0 : 1
+  name   = "${var.prefix}-pg-${local.pg_version}"
+  family = "postgres${local.pg_version}"
+
+  tags = {
+    Name = "${var.prefix}-pg-${local.pg_version}"
+  }
+}
+
+# Static Parameter Group - Production (with prevent_destroy)
 resource "aws_db_parameter_group" "postgres_static" {
+  count  = var.prevent_destroy ? 1 : 0
   name   = "${var.prefix}-pg-${local.pg_version}-static"
   family = "postgres${local.pg_version}"
 
@@ -137,7 +149,7 @@ resource "aws_db_parameter_group" "postgres_static" {
   parameter {
     name         = "shared_preload_libraries"
     value        = "pg_stat_statements"
-    apply_method = "pending-reboot" # This is the key setting that makes this work
+    apply_method = "pending-reboot"
   }
 
   tags = {
@@ -146,6 +158,28 @@ resource "aws_db_parameter_group" "postgres_static" {
 
   lifecycle {
     prevent_destroy = true
+  }
+
+  depends_on = [
+    aws_db_instance.postgres
+  ]
+}
+
+# Static Parameter Group - Testing (without prevent_destroy)
+resource "aws_db_parameter_group" "postgres_static_testing" {
+  count  = var.prevent_destroy ? 0 : 1
+  name   = "${var.prefix}-pg-${local.pg_version}-static"
+  family = "postgres${local.pg_version}"
+
+  # Include static parameters with pending-reboot apply method
+  parameter {
+    name         = "shared_preload_libraries"
+    value        = "pg_stat_statements"
+    apply_method = "pending-reboot"
+  }
+
+  tags = {
+    Name = "${var.prefix}-pg-${local.pg_version}-static"
   }
 
   depends_on = [

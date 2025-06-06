@@ -4,6 +4,12 @@ variable "credential_rotation_trigger" {
   default     = "initial-v1"
 }
 
+variable "prevent_destroy" {
+  description = "Whether to prevent destruction of database resources (set to false for testing)"
+  type        = bool
+  default     = true
+}
+
 variable "prefix" {
   description = "Prefix to use for resource names"
   type        = string
