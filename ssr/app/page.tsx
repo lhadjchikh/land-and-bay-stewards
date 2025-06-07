@@ -18,10 +18,10 @@ export default async function HomePage() {
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-gray-900 sm:text-5xl">
-            Land and Bay Stewards
+            {process.env.ORGANIZATION_NAME || "Coalition Builder"}
           </h1>
           <p className="mt-4 text-xl text-gray-600">
-            Protecting our waterways and coastal communities
+            {process.env.TAGLINE || "Building strong advocacy partnerships"}
           </p>
         </div>
 

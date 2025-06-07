@@ -1,0 +1,47 @@
+[
+  {
+    "model": "campaigns.policycampaign",
+    "pk": 1,
+    "fields": {
+      "title": "Clean Water Act",
+      "slug": "clean-water-act",
+      "summary": "Advocacy for stronger water protections",
+      "active": true
+    }
+  },
+  {
+    "model": "legislators.legislator",
+    "pk": 1,
+    "fields": {
+      "bioguide_id": "L000001",
+      "first_name": "Alex",
+      "last_name": "Smith",
+      "chamber": "House",
+      "state": "MD",
+      "district": "01",
+      "party": "D"
+    }
+  },
+  {
+    "model": "stakeholders.stakeholder",
+    "pk": 1,
+    "fields": {
+      "name": "Jamie Doe",
+      "organization": "Bay Watchers",
+      "role": "Director",
+      "email": "jamie@example.org",
+      "state": "MD",
+      "type": "nonprofit"
+    }
+  },
+  {
+    "model": "endorsements.endorsement",
+    "pk": 1,
+    "fields": {
+      "stakeholder": 1,
+      "campaign": 1,
+      "statement": "We fully support this effort",
+      "public_display": true
+    }
+  }
+]

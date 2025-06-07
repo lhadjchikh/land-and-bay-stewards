@@ -28,9 +28,9 @@ describe('App component', () => {
     jest.clearAllMocks();
   });
 
-  test('renders Land and Bay Stewards title', () => {
+  test('renders Coalition Builder title', () => {
     render(<App />);
-    const headingElement = screen.getByText(/Land and Bay Stewards/i);
+    const headingElement = screen.getByText(/Coalition Builder/i);
     expect(headingElement).toBeInTheDocument();
   });
 

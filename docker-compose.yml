@@ -10,7 +10,7 @@ services:
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=landandbay
+      - POSTGRES_DB=${DB_NAME:-coalitionbuilder}
     ports:
       - "5432:5432"
     healthcheck:
@@ -31,7 +31,7 @@ services:
     environment:
       - DEBUG=True
       - SECRET_KEY=dev_secret_key_replace_in_production
-      - DATABASE_URL=postgis://landandbay_app:app_password@db:5432/landandbay
+      - DATABASE_URL=postgis://${APP_DB_USERNAME:-coalition_app}:${APP_DB_PASSWORD:-app_password}@db:5432/${DB_NAME:-coalitionbuilder}
       - ALLOWED_HOSTS=localhost,127.0.0.1,api,ssr,nginx
     ports:
       - "8000:8000"
