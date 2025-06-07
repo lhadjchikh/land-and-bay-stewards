@@ -1,6 +1,6 @@
-# Terraform Infrastructure for Land and Bay Stewards
+# Terraform Infrastructure for Coalition Builder
 
-This directory contains the Terraform configuration for deploying the Land and Bay Stewards application to AWS. The infrastructure is designed to be secure, scalable, and SOC 2 compliant.
+This directory contains the Terraform configuration for deploying the Coalition Builder application to AWS. The infrastructure is designed to be secure, scalable, and SOC 2 compliant.
 
 ## Architecture Overview
 
@@ -344,7 +344,7 @@ To access the RDS database through the bastion host:
 
 | Variable Name        | Description                            | Default                                                  | Required                |
 | -------------------- | -------------------------------------- | -------------------------------------------------------- | ----------------------- |
-| `prefix`             | Prefix to use for resource names       | `landandbay`                                             | No                      |
+| `prefix`             | Prefix to use for resource names       | `coalition`                                              | No                      |
 | `aws_region`         | AWS region to deploy to                | `us-east-1`                                              | No                      |
 | `tags`               | Default tags to apply to all resources | `{ Project = "landandbay", Environment = "Production" }` | No                      |
 | `bastion_key_name`   | SSH key name for bastion host          | `landandbay-bastion`                                     | No                      |

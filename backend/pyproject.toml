@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "landandbay"
 version = "0.1.0"
-description = "Land and Bay (landandbay.org)"
+description = "Coalition Builder"
 authors = ["Leila Hadj-Chikh <lhadjchikh@gmail.com>"]
 license = "n"
 readme = "README.md"

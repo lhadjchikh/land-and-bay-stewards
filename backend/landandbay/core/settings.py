@@ -34,6 +34,10 @@ DEBUG = os.getenv("DEBUG", "True").lower() in ("true", "1", "t")
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
+ORGANIZATION_NAME = os.getenv("ORGANIZATION_NAME", "Coalition Builder")
+TAGLINE = os.getenv("ORG_TAGLINE", "Building strong advocacy partnerships")
+CONTACT_EMAIL = os.getenv("CONTACT_EMAIL", "info@example.org")
+
 
 # Application definition
 
@@ -105,7 +109,7 @@ if os.getenv("DATABASE_URL"):
         # Use admin credentials for test database creation
         db_config.update(
             {
-                "USER": "landandbay_admin",
+                "USER": "coalition_admin",
                 "PASSWORD": "admin_password",
             },
         )

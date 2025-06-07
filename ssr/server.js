@@ -1,5 +1,5 @@
 /**
- * Production-ready Node.js SSR Service for Land and Bay Stewards
+ * Production-ready Node.js SSR Service for Coalition Builder
  */
 
 const express = require("express");
@@ -106,7 +106,7 @@ const AppComponent = (props = {}) => {
           React.createElement(
             "h1",
             { key: "title" },
-            title || "Land and Bay Stewards",
+            title || process.env.ORGANIZATION_NAME || "Coalition Builder",
           ),
           React.createElement(
             "a",
