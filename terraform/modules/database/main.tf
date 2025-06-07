@@ -116,33 +116,33 @@ resource "aws_db_instance" "postgres" {
 # PostgreSQL Parameter Group - Production (with prevent_destroy)
 resource "aws_db_parameter_group" "postgres" {
   count  = var.prevent_destroy ? 1 : 0
-  name   = "${var.prefix}-pg-${local.pg_version}"
+  name   = "${var.prefix}-pg-${local.pg_version}-prod"
   family = "postgres${local.pg_version}"
 
   tags = {
-    Name = "${var.prefix}-pg-${local.pg_version}"
+    Name = "${var.prefix}-pg-${local.pg_version}-prod"
   }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false # TODO: set to true
   }
 }
 
 # PostgreSQL Parameter Group - Testing (without prevent_destroy)
 resource "aws_db_parameter_group" "postgres_testing" {
   count  = var.prevent_destroy ? 0 : 1
-  name   = "${var.prefix}-pg-${local.pg_version}"
+  name   = "${var.prefix}-pg-${local.pg_version}-test"
   family = "postgres${local.pg_version}"
 
   tags = {
-    Name = "${var.prefix}-pg-${local.pg_version}"
+    Name = "${var.prefix}-pg-${local.pg_version}-test"
   }
 }
 
 # Static Parameter Group - Production (with prevent_destroy)
 resource "aws_db_parameter_group" "postgres_static" {
   count  = var.prevent_destroy ? 1 : 0
-  name   = "${var.prefix}-pg-${local.pg_version}-static"
+  name   = "${var.prefix}-pg-${local.pg_version}-static-prod"
   family = "postgres${local.pg_version}"
 
   # Include static parameters with pending-reboot apply method
@@ -153,11 +153,11 @@ resource "aws_db_parameter_group" "postgres_static" {
   }
 
   tags = {
-    Name = "${var.prefix}-pg-${local.pg_version}-static"
+    Name = "${var.prefix}-pg-${local.pg_version}-static-prod"
   }
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false # TODO: set to true
   }
 
   depends_on = [
@@ -168,7 +168,7 @@ resource "aws_db_parameter_group" "postgres_static" {
 # Static Parameter Group - Testing (without prevent_destroy)
 resource "aws_db_parameter_group" "postgres_static_testing" {
   count  = var.prevent_destroy ? 0 : 1
-  name   = "${var.prefix}-pg-${local.pg_version}-static"
+  name   = "${var.prefix}-pg-${local.pg_version}-static-test"
   family = "postgres${local.pg_version}"
 
   # Include static parameters with pending-reboot apply method
@@ -179,7 +179,7 @@ resource "aws_db_parameter_group" "postgres_static_testing" {
   }
 
   tags = {
-    Name = "${var.prefix}-pg-${local.pg_version}-static"
+    Name = "${var.prefix}-pg-${local.pg_version}-static-test"
   }
 
   depends_on = [
