@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const org = process.env.ORGANIZATION_NAME || "Coalition Builder";
 export const metadata: Metadata = {
-  title: "Land and Bay Stewards",
-  description: "Protecting our waterways and coastal communities",
+  title: org,
+  description: process.env.TAGLINE || "Building strong advocacy partnerships",
   viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
   generator: "Next.js",
-  applicationName: "Land and Bay Stewards",
-  authors: [{ name: "Land and Bay Stewards Team" }],
+  applicationName: org,
+  authors: [{ name: org + " Team" }],
 };
 
 export default function RootLayout({

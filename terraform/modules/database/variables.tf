@@ -13,7 +13,7 @@ variable "prevent_destroy" {
 variable "prefix" {
   description = "Prefix to use for resource names"
   type        = string
-  default     = "landandbay"
+  default     = "coalition"
 }
 
 variable "aws_region" {

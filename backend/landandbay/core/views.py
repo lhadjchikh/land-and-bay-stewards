@@ -272,7 +272,7 @@ def health_check(request: HttpRequest) -> JsonResponse:
         "status": "healthy" if db_status == "healthy" else "unhealthy",
         "timestamp": datetime.now(tz=UTC).isoformat(),
         "application": {
-            "name": "Land and Bay Stewards API",
+            "name": f"{settings.ORGANIZATION_NAME} API",
             "debug": settings.DEBUG,
         },
         "database": {

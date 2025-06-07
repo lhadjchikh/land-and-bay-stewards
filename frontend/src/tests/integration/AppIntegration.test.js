@@ -64,7 +64,7 @@ describe('App Integration Test', () => {
     render(<App />);
 
     // Assert - Check for app title
-    expect(screen.getByText('Land and Bay Stewards')).toBeInTheDocument();
+    expect(screen.getByText('Coalition Builder')).toBeInTheDocument();
 
     // Wait for campaigns to load
     await waitFor(() => {
@@ -72,7 +72,7 @@ describe('App Integration Test', () => {
     });
 
     // Verify that app title and campaigns list exist together
-    expect(screen.getByText('Land and Bay Stewards')).toBeInTheDocument();
+    expect(screen.getByText('Coalition Builder')).toBeInTheDocument();
     expect(screen.getByText('Policy Campaigns')).toBeInTheDocument();
     expect(screen.getByText('Save the Bay')).toBeInTheDocument();
   });
@@ -92,6 +92,6 @@ describe('App Integration Test', () => {
     expect(screen.getByText('Failed to fetch campaigns')).toBeInTheDocument();
 
     // Verify that even with an error, the app header is still displayed
-    expect(screen.getByText('Land and Bay Stewards')).toBeInTheDocument();
+    expect(screen.getByText('Coalition Builder')).toBeInTheDocument();
   });
 });
