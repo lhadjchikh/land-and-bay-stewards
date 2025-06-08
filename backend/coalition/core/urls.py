@@ -18,8 +18,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from landandbay.api.api import api
-from landandbay.core.views import health_check, home, robots_txt
+from coalition.api.api import api
+from coalition.core.views import health_check, home, robots_txt
 
 urlpatterns = [
     path("admin/", admin.site.urls),

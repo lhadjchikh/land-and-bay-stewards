@@ -1,10 +1,10 @@
-# Land and Bay Frontend (landandbay.org)
+# Coalition Builder Frontend
 
-[![TypeScript Type Check](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/ts-typecheck.yml)
-[![JavaScript & TypeScript Linting](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/js-lint.yml)
-[![Frontend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/frontend-tests.yml)
+[![TypeScript Type Check](https://github.com/lhadjchikh/coalition/actions/workflows/ts-typecheck.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/ts-typecheck.yml)
+[![JavaScript & TypeScript Linting](https://github.com/lhadjchikh/coalition/actions/workflows/js-lint.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/js-lint.yml)
+[![Frontend Tests](https://github.com/lhadjchikh/coalition/actions/workflows/frontend-tests.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/frontend-tests.yml)
 
-This is the frontend for the Land and Bay Stewards (landandbay.org) project. It's a React application with TypeScript
+This is the frontend for Coalition Builder. It's a React application with TypeScript
 that interacts with the Django backend API.
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and has been

@@ -89,4 +89,4 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
 
 # Set entrypoint and default command
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["gunicorn", "landandbay.core.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "coalition.core.wsgi:application", "--bind", "0.0.0.0:8000"]

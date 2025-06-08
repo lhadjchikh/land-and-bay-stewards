@@ -1,6 +1,6 @@
 # Networking Module
 
-This module creates and manages the networking infrastructure for the Land and Bay Stewards application.
+This module creates and manages the networking infrastructure for the Coalition Builder application.
 
 ## Features
 
@@ -21,7 +21,7 @@ This module creates and manages the networking infrastructure for the Land and B
 module "networking" {
   source = "./modules/networking"
 
-  prefix     = "landandbay"
+  prefix     = "coalition"
   aws_region = "us-east-1"
 
   # VPC Configuration

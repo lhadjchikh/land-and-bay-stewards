@@ -1,6 +1,6 @@
 # Project Scripts
 
-This directory contains project-wide scripts that operate across multiple components of the Land and Bay Stewards application.
+This directory contains project-wide scripts that operate across multiple components of the Coalition Builder application.
 
 ## 📁 Available Scripts
 

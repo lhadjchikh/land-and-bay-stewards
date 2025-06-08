@@ -1,13 +1,13 @@
 # Coalition Builder
 
-[![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/test_backend.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/test_backend.yml)
-[![Frontend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/test_frontend.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/test_frontend.yml)
-[![Full Stack Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/test_fullstack.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/test_fullstack.yml)
-[![Python Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_python.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_python.yml)
-[![Prettier Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_prettier.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_prettier.yml)
-[![TypeScript Type Check](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_typescript.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_typescript.yml)
-[![Terraform Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_terraform.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_terraform.yml)
-[![ShellCheck Lint](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_shellcheck.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/lint_shellcheck.yml)
+[![Backend Tests](https://github.com/lhadjchikh/coalition/actions/workflows/test_backend.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/test_backend.yml)
+[![Frontend Tests](https://github.com/lhadjchikh/coalition/actions/workflows/test_frontend.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/test_frontend.yml)
+[![Full Stack Tests](https://github.com/lhadjchikh/coalition/actions/workflows/test_fullstack.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/test_fullstack.yml)
+[![Python Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_python.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_python.yml)
+[![Prettier Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_prettier.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_prettier.yml)
+[![TypeScript Type Check](https://github.com/lhadjchikh/coalition/actions/workflows/lint_typescript.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_typescript.yml)
+[![Terraform Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_terraform.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_terraform.yml)
+[![ShellCheck Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_shellcheck.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_shellcheck.yml)
 
 A comprehensive web application for managing policy campaigns, tracking legislative support, and organizing endorsers. Built with Django REST API backend, React TypeScript frontend, and optional Next.js Server-Side Rendering.
 
@@ -61,7 +61,7 @@ This project uses a modern, scalable architecture:
 
 ```
 ├── backend/                 # Django API server
-│   ├── landandbay/         # Main Django project
+│   ├── coalition/         # Main Django project
 │   │   ├── campaigns/      # Policy campaigns app
 │   │   ├── legislators/    # Legislators tracking app
 │   │   ├── regions/        # Geographic regions app
@@ -112,8 +112,8 @@ Get the entire stack running in minutes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/lhadjchikh/landandbay.git
-cd landandbay
+git clone https://github.com/lhadjchikh/coalition.git
+cd coalition
 
 # Start all services (database, backend, frontend, SSR)
 docker-compose up
@@ -339,7 +339,7 @@ Key environment variables:
 # Django settings
 DEBUG=True
 SECRET_KEY=your-secret-key-here
-DATABASE_URL=postgis://user:password@localhost:5432/landandbay
+DATABASE_URL=postgis://user:password@localhost:5432/coalition
 ALLOWED_HOSTS=localhost,127.0.0.1
 
 # For production deployment (see DEPLOY_TO_ECS.md)
@@ -488,7 +488,7 @@ poetry run python manage.py test campaigns
 
 ### Getting Help
 
-- Check existing [GitHub Issues](https://github.com/lhadjchikh/landandbay/issues)
+- Check existing [GitHub Issues](https://github.com/lhadjchikh/coalition/issues)
 - Review documentation in the `docs/` directory
 - Check the application logs: `docker-compose logs [service-name]`
 

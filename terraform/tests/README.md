@@ -1,6 +1,6 @@
 # Terraform Testing Suite
 
-This directory contains comprehensive unit and integration tests for the Land and Bay Stewards Terraform infrastructure using [Terratest](https://terratest.gruntwork.io/).
+This directory contains comprehensive unit and integration tests for the Coalition Builder Terraform infrastructure using [Terratest](https://terratest.gruntwork.io/).
 
 ## 📁 Test Structure
 
@@ -163,9 +163,9 @@ Each test run creates uniquely named resources:
 
 ```bash
 # Example resource names created during tests:
-# - VPC: landandbay-test-12345-vpc
-# - Cluster: landandbay-test-12345-cluster
-# - Database: landandbay-test-12345-postgres
+# - VPC: coalition-test-12345-vpc
+# - Cluster: coalition-test-12345-cluster
+# - Database: coalition-test-12345-postgres
 ```
 
 #### Cleanup
@@ -180,7 +180,7 @@ defer common.CleanupResources(t, terraformOptions)
 make clean
 
 # Check for leftover resources
-aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*"
+aws ec2 describe-vpcs --filters "Name=tag:Name,Values=coalition-test-*"
 ```
 
 ### Debugging Failed Tests
@@ -327,7 +327,7 @@ Tests use unique prefixes to avoid conflicts:
 
 ```go
 testConfig := common.NewTestConfig("../modules/networking")
-// Creates prefix like "landandbay-test-12345"
+// Creates prefix like "coalition-test-12345"
 ```
 
 ## 🧩 Test Modules
@@ -475,7 +475,7 @@ go test -timeout 45m ./...
 make clean
 
 # Check for existing resources with test prefix
-aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*"
+aws ec2 describe-vpcs --filters "Name=tag:Name,Values=coalition-test-*"
 ```
 
 #### Permission Errors

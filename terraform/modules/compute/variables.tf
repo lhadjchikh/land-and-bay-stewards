@@ -1,7 +1,7 @@
 variable "prefix" {
   description = "Prefix to use for resource names"
   type        = string
-  default     = "landandbay"
+  default     = "coalition"
 }
 
 variable "aws_region" {
@@ -103,7 +103,7 @@ variable "secrets_kms_key_arn" {
 variable "bastion_key_name" {
   description = "SSH key pair name for the bastion host"
   type        = string
-  default     = "landandbay-bastion"
+  default     = "coalition-bastion"
 }
 
 variable "bastion_public_key" {

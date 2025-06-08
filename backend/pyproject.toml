@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "landandbay"
+name = "coalition"
 version = "0.1.0"
 description = "Coalition Builder"
 authors = ["Leila Hadj-Chikh <lhadjchikh@gmail.com>"]
 license = "n"
 readme = "README.md"
 packages = [
-    { include = "landandbay" },
+    { include = "coalition" },
     { include = "scripts" } 
 ]
 
@@ -49,7 +49,7 @@ ignore = [
 "scripts/*.py" = ["T201"]  # Allow print statements in scripts directory
 
 [tool.ruff.lint.isort]
-known-first-party = ["landandbay", "campaigns", "endorsers", "legislators", "regions", "api"]
+known-first-party = ["coalition", "campaigns", "endorsers", "legislators", "regions", "api"]
 
 [build-system]
 requires = ["poetry-core"]

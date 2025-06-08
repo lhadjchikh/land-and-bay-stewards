@@ -7,7 +7,7 @@ ADMIN_USER="${DB_USERNAME:-coalition_admin}"
 ADMIN_PASS="${DB_PASSWORD:-admin_password}"
 APP_USER="${APP_DB_USERNAME:-coalition_app}"
 APP_PASS="${APP_DB_PASSWORD:-app_password}"
-APP_DB="${DB_NAME:-coalitionbuilder}"
+APP_DB="${DB_NAME:-coalition}"
 
 echo "Starting database initialization..."
 

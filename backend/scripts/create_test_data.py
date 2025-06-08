@@ -10,7 +10,7 @@ import sys
 import django
 
 # Initialize Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "landandbay.core.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "coalition.core.settings")
 django.setup()
 
 
@@ -18,10 +18,10 @@ def create_test_data() -> int:
     """Create test data for integration tests if it doesn't already exist."""
     try:
         # Import models after Django is initialized
-        from landandbay.campaigns.models import PolicyCampaign
-        from landandbay.endorsements.models import Endorsement
-        from landandbay.legislators.models import Legislator
-        from landandbay.stakeholders.models import Stakeholder
+        from coalition.campaigns.models import PolicyCampaign
+        from coalition.endorsements.models import Endorsement
+        from coalition.legislators.models import Legislator
+        from coalition.stakeholders.models import Stakeholder
 
         # Create a test campaign if none exists
         if not PolicyCampaign.objects.exists():

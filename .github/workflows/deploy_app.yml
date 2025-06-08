@@ -29,8 +29,8 @@ permissions:
   id-token: write # For AWS authentication
 
 env:
-  API_ECR_REPOSITORY: landandbay-api
-  SSR_ECR_REPOSITORY: landandbay-ssr
+  API_ECR_REPOSITORY: coalition-api
+  SSR_ECR_REPOSITORY: coalition-ssr
 
 jobs:
   check_changes:
@@ -252,7 +252,7 @@ jobs:
 
       - name: Download task definition
         run: |
-          aws ecs describe-task-definition --task-definition landandbay --query taskDefinition > task-definition.json
+          aws ecs describe-task-definition --task-definition coalition --query taskDefinition > task-definition.json
 
       - name: Update Django app container image in ECS task definition
         id: task-def-app
@@ -301,6 +301,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v2
         with:
           task-definition: ${{ steps.set-final-taskdef.outputs.final_taskdef }}
-          service: landandbay-service
-          cluster: landandbay-cluster
+          service: coalition-service
+          cluster: coalition-cluster
           wait-for-service-stability: true

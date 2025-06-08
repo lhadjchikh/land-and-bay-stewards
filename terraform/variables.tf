@@ -14,7 +14,7 @@ variable "tags" {
   description = "Default tags to apply to all resources"
   type        = map(string)
   default = {
-    Project     = "landandbay"
+    Project     = "coalition"
     Environment = "Production"
   }
 }
@@ -117,7 +117,7 @@ variable "private_db_subnet_b_cidr" {
 variable "db_name" {
   description = "Database name"
   type        = string
-  default     = "landandbay"
+  default     = "coalition"
 }
 
 # While usernames are not as sensitive as passwords,
@@ -218,7 +218,7 @@ variable "allowed_bastion_cidrs" {
 variable "bastion_key_name" {
   description = "SSH key pair name for the bastion host"
   type        = string
-  default     = "landandbay-bastion"
+  default     = "coalition-bastion"
 }
 
 variable "bastion_public_key" {

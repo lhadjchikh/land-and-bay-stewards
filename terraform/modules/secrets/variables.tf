@@ -1,7 +1,7 @@
 variable "prefix" {
   description = "Prefix to use for resource names"
   type        = string
-  default     = "landandbay"
+  default     = "coalition"
 }
 
 variable "app_db_username" {

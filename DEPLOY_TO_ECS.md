@@ -1,6 +1,6 @@
 # Deploying to Amazon ECS with Terraform
 
-This guide explains how to deploy the Land and Bay application to Amazon ECS (Elastic Container Service) using Terraform
+This guide explains how to deploy the Coalition Builder application to Amazon ECS (Elastic Container Service) using Terraform
 and GitHub Actions. The application is built with Python 3.13 and PostgreSQL 16 with PostGIS extension.
 
 ## Overview
@@ -41,9 +41,9 @@ AWS_SECRET_ACCESS_KEY=your-aws-secret-key
 
 # Domain and certificate settings
 TF_VAR_aws_region=us-east-1
-TF_VAR_db_name=landandbay
+TF_VAR_db_name=your-db-name
 TF_VAR_route53_zone_id=your-route53-zone-id
-TF_VAR_domain_name=landandbay.org
+TF_VAR_domain_name=yourdomain.org
 TF_VAR_acm_certificate_arn=your-acm-certificate-arn
 TF_VAR_alert_email=your-email@example.com
 
@@ -63,9 +63,9 @@ For CI/CD deployment, add the following secrets to your GitHub repository:
 1.  `AWS_ACCESS_KEY_ID`: Your AWS access key
 2.  `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
 3.  `AWS_REGION`: The AWS region to deploy to (e.g., `us-east-1`)
-4.  `TF_VAR_db_name`: Database name (default: `landandbay`)
+4.  `TF_VAR_db_name`: Database name (default: `coalition`)
 5.  `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
-6.  `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`)
+6.  `TF_VAR_domain_name`: Your domain name (e.g., `app.mydomain.org` or `mydomain.org`)
 7.  `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate for HTTPS
 8.  `TF_VAR_alert_email`: Email address to receive budget and other alerts
 9.  `TF_VAR_use_secrets_manager`: Set to `true` to use AWS Secrets Manager (recommended for production)
@@ -86,18 +86,18 @@ Before deployment, set up your database credentials in AWS Secrets Manager:
 
    ```bash
    aws secretsmanager create-secret \
-     --name landandbay/database-master \
+     --name coalition/database-master \
      --description "PostgreSQL master database credentials" \
-     --secret-string '{"username":"your_secure_username","password":"your_secure_password","host":"pending-db-creation","port":"5432","dbname":"landandbay"}'
+     --secret-string '{"username":"your_secure_username","password":"your_secure_password","host":"pending-db-creation","port":"5432","dbname":"coalition"}'
    ```
 
 2. **Create a secret for application database credentials** (optional, will be auto-generated if not provided):
 
    ```bash
    aws secretsmanager create-secret \
-     --name landandbay/database-app \
+     --name coalition/database-app \
      --description "PostgreSQL application database credentials" \
-     --secret-string '{"username":"app_user","password":"your_secure_app_password","host":"pending-db-creation","port":"5432","dbname":"landandbay"}'
+     --secret-string '{"username":"app_user","password":"your_secure_app_password","host":"pending-db-creation","port":"5432","dbname":"coalition"}'
    ```
 
 > **IMPORTANT**: Once these secrets are created, Terraform will use them for all deployments. For initial setup, if no secrets exist yet, Terraform will create them using secure random passwords.
@@ -123,10 +123,10 @@ After the initial deployment, you need to enable the PostGIS extension in the RD
 
    ```bash
    # Get database connection details from Secrets Manager
-   aws secretsmanager get-secret-value --secret-id landandbay/database-master --query SecretString --output text | jq .
+   aws secretsmanager get-secret-value --secret-id coalition/database-master --query SecretString --output text | jq .
 
    # Connect to the database (replace values with those from the secret)
-   psql -h <database_endpoint> -U <master_username> -d landandbay
+   psql -h <database_endpoint> -U <master_username> -d coalition
    ```
 
    (You can also get the database_endpoint from Terraform outputs by running: `terraform -chdir=terraform output database_endpoint`)
@@ -220,7 +220,7 @@ To use a custom domain name:
 1. The Route 53 and HTTPS configuration is already enabled in `terraform/main.tf`
 2. You need to add the following GitHub secrets:
    - `TF_VAR_route53_zone_id`: Your Route 53 hosted zone ID
-   - `TF_VAR_domain_name`: Your domain name (e.g., `app.landandbay.org` or `landandbay.org`)
+   - `TF_VAR_domain_name`: Your domain name (e.g., `app.mydomain.org` or `mydomain.org`)
    - `TF_VAR_acm_certificate_arn`: The ARN of your ACM certificate
 
 > **Note**: You must have already created an ACM certificate for your domain. If you don't have one, you can create it
@@ -232,7 +232,7 @@ Your application logs are sent to CloudWatch Logs:
 
 1. Go to CloudWatch in the AWS Console
 2. Navigate to "Log groups"
-3. Find the `/ecs/landandbay` log group
+3. Find the `/ecs/coalition` log group
 
 ### Cost Monitoring
 
@@ -248,7 +248,7 @@ To view or modify the budget:
 
 1. Go to the AWS Billing Dashboard
 2. Navigate to "Budgets"
-3. Select the "landandbay-monthly-budget"
+3. Select the "coalition-monthly-budget"
 
 > **Important**: Make sure to set the `TF_VAR_alert_email` variable with a valid email address to receive these alerts.
 > If you change the email address, you'll need to redeploy the infrastructure.
@@ -257,7 +257,7 @@ To view or modify the budget:
 
 All resources are automatically tagged with essential AWS provider tags and two custom tags:
 
-- `Project`: Identifies all resources as part of "Land and Bay"
+- `Project`: Identifies all resources as part of "Coalition Builder"
 - `Environment`: Specifies the deployment environment (e.g., "Production")
 
 AWS Cost Explorer and AWS Budgets can use these tags for cost tracking and allocation. Resources are also automatically
@@ -288,7 +288,7 @@ To clean up all AWS resources:
    env:
      AWS_REGION: ${{ secrets.AWS_REGION }}
      TF_VAR_aws_region: ${{ secrets.AWS_REGION }}
-     TF_VAR_db_name: ${{ secrets.TF_VAR_db_name || 'landandbay' }}
+     TF_VAR_db_name: ${{ secrets.TF_VAR_db_name || 'coalition' }}
      TF_VAR_route53_zone_id: ${{ secrets.TF_VAR_route53_zone_id }}
      TF_VAR_domain_name: ${{ secrets.TF_VAR_domain_name }}
      TF_VAR_acm_certificate_arn: ${{ secrets.TF_VAR_acm_certificate_arn }}

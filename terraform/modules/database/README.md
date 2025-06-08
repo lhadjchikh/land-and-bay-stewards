@@ -58,7 +58,7 @@ module "database" {
 
 | Name                       | Description                                              | Type         | Default        |
 | -------------------------- | -------------------------------------------------------- | ------------ | -------------- |
-| prefix                     | Prefix to use for resource names                         | string       | "landandbay"   |
+| prefix                     | Prefix to use for resource names                         | string       | "coalition"    |
 | db_subnet_ids              | List of subnet IDs for the DB subnet group               | list(string) |                |
 | db_security_group_id       | ID of the security group for the database                | string       |                |
 | db_allocated_storage       | Allocated storage for the database in GB                 | number       | 20             |

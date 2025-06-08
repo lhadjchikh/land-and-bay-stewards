@@ -1,8 +1,8 @@
 from django.db import IntegrityError
 from django.test import TestCase
 
-from landandbay.campaigns.models import PolicyCampaign
-from landandbay.stakeholders.models import Stakeholder
+from coalition.campaigns.models import PolicyCampaign
+from coalition.stakeholders.models import Stakeholder
 
 from .models import Endorsement
 

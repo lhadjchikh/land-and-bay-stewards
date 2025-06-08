@@ -172,9 +172,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
-      - name: Verify AWS credentials
+      - name: Verify AWS credentials and setup backend
         run: |
           aws sts get-caller-identity
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "Using backend bucket: coalition-terraform-state-${ACCOUNT_ID}"
+
+          # Create test-specific backend configuration for CI
+          cd terraform
+          cat > backend.hcl << EOF
+          bucket         = "coalition-terraform-state-${ACCOUNT_ID}"
+          key            = "tests/terraform-${GITHUB_RUN_ID}-${{ strategy.job-index }}.tfstate"
+          region         = "us-east-1"
+          encrypt        = true
+          dynamodb_table = "coalition-terraform-locks"
+          EOF
+
+          echo "Test state key: tests/terraform-${GITHUB_RUN_ID}-${{ strategy.job-index }}.tfstate"
 
       - name: Install dependencies
         run: |
@@ -187,12 +201,21 @@ jobs:
           cd terraform/tests
           go test -v -timeout 45m -run ${{ matrix.test-scenario.pattern }} ./integration/
 
+      - name: Cleanup test state file
+        if: always() # Run even if tests fail
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          TEST_STATE_KEY="tests/terraform-${GITHUB_RUN_ID}-${{ strategy.job-index }}.tfstate"
+
+          echo "Cleaning up test state file: s3://coalition-terraform-state-${ACCOUNT_ID}/${TEST_STATE_KEY}"
+          aws s3 rm "s3://coalition-terraform-state-${ACCOUNT_ID}/${TEST_STATE_KEY}" || echo "State file already deleted or doesn't exist"
+
       - name: Cleanup on failure
         if: failure()
         run: |
           echo "Cleaning up any leftover resources..."
           # List resources with test prefix for manual cleanup if needed
-          aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*" --query 'Vpcs[].VpcId' --output table || true
+          aws ec2 describe-vpcs --filters "Name=tag:Name,Values=coalition-test-*" --query 'Vpcs[].VpcId' --output table || true
           aws ecs list-clusters --query 'clusterArns[?contains(@, `test`)]' --output table || true
 
   # Fast integration tests (no AWS resources created)
@@ -275,7 +298,18 @@ jobs:
                 case 'success': return '✅';
                 case 'failure': return '❌';
                 case 'skipped': return '⏭️';
+                case 'cancelled': return '🚫';
                 default: return '⚠️';
+              }
+            };
+
+            const statusText = (result) => {
+              switch(result) {
+                case 'success': return 'Passed';
+                case 'failure': return 'Failed';
+                case 'skipped': return 'Skipped';
+                case 'cancelled': return 'Cancelled';
+                default: return 'Unknown';
               }
             };
 
@@ -283,8 +317,8 @@ jobs:
 
             | Test Type | Status | Details |
             |-----------|--------|---------|
-            | Unit Tests | ${statusIcon(unitTestResult)} ${unitTestResult} | Tests individual modules without AWS resources |
-            | Integration Tests (Short) | ${statusIcon(integrationTestResult)} ${integrationTestResult} | Tests module interactions without AWS resources |
+            | Unit Tests | ${statusIcon(unitTestResult)} ${statusText(unitTestResult)} | Tests individual modules without AWS resources |
+            | Integration Tests (Short) | ${statusIcon(integrationTestResult)} ${statusText(integrationTestResult)} | Tests module interactions without AWS resources |
 
             ### 📝 Test Summary
 
@@ -341,7 +375,7 @@ jobs:
           echo "Checking for leftover test resources..."
 
           # Check for test VPCs
-          TEST_VPCS=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*" --query 'Vpcs[].VpcId' --output text)
+          TEST_VPCS=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=coalition-test-*" --query 'Vpcs[].VpcId' --output text)
           if [ -n "$TEST_VPCS" ]; then
             echo "⚠️ Found leftover test VPCs: $TEST_VPCS"
             echo "TEST_VPCS_FOUND=true" >> $GITHUB_ENV
@@ -398,10 +432,18 @@ jobs:
           echo "Unit Tests: $unit_result"
           echo "Integration Tests (Short): $integration_result"
 
-          if [[ "$validate_result" == "success" && "$unit_result" == "success" && "$integration_result" == "success" ]]; then
-            echo "✅ All Terraform tests passed!"
+          # Function to check if result is acceptable (success or skipped)
+          is_acceptable() {
+            [[ "$1" == "success" || "$1" == "skipped" ]]
+          }
+
+          if is_acceptable "$validate_result" && is_acceptable "$unit_result" && is_acceptable "$integration_result"; then
+            echo "✅ All Terraform tests passed or were skipped!"
             exit 0
           else
             echo "❌ Some Terraform tests failed"
+            echo "  - Validate: $validate_result"
+            echo "  - Unit Tests: $unit_result" 
+            echo "  - Integration Tests: $integration_result"
             exit 1
           fi

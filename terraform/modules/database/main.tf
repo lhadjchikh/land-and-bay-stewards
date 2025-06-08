@@ -95,9 +95,9 @@ resource "aws_db_instance" "postgres" {
   parameter_group_name         = local.parameter_group_name
   db_subnet_group_name         = aws_db_subnet_group.main.name
   vpc_security_group_ids       = [var.db_security_group_id]
-  skip_final_snapshot          = false
-  final_snapshot_identifier    = "${var.prefix}-final-snapshot"
-  deletion_protection          = true
+  skip_final_snapshot          = contains(["test", "dev"], var.prefix) ? true : false
+  final_snapshot_identifier    = contains(["test", "dev"], var.prefix) ? null : "${var.prefix}-final-snapshot"
+  deletion_protection          = contains(["test", "dev"], var.prefix) ? false : true
   multi_az                     = false
   backup_retention_period      = var.db_backup_retention_period
   backup_window                = "03:00-04:00"

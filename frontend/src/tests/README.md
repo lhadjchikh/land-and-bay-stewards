@@ -1,6 +1,6 @@
-# Land and Bay Tests
+# Coalition Builder Tests
 
-This directory contains tests for the Land and Bay frontend application.
+This directory contains tests for the Coalition Builder frontend application.
 
 ## Test Structure
 
