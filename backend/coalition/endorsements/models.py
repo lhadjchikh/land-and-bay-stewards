@@ -1,6 +1,6 @@
 from django.db import models
 
-from coalitionbuilder.stakeholders.models import Stakeholder
+from coalition.stakeholders.models import Stakeholder
 
 
 class Endorsement(models.Model):

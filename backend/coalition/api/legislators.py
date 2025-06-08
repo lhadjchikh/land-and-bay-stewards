@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 from ninja import Router
 
-from coalitionbuilder.legislators.models import Legislator
+from coalition.legislators.models import Legislator
 
 from .schemas import LegislatorOut
 

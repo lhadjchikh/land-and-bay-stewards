@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 from ninja import Router
 
-from coalitionbuilder.campaigns.models import PolicyCampaign
+from coalition.campaigns.models import PolicyCampaign
 
 from .schemas import PolicyCampaignOut
 

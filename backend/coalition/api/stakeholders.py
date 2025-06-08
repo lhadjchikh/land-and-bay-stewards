@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 from ninja import Router
 
-from coalitionbuilder.stakeholders.models import Stakeholder
+from coalition.stakeholders.models import Stakeholder
 
 from .schemas import StakeholderOut
 

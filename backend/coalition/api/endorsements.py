@@ -1,7 +1,7 @@
 from django.http import HttpRequest
 from ninja import Router
 
-from coalitionbuilder.endorsements.models import Endorsement
+from coalition.endorsements.models import Endorsement
 
 from .schemas import EndorsementOut
 

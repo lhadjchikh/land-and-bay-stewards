@@ -18,10 +18,10 @@ def create_test_data() -> int:
     """Create test data for integration tests if it doesn't already exist."""
     try:
         # Import models after Django is initialized
-        from coalitionbuilder.campaigns.models import PolicyCampaign
-        from coalitionbuilder.endorsements.models import Endorsement
-        from coalitionbuilder.legislators.models import Legislator
-        from coalitionbuilder.stakeholders.models import Stakeholder
+        from coalition.campaigns.models import PolicyCampaign
+        from coalition.endorsements.models import Endorsement
+        from coalition.legislators.models import Legislator
+        from coalition.stakeholders.models import Stakeholder
 
         # Create a test campaign if none exists
         if not PolicyCampaign.objects.exists():
