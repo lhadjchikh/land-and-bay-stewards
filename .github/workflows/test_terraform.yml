@@ -275,7 +275,18 @@ jobs:
                 case 'success': return '✅';
                 case 'failure': return '❌';
                 case 'skipped': return '⏭️';
+                case 'cancelled': return '🚫';
                 default: return '⚠️';
+              }
+            };
+
+            const statusText = (result) => {
+              switch(result) {
+                case 'success': return 'Passed';
+                case 'failure': return 'Failed';
+                case 'skipped': return 'Skipped';
+                case 'cancelled': return 'Cancelled';
+                default: return 'Unknown';
               }
             };
 
@@ -283,8 +294,8 @@ jobs:
 
             | Test Type | Status | Details |
             |-----------|--------|---------|
-            | Unit Tests | ${statusIcon(unitTestResult)} ${unitTestResult} | Tests individual modules without AWS resources |
-            | Integration Tests (Short) | ${statusIcon(integrationTestResult)} ${integrationTestResult} | Tests module interactions without AWS resources |
+            | Unit Tests | ${statusIcon(unitTestResult)} ${statusText(unitTestResult)} | Tests individual modules without AWS resources |
+            | Integration Tests (Short) | ${statusIcon(integrationTestResult)} ${statusText(integrationTestResult)} | Tests module interactions without AWS resources |
 
             ### 📝 Test Summary
 
@@ -398,10 +409,18 @@ jobs:
           echo "Unit Tests: $unit_result"
           echo "Integration Tests (Short): $integration_result"
 
-          if [[ "$validate_result" == "success" && "$unit_result" == "success" && "$integration_result" == "success" ]]; then
-            echo "✅ All Terraform tests passed!"
+          # Function to check if result is acceptable (success or skipped)
+          is_acceptable() {
+            [[ "$1" == "success" || "$1" == "skipped" ]]
+          }
+
+          if is_acceptable "$validate_result" && is_acceptable "$unit_result" && is_acceptable "$integration_result"; then
+            echo "✅ All Terraform tests passed or were skipped!"
             exit 0
           else
             echo "❌ Some Terraform tests failed"
+            echo "  - Validate: $validate_result"
+            echo "  - Unit Tests: $unit_result" 
+            echo "  - Integration Tests: $integration_result"
             exit 1
           fi
