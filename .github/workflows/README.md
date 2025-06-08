@@ -1,6 +1,6 @@
 # GitHub Workflows
 
-This directory contains the GitHub Actions workflows for the Land and Bay Stewards project. These workflows automate
+This directory contains the GitHub Actions workflows for the Coalition Builder project. These workflows automate
 testing and other CI/CD processes.
 
 ## CI/CD Architecture

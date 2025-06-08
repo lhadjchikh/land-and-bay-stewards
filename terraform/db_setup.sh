@@ -1,5 +1,5 @@
 #!/bin/bash
-# Database Setup Script for Land and Bay Stewards
+# Database Setup Script for Coalition Builder
 # This script sets up PostgreSQL with PostGIS and creates application user
 # Run this after Terraform has created the RDS instance
 
@@ -30,8 +30,8 @@ log_error() {
 }
 
 # Default configuration
-DEFAULT_PREFIX="landandbay"
-DEFAULT_DB_NAME="landandbay"
+DEFAULT_PREFIX="coalition"
+DEFAULT_DB_NAME="coalition"
 DEFAULT_MASTER_USERNAME="postgres_admin"
 DEFAULT_APP_USERNAME="app_user"
 DEFAULT_REGION="us-east-1"
@@ -39,7 +39,7 @@ DEFAULT_REGION="us-east-1"
 # Function to show usage
 usage() {
   cat <<EOF
-Database Setup Script for Land and Bay Stewards
+Database Setup Script for Coalition Builder
 
 Usage: $0 [OPTIONS]
 

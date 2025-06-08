@@ -192,7 +192,7 @@ jobs:
         run: |
           echo "Cleaning up any leftover resources..."
           # List resources with test prefix for manual cleanup if needed
-          aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*" --query 'Vpcs[].VpcId' --output table || true
+          aws ec2 describe-vpcs --filters "Name=tag:Name,Values=coalition-test-*" --query 'Vpcs[].VpcId' --output table || true
           aws ecs list-clusters --query 'clusterArns[?contains(@, `test`)]' --output table || true
 
   # Fast integration tests (no AWS resources created)
@@ -341,7 +341,7 @@ jobs:
           echo "Checking for leftover test resources..."
 
           # Check for test VPCs
-          TEST_VPCS=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=landandbay-test-*" --query 'Vpcs[].VpcId' --output text)
+          TEST_VPCS=$(aws ec2 describe-vpcs --filters "Name=tag:Name,Values=coalition-test-*" --query 'Vpcs[].VpcId' --output text)
           if [ -n "$TEST_VPCS" ]; then
             echo "⚠️ Found leftover test VPCs: $TEST_VPCS"
             echo "TEST_VPCS_FOUND=true" >> $GITHUB_ENV

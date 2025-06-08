@@ -7,8 +7,8 @@ This document clarifies the usage of different health check endpoints in the app
 ### `/health/` (Django Backend)
 
 - **Purpose**: Load balancer health checks, container health checks, internal monitoring
-- **Implementation**: Django view in `backend/landandbay/core/views.py`
-- **URL Pattern**: `backend/landandbay/core/urls.py` → `path("health/", health_check)`
+- **Implementation**: Django view in `backend/coalition/core/views.py`
+- **URL Pattern**: `backend/coalition/core/urls.py` → `path("health/", health_check)`
 - **Used By**:
   - AWS Load Balancer API target group health checks
   - ECS container health checks
@@ -18,7 +18,7 @@ This document clarifies the usage of different health check endpoints in the app
 ### `/api/health/` (Django API)
 
 - **Purpose**: API-specific health checks, external monitoring tools, API consumers
-- **Implementation**: Django Ninja API endpoint in `backend/landandbay/api/api.py`
+- **Implementation**: Django Ninja API endpoint in `backend/coalition/api/api.py`
 - **URL Pattern**: `@api.get("/health/", tags=["Health"])`
 - **Used By**:
   - External monitoring services

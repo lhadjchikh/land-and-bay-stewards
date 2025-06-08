@@ -48,14 +48,14 @@ jobs:
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
             --load \
-            -t landandbay_app:latest \
+            -t coalition_app:latest \
             .
 
           docker buildx build \
             --cache-from=type=local,src=/tmp/.buildx-cache \
             --cache-to=type=local,dest=/tmp/.buildx-cache-new,mode=max \
             --load \
-            -t landandbay_ssr:latest \
+            -t coalition_ssr:latest \
             ./ssr
 
       - name: Start all containers

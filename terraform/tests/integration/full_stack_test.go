@@ -185,7 +185,7 @@ func TestFullStackResourceTagging(t *testing.T) {
 
 	// Add custom tags
 	testVars["tags"] = map[string]string{
-		"Project":     "landandbay",
+		"Project":     "coalition",
 		"Environment": "test",
 		"Owner":       "terratest",
 		"TestRun":     testConfig.UniqueID,
@@ -211,7 +211,7 @@ func TestFullStackResourceTagging(t *testing.T) {
 	vpc := aws.GetVpcById(t, vpcID, testConfig.AWSRegion)
 
 	expectedTags := map[string]string{
-		"Project":     "landandbay",
+		"Project":     "coalition",
 		"Environment": "test",
 		"Owner":       "terratest",
 		"TestRun":     testConfig.UniqueID,

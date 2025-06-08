@@ -4,8 +4,8 @@
 set -euo pipefail
 
 # Configuration
-S3_BUCKET_NAME="landandbay-terraform-state"
-DYNAMODB_TABLE_NAME="landandbay-terraform-locks"
+S3_BUCKET_NAME="coalition-terraform-state"
+DYNAMODB_TABLE_NAME="coalition-terraform-locks"
 REGION="us-east-1"
 
 # Create S3 bucket for state if it doesn't exist

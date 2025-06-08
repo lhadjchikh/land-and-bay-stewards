@@ -1,4 +1,4 @@
-# Land and Bay Codex Instructions
+# Coalition Builder Codex Instructions
 
 This repository contains multiple components:
 

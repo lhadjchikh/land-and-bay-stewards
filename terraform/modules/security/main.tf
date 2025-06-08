@@ -7,7 +7,7 @@ data "aws_vpc" "current" {
 # Application Security Group
 resource "aws_security_group" "app_sg" {
   name        = "${var.prefix}-sg"
-  description = "Allow inbound traffic for Land and Bay application"
+  description = "Allow inbound traffic for Coalition Builder application"
   vpc_id      = var.vpc_id
 
   # Ingress rules that don't reference other security groups
@@ -245,7 +245,7 @@ resource "aws_security_group" "bastion_sg" {
 # WAF Web ACL
 resource "aws_wafv2_web_acl" "main" {
   name        = "${var.prefix}-waf"
-  description = "WAF for Land and Bay application"
+  description = "WAF for Coalition Builder application"
   scope       = "REGIONAL"
 
   default_action {

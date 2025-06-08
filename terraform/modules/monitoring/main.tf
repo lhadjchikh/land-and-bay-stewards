@@ -1,8 +1,13 @@
 # Monitoring Module
 
+# Random suffix for S3 bucket to ensure global uniqueness
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
+}
+
 # S3 Bucket for ALB Logs
 resource "aws_s3_bucket" "alb_logs" {
-  bucket = "${var.prefix}-alb-logs"
+  bucket = "${var.prefix}-alb-logs-${random_id.bucket_suffix.hex}"
 
   tags = {
     Name = "${var.prefix}-alb-logs"

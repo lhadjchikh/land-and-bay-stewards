@@ -32,7 +32,7 @@ func NewTestConfig(terraformDir string) *TestConfig {
 	return &TestConfig{
 		TerraformDir: terraformDir,
 		AWSRegion:    "us-east-1",
-		Prefix:       fmt.Sprintf("landandbay-%s", uniqueID),
+		Prefix:       fmt.Sprintf("coalition-%s", uniqueID),
 		UniqueID:     uniqueID,
 	}
 }

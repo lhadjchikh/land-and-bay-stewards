@@ -1,7 +1,7 @@
 from django.http import HttpRequest, JsonResponse
 from ninja import NinjaAPI
 
-from landandbay.core.views import health_check as health_check_view
+from coalitionbuilder.core.views import health_check as health_check_view
 
 from . import campaigns, endorsements, legislators, stakeholders
 

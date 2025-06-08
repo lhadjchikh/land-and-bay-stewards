@@ -28,7 +28,7 @@ if ! command -v aws &>/dev/null; then
 fi
 
 # Configuration
-PREFIX="landandbay"
+PREFIX="coalition"
 REGION="us-east-1"
 
 info "Starting cleanup of problematic resources for prefix: $PREFIX"

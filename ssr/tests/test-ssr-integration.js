@@ -83,7 +83,9 @@ async function testDjangoAPI() {
 
   if (healthData.status !== "healthy") {
     throw new Error(
-      `Django API health check returned unhealthy status: ${JSON.stringify(healthData)}`,
+      `Django API health check returned unhealthy status: ${JSON.stringify(
+        healthData,
+      )}`,
     );
   }
 
@@ -142,7 +144,7 @@ async function testSSRHomepage() {
   // Content that should be present but won't fail tests if missing
   // These could change with UI updates
   const expectedContent = [
-    "Land and Bay Stewards",
+    "Coalition Builder",
     "Policy Campaigns",
     // Check for Next.js specific meta tags
     "viewport",
@@ -165,7 +167,9 @@ async function testSSRHomepage() {
 
   if (missingContent.length > 0) {
     console.warn(
-      `⚠️  Warning: SSR homepage missing some expected content: ${missingContent.join(", ")}`,
+      `⚠️  Warning: SSR homepage missing some expected content: ${missingContent.join(
+        ", ",
+      )}`,
     );
   }
 
@@ -284,7 +288,9 @@ async function testContainerCommunication() {
         }
       } else {
         console.log(
-          `ℹ️  Required services (ssr, api) not running in Docker. Found: [${services.join(", ")}]`,
+          `ℹ️  Required services (ssr, api) not running in Docker. Found: [${services.join(
+            ", ",
+          )}]`,
         );
         return true; // Skip test but don't fail it
       }

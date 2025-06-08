@@ -523,7 +523,7 @@ resource "aws_instance" "bastion" {
     # Create a welcome message with usage instructions
     cat > /etc/motd << 'MOTD'
     =======================================================
-    Welcome to the Land and Bay Stewards Database Jump Box
+    Welcome to the Coalition Builder Database Jump Box
     =======================================================
     
     This server is configured to automatically shut down after

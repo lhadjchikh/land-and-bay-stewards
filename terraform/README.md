@@ -238,13 +238,13 @@ For the initial deployment, you have two options:
    ```bash
    # Create master credentials secret
    aws secretsmanager create-secret \
-     --name landandbay/database-master \
+     --name coalition/database-master \
      --description "PostgreSQL master database credentials" \
      --secret-string '{"username":"your_secure_username","password":"your_secure_password"}'
 
    # Optional: Create application credentials secret
    aws secretsmanager create-secret \
-     --name landandbay/database-app \
+     --name coalition/database-app \
      --description "PostgreSQL application database credentials" \
      --secret-string '{"username":"app_user","password":"your_secure_app_password"}'
    ```
@@ -260,13 +260,13 @@ To view the secrets:
 
 ```bash
 # View master credentials
-aws secretsmanager get-secret-value --secret-id landandbay/database-master --query SecretString --output text | jq .
+aws secretsmanager get-secret-value --secret-id coalition/database-master --query SecretString --output text | jq .
 
 # View application credentials
-aws secretsmanager get-secret-value --secret-id landandbay/database-app --query SecretString --output text | jq .
+aws secretsmanager get-secret-value --secret-id coalition/database-app --query SecretString --output text | jq .
 
 # Get just the application password
-aws secretsmanager get-secret-value --secret-id landandbay/database-url --query SecretString --output text | jq -r .password
+aws secretsmanager get-secret-value --secret-id coalition/database-url --query SecretString --output text | jq -r .password
 ```
 
 ## Bastion Host SSH Key Management
@@ -278,20 +278,20 @@ A bastion host is provisioned to allow secure access to the database. You have s
 1. Create an SSH key pair locally:
 
    ```bash
-   ssh-keygen -t rsa -b 2048 -f ~/.ssh/landandbay-bastion -C "landandbay-bastion"
+   ssh-keygen -t rsa -b 2048 -f ~/.ssh/coalition-bastion -C "coalition-bastion"
    ```
 
 2. Store the public key as a GitHub secret with the name `TF_VAR_BASTION_PUBLIC_KEY`.
 
-   - Copy the contents of `~/.ssh/landandbay-bastion.pub`
+   - Copy the contents of `~/.ssh/coalition-bastion.pub`
    - Go to your GitHub repository → Settings → Secrets and Variables → Actions
    - Add new repository secret with name `TF_VAR_BASTION_PUBLIC_KEY` and paste the public key as value
 
-3. Keep the private key (`~/.ssh/landandbay-bastion`) secure for connecting to the bastion host.
+3. Keep the private key (`~/.ssh/coalition-bastion`) secure for connecting to the bastion host.
 
 4. To connect to the bastion host:
    ```bash
-   ssh -i ~/.ssh/landandbay-bastion ec2-user@<bastion-host-public-ip>
+   ssh -i ~/.ssh/coalition-bastion ec2-user@<bastion-host-public-ip>
    ```
 
 ### Option 2: Using an AWS-Managed Key Pair
@@ -301,14 +301,14 @@ Instead of providing your own public key, you can have AWS create and manage the
 1. Create a key pair in the AWS Console:
 
    - Go to EC2 → Key Pairs → Create Key Pair
-   - Name it `landandbay-bastion` (or whatever name you prefer)
+   - Name it `coalition-bastion` (or whatever name you prefer)
    - Select RSA and .pem format
    - Download and save the private key file securely
 
 2. In your Terraform configuration, set:
 
    ```hcl
-   bastion_key_name = "landandbay-bastion"  # Must match the name you used in AWS Console
+   bastion_key_name = "coalition-bastion"  # Must match the name you used in AWS Console
    bastion_public_key = ""                  # Leave empty to use existing key
    ```
 
@@ -323,7 +323,7 @@ Instead of providing your own public key, you can have AWS create and manage the
 
 4. Connect using the private key you downloaded:
    ```bash
-   ssh -i /path/to/landandbay-bastion.pem ec2-user@<bastion-host-public-ip>
+   ssh -i /path/to/coalition-bastion.pem ec2-user@<bastion-host-public-ip>
    ```
 
 > **Note**: The key difference between Option 1 and Option 2 is who creates and manages the key pair. With Option 1, you create the key pair locally and provide the public key to Terraform. With Option 2, AWS creates and manages the key pair, and you only need to download the private key.
@@ -335,21 +335,21 @@ To access the RDS database through the bastion host:
 1. Create an SSH tunnel:
 
    ```bash
-   ssh -i ~/.ssh/landandbay-bastion -L 5432:your-rds-endpoint:5432 ec2-user@<bastion-host-public-ip>
+   ssh -i ~/.ssh/coalition-bastion -L 5432:your-rds-endpoint:5432 ec2-user@<bastion-host-public-ip>
    ```
 
 2. Connect to the database using localhost:5432 in your SQL client.
 
 ## Core Variables
 
-| Variable Name        | Description                            | Default                                                  | Required                |
-| -------------------- | -------------------------------------- | -------------------------------------------------------- | ----------------------- |
-| `prefix`             | Prefix to use for resource names       | `coalition`                                              | No                      |
-| `aws_region`         | AWS region to deploy to                | `us-east-1`                                              | No                      |
-| `tags`               | Default tags to apply to all resources | `{ Project = "landandbay", Environment = "Production" }` | No                      |
-| `bastion_key_name`   | SSH key name for bastion host          | `landandbay-bastion`                                     | No                      |
-| `bastion_public_key` | SSH public key for bastion host        | `""`                                                     | Yes, for bastion access |
-| `enable_ssr`         | Enable Server-Side Rendering           | `true`                                                   | No                      |
+| Variable Name        | Description                            | Default                                                 | Required                |
+| -------------------- | -------------------------------------- | ------------------------------------------------------- | ----------------------- |
+| `prefix`             | Prefix to use for resource names       | `coalition`                                             | No                      |
+| `aws_region`         | AWS region to deploy to                | `us-east-1`                                             | No                      |
+| `tags`               | Default tags to apply to all resources | `{ Project = "coalition", Environment = "Production" }` | No                      |
+| `bastion_key_name`   | SSH key name for bastion host          | `coalition-bastion`                                     | No                      |
+| `bastion_public_key` | SSH public key for bastion host        | `""`                                                    | Yes, for bastion access |
+| `enable_ssr`         | Enable Server-Side Rendering           | `true`                                                  | No                      |
 
 ## Networking Variables
 
@@ -373,7 +373,7 @@ To access the RDS database through the bastion host:
 | `db_password`         | Master database password (used only for initial setup)  | n/a              | Yes, for initial setup only |
 | `app_db_username`     | Application database username                           | `app_user`       | No                          |
 | `app_db_password`     | Application database password (auto-generated if empty) | `""`             | No                          |
-| `db_name`             | Database name                                           | `landandbay`     | No                          |
+| `db_name`             | Database name                                           | `coalition`      | No                          |
 | `auto_setup_database` | Whether to automatically run database setup             | `false`          | No                          |
 
 ## Usage Examples
@@ -388,7 +388,7 @@ module "infrastructure" {
   # Only required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
-  domain_name         = "landandbay.org"
+  domain_name         = "mydomain.org"
   acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
   alert_email         = "alerts@example.com"
 }
@@ -406,7 +406,7 @@ module "infrastructure" {
   # Required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
-  domain_name         = "landandbay.org"
+  domain_name         = "mydomain.org"
   acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
   alert_email         = "alerts@example.com"
 }
@@ -424,7 +424,7 @@ module "infrastructure" {
   # Required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
-  domain_name         = "landandbay.org"
+  domain_name         = "mydomain.org"
   acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
   alert_email         = "alerts@example.com"
 }
@@ -446,14 +446,14 @@ module "infrastructure" {
   create_db_subnets      = true
 
   # Bastion host configuration
-  bastion_key_name    = "landandbay-bastion"
-  bastion_public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAAD... landandbay-bastion-key" # Your actual public key
+  bastion_key_name    = "coalition-bastion"
+  bastion_public_key  = "ssh-rsa AAAAB3NzaC1yc2EAAAAD... coalition-bastion-key" # Your actual public key
   create_new_key_pair = true  # Set to true to create a new key pair, false to use existing
 
   # Required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
-  domain_name         = "landandbay.org"
+  domain_name         = "mydomain.org"
   acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
   alert_email         = "alerts@example.com"
 }
@@ -484,7 +484,7 @@ module "infrastructure" {
   # Required variables
   db_password         = "your-secure-password"
   route53_zone_id     = "Z1234567890ABC"
-  domain_name         = "landandbay.org"
+  domain_name         = "mydomain.org"
   acm_certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/uuid"
   alert_email         = "alerts@example.com"
 }
@@ -497,11 +497,11 @@ module "infrastructure" {
   source = "./terraform"
 
   # Resource naming
-  prefix = "landandbay-${var.environment}"
+  prefix = "coalition-${var.environment}"
 
   # Environment-specific settings
   tags = {
-    Project     = "LandandBay"
+    Project     = "coalition"
     Environment = var.environment
     ManagedBy   = "Terraform"
   }
@@ -510,7 +510,7 @@ module "infrastructure" {
   enable_ssr = var.environment == "prod" ? true : false
 
   # Database configuration
-  db_name             = "landandbay_${var.environment}"
+  db_name             = "coalition_${var.environment}"
   auto_setup_database = var.environment != "prod" # Auto setup except in production
 
   # Security configuration
@@ -522,7 +522,7 @@ module "infrastructure" {
   # Required variables
   db_password         = var.db_password
   route53_zone_id     = var.route53_zone_id
-  domain_name         = "${var.environment == "prod" ? "" : "${var.environment}."}landandbay.org"
+  domain_name         = "${var.environment == "prod" ? "" : "${var.environment}."}mydomain.org"
   acm_certificate_arn = var.acm_certificate_arn
   alert_email         = var.alert_email
 }
@@ -683,7 +683,7 @@ Error: cannot destroy a previously created resource
 
 - First, remove the SSR containers from the task definition:
   ```bash
-  aws ecs update-service --cluster landandbay-cluster --service landandbay-service --task-definition landandbay-task-definition:LATEST --force-new-deployment
+  aws ecs update-service --cluster coalition-cluster --service coalition-service --task-definition coalition-task-definition:LATEST --force-new-deployment
   ```
 - Wait for deployment to complete, then run Terraform again
 - Consider using separate environments for SSR and non-SSR deployments
@@ -699,7 +699,7 @@ HealthCheckFailure: container health check failed
 - Verify the healthcheck.js file exists and has correct permissions
 - Check container logs for startup errors:
   ```bash
-  aws logs get-log-events --log-group-name /ecs/landandbay-task --log-stream-name ssr/latest
+  aws logs get-log-events --log-group-name /ecs/coalition-task --log-stream-name ssr/latest
   ```
 - Ensure the NEXT_PUBLIC_API_URL and API_URL environment variables are correctly set
 
@@ -1006,4 +1006,4 @@ See `terraform/tests/README.md` for detailed testing documentation.
 - **AWS SDK Go v2**: v1.36.3
 - **Testify**: v1.10.0
 
-This infrastructure configuration provides a robust, secure, and scalable foundation for the Land and Bay Stewards application with comprehensive documentation and troubleshooting guidance.
+This infrastructure configuration provides a robust, secure, and scalable foundation for the Coalition Builder application with comprehensive documentation and troubleshooting guidance.

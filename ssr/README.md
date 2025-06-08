@@ -1,6 +1,6 @@
-# Land and Bay Stewards - Server-Side Rendering (SSR)
+# Coalition Builder - Server-Side Rendering (SSR)
 
-This directory contains the Next.js application that provides server-side rendering for the Land and Bay Stewards project.
+This directory contains the Next.js application that provides server-side rendering for the Coalition Builder project.
 
 ## Architecture
 
@@ -69,10 +69,10 @@ Environment variables can be set in `.env` file or via Docker:
 
 ```bash
 # Build the Docker image
-docker build -t landandbay-ssr .
+docker build -t coalition-ssr .
 
 # Run the container
-docker run -p 3000:3000 -e API_URL=http://api:8000 landandbay-ssr
+docker run -p 3000:3000 -e API_URL=http://api:8000 coalition-ssr
 ```
 
 ## Testing
