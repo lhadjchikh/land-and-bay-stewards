@@ -7,7 +7,8 @@ resource "random_id" "bucket_suffix" {
 
 # S3 Bucket for ALB Logs
 resource "aws_s3_bucket" "alb_logs" {
-  bucket = "${var.prefix}-alb-logs-${random_id.bucket_suffix.hex}"
+  bucket        = "${var.prefix}-alb-logs-${random_id.bucket_suffix.hex}"
+  force_destroy = true
 
   tags = {
     Name = "${var.prefix}-alb-logs"
