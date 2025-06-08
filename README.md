@@ -1,4 +1,4 @@
-# Land and Bay Stewards
+# Coalition Builder
 
 [![Backend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/test_backend.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/test_backend.yml)
 [![Frontend Tests](https://github.com/lhadjchikh/landandbay/actions/workflows/test_frontend.yml/badge.svg)](https://github.com/lhadjchikh/landandbay/actions/workflows/test_frontend.yml)

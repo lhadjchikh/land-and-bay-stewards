@@ -8,7 +8,7 @@ const App: React.FC = () => {
     <div className="App">
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
-        <h1>Land and Bay Stewards</h1>
+        <h1>{process.env.REACT_APP_ORGANIZATION_NAME || 'Coalition Builder'}</h1>
         <a
           className="App-link"
           href="https://reactjs.org"
