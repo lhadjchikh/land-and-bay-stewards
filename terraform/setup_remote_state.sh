@@ -3,10 +3,15 @@
 
 set -euo pipefail
 
+# Get AWS account ID for unique bucket naming
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+
 # Configuration
-S3_BUCKET_NAME="coalition-terraform-state"
+S3_BUCKET_NAME="coalition-terraform-state-${ACCOUNT_ID}"
 DYNAMODB_TABLE_NAME="coalition-terraform-locks"
 REGION="us-east-1"
+
+echo "Using S3 bucket: $S3_BUCKET_NAME"
 
 # Create S3 bucket for state if it doesn't exist
 if ! aws s3api head-bucket --bucket $S3_BUCKET_NAME 2>/dev/null; then
