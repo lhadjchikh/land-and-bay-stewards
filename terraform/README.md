@@ -2,6 +2,31 @@
 
 This directory contains the Terraform configuration for deploying the Coalition Builder application to AWS. The infrastructure is designed to be secure, scalable, and SOC 2 compliant.
 
+## Quick Start
+
+```bash
+# 1. Setup remote state (one-time per AWS account)
+./setup_remote_state.sh
+
+# 2. Initialize Terraform with your backend
+terraform init -backend-config=backend.hcl
+
+# 3. Plan and apply your infrastructure
+terraform plan
+terraform apply
+
+# 4. (Optional) Run database setup if not using auto_setup_database
+./db_setup.sh --endpoint $(terraform output -raw database_endpoint)
+```
+
+## Key Features
+
+- ✅ **Multi-environment support** with account-specific remote state
+- ✅ **Conditional SSR** for cost optimization and flexible deployment
+- ✅ **Secure credentials** with AWS Secrets Manager integration
+- ✅ **Comprehensive testing** with Terratest and AWS SDK v2
+- ✅ **Production-ready** security and monitoring
+
 ## Architecture Overview
 
 The infrastructure architecture consists of the following components:
@@ -526,6 +551,78 @@ module "infrastructure" {
   acm_certificate_arn = var.acm_certificate_arn
   alert_email         = var.alert_email
 }
+```
+
+## Remote State Setup
+
+This Terraform configuration uses remote state storage in S3 with DynamoDB locking for team collaboration and state consistency.
+
+### Initial Setup
+
+1. **Run the setup script** to create your account-specific remote state resources:
+
+   ```bash
+   cd terraform
+   ./setup_remote_state.sh
+   ```
+
+   This script will:
+
+   - Create a unique S3 bucket: `coalition-terraform-state-{YOUR_AWS_ACCOUNT_ID}`
+   - Create a DynamoDB table: `coalition-terraform-locks`
+   - Generate a `backend.hcl` file with your account-specific configuration
+
+2. **Initialize Terraform** with the remote backend:
+
+   ```bash
+   terraform init -backend-config=backend.hcl
+   ```
+
+### For Reusable Infrastructure
+
+This setup ensures that:
+
+- ✅ **Each AWS account gets its own unique bucket** (no naming conflicts)
+- ✅ **No account-specific values** are committed to the repository
+- ✅ **Team members can share the same code** with their own backends
+- ✅ **CI/CD pipelines work** across different environments
+
+### Backend Configuration Files
+
+The repository includes:
+
+- `backend.tf` - Partial backend configuration (version controlled)
+- `backend.hcl.example` - Template for users (version controlled)
+- `backend.hcl` - Your account-specific config (automatically generated, gitignored)
+
+**Important**: Never commit `backend.hcl` to version control as it contains account-specific information.
+
+### State File Management
+
+The setup includes automatic cleanup for test state files:
+
+- **Production state**: `production/terraform.tfstate` (permanent)
+- **Test states**: `tests/terraform-{run-id}.tfstate` (temporary)
+- **Automatic cleanup**: S3 lifecycle policy deletes test states after 7 days
+- **Immediate cleanup**: GitHub workflows delete their state files after test completion
+
+This approach ensures:
+
+- ✅ **No state conflicts** between production and tests
+- ✅ **Parallel test execution** with unique state files per run
+- ✅ **Automatic cleanup** prevents storage cost accumulation
+- ✅ **Shared bucket** reduces infrastructure complexity
+
+### State File Structure
+
+```
+coalition-terraform-state-{ACCOUNT_ID}/
+├── production/
+│   └── terraform.tfstate                # Production (permanent)
+├── tests/
+│   ├── terraform-123456-0.tfstate      # Test run 1, job 0 (7-day TTL)
+│   ├── terraform-123456-1.tfstate      # Test run 1, job 1 (7-day TTL)
+│   └── terraform-789012-0.tfstate      # Test run 2, job 0 (7-day TTL)
 ```
 
 ## Deployment Workflows

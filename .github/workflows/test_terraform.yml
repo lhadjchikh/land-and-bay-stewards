@@ -172,9 +172,23 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_DEFAULT_REGION }}
 
-      - name: Verify AWS credentials
+      - name: Verify AWS credentials and setup backend
         run: |
           aws sts get-caller-identity
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "Using backend bucket: coalition-terraform-state-${ACCOUNT_ID}"
+
+          # Create test-specific backend configuration for CI
+          cd terraform
+          cat > backend.hcl << EOF
+          bucket         = "coalition-terraform-state-${ACCOUNT_ID}"
+          key            = "tests/terraform-${GITHUB_RUN_ID}-${{ strategy.job-index }}.tfstate"
+          region         = "us-east-1"
+          encrypt        = true
+          dynamodb_table = "coalition-terraform-locks"
+          EOF
+
+          echo "Test state key: tests/terraform-${GITHUB_RUN_ID}-${{ strategy.job-index }}.tfstate"
 
       - name: Install dependencies
         run: |
@@ -186,6 +200,15 @@ jobs:
         run: |
           cd terraform/tests
           go test -v -timeout 45m -run ${{ matrix.test-scenario.pattern }} ./integration/
+
+      - name: Cleanup test state file
+        if: always() # Run even if tests fail
+        run: |
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          TEST_STATE_KEY="tests/terraform-${GITHUB_RUN_ID}-${{ strategy.job-index }}.tfstate"
+
+          echo "Cleaning up test state file: s3://coalition-terraform-state-${ACCOUNT_ID}/${TEST_STATE_KEY}"
+          aws s3 rm "s3://coalition-terraform-state-${ACCOUNT_ID}/${TEST_STATE_KEY}" || echo "State file already deleted or doesn't exist"
 
       - name: Cleanup on failure
         if: failure()

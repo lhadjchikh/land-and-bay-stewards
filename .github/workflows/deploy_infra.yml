@@ -63,7 +63,7 @@ jobs:
         with:
           terraform_version: 1.12.1
 
-      - name: Setup Remote State
+      - name: Setup Remote State and Backend
         run: |
           cd terraform
           # Make the setup script executable
@@ -71,11 +71,16 @@ jobs:
           # Run the setup script to create S3 bucket and DynamoDB table
           ./setup_remote_state.sh
 
+          # Setup backend configuration for production deployment
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "Using backend bucket: coalition-terraform-state-${ACCOUNT_ID}"
+          echo "Using state key: production/terraform.tfstate"
+
       - name: Terraform Init
         run: |
           cd terraform
           # Use -input=false to prevent interactive prompts
-          timeout 5m terraform init -input=false
+          timeout 5m terraform init -backend-config=backend.hcl -input=false
 
       - name: Terraform Validate
         run: |
@@ -182,13 +187,28 @@ jobs:
         with:
           terraform_version: 1.12.1
 
-      # Remote state is already set up in the plan job
-      # We just need to initialize Terraform to use it
+      - name: Setup Backend Configuration
+        run: |
+          cd terraform
+          # Regenerate backend configuration for apply job
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "Using backend bucket: coalition-terraform-state-${ACCOUNT_ID}"
+
+          cat > backend.hcl << EOF
+          bucket         = "coalition-terraform-state-${ACCOUNT_ID}"
+          key            = "production/terraform.tfstate"
+          region         = "us-east-1"
+          encrypt        = true
+          dynamodb_table = "coalition-terraform-locks"
+          EOF
+
+          echo "Backend configuration created for production deployment"
+
       - name: Terraform Init
         run: |
           cd terraform
           # Use -input=false to prevent interactive prompts
-          timeout 5m terraform init -input=false
+          timeout 5m terraform init -backend-config=backend.hcl -input=false
 
       - name: Terraform Apply
         # Only apply on main branch - push events include direct pushes and PR merges to main
