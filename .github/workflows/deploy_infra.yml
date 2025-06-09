@@ -67,7 +67,7 @@ jobs:
         run: |
           cd terraform
           # Make the setup script executable
-          chmod +x setup_remote_state.sh
+          chmod +x ./scripts/setup_remote_state.sh
           # Run the setup script to create S3 bucket and DynamoDB table
           ./scripts/setup_remote_state.sh
 
