@@ -6,7 +6,7 @@ This directory contains the Terraform configuration for deploying the Coalition 
 
 ```bash
 # 1. Setup remote state (one-time per AWS account)
-./setup_remote_state.sh
+./scripts/setup_remote_state.sh
 
 # 2. Initialize Terraform with your backend
 terraform init -backend-config=backend.hcl
@@ -16,7 +16,7 @@ terraform plan
 terraform apply
 
 # 4. (Optional) Run database setup if not using auto_setup_database
-./db_setup.sh --endpoint $(terraform output -raw database_endpoint)
+./scripts/db_setup.sh --endpoint $(terraform output -raw database_endpoint)
 ```
 
 ## Key Features
@@ -241,10 +241,10 @@ The infrastructure includes an improved database setup script (`db_setup.sh`) wi
 
 ```bash
 # Basic usage
-./db_setup.sh --endpoint your-rds-endpoint.amazonaws.com
+./scripts/db_setup.sh --endpoint your-rds-endpoint.amazonaws.com
 
 # Full options
-./db_setup.sh --endpoint your-rds-endpoint.amazonaws.com \
+./scripts/db_setup.sh --endpoint your-rds-endpoint.amazonaws.com \
               --database myapp \
               --master-user admin \
               --app-user app_service \
@@ -563,7 +563,7 @@ This Terraform configuration uses remote state storage in S3 with DynamoDB locki
 
    ```bash
    cd terraform
-   ./setup_remote_state.sh
+   ./scripts/setup_remote_state.sh
    ```
 
    This script will:
@@ -668,7 +668,7 @@ terraform apply
 terraform apply -var="auto_setup_database=false"
 
 # Run database setup manually with full control
-./db_setup.sh --endpoint $(terraform output -raw database_endpoint)
+./scripts/db_setup.sh --endpoint $(terraform output -raw database_endpoint)
 
 # You'll be prompted for the master password
 # ✅ Done!
