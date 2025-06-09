@@ -963,58 +963,31 @@ make test-integration
 - Test patterns and best practices
 - CI/CD integration
 - AWS permissions required
-  ├── main.tf # Main Terraform configuration
-  ├── variables.tf # Input variables
-  ├── outputs.tf # Output values
-  ├── backend.tf # Remote state configuration
-  ├── versions.tf # Provider version constraints
-  ├── db_setup.sh # Database setup script (executable)
-  ├── setup_remote_state.sh # Remote state setup script
-  ├── modules/
-  │ ├── compute/
-  │ │ ├── main.tf # ECS, ECR, Bastion host
-  │ │ ├── variables.tf
-  │ │ ├── outputs.tf
-  │ │ └── versions.tf
-  │ ├── database/
-  │ │ ├── main.tf # RDS, Parameter groups
-  │ │ ├── variables.tf
-  │ │ ├── outputs.tf
-  │ │ ├── versions.tf
-  │ │ └── README.md # Database module documentation
-  │ ├── dns/
-  │ │ ├── main.tf # Route53 records
-  │ │ ├── variables.tf
-  │ │ ├── outputs.tf
-  │ │ └── versions.tf
-  │ ├── loadbalancer/
-  │ │ ├── main.tf # ALB, Target groups, Listeners
-  │ │ ├── variables.tf
-  │ │ ├── outputs.tf
-  │ │ └── versions.tf
-  │ ├── monitoring/
-  │ │ ├── main.tf # CloudWatch, S3 logs, Budgets
-  │ │ ├── variables.tf
-  │ │ ├── outputs.tf
-  │ │ └── versions.tf
-  │ ├── networking/
-  │ │ ├── main.tf # VPC, Subnets, Route tables
-  │ │ ├── variables.tf
-  │ │ ├── outputs.tf
-  │ │ └── versions.tf
-  │ ├── secrets/
-  │ │ ├── main.tf # Secrets Manager, KMS
-  │ │ ├── variables.tf
-  │ │ ├── outputs.tf
-  │ │ └── versions.tf
-  │ └── security/
-  │ ├── main.tf # Security groups, WAF
-  │ ├── variables.tf
-  │ ├── outputs.tf
-  │ └── versions.tf
-  └── terraform.tfvars # Variable values (gitignored)
 
-````
+### Project Structure
+
+```text
+terraform/
+├── backend.hcl.example           # Example backend configuration
+├── backend.tf                    # Remote state configuration
+├── main.tf                       # Main Terraform configuration
+├── variables.tf                  # Input variables
+├── outputs.tf                    # Output values
+├── versions.tf                   # Provider version constraints
+├── scripts/
+│   ├── db_setup.sh               # Database setup script
+│   └── setup_remote_state.sh     # Remote state helper
+├── modules/
+│   ├── compute/                  # ECS, ECR, Bastion host
+│   ├── database/                 # RDS, Parameter groups
+│   ├── dns/                      # Route53 records
+│   ├── loadbalancer/             # ALB, Target groups,
+│   ├── monitoring/               # CloudWatch, S3 logs,
+│   ├── networking/               # VPC, Subnets, Route
+│   ├── secrets/                  # Secrets Manager, KMS
+│   └── security/                 # Security groups, WAF
+└── terraform.tfvars
+```
 
 ## Security Considerations
 
@@ -1074,7 +1047,7 @@ go test -v ./modules/security_test.go
 
 # Run integration tests
 go test -v ./integration/
-````
+```
 
 **Test Features:**
 
