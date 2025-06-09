@@ -61,17 +61,20 @@ This project uses a modern, scalable architecture:
 
 ```
 ├── backend/                 # Django API server
-│   ├── coalition/         # Main Django project
-│   │   ├── campaigns/      # Policy campaigns app
-│   │   ├── legislators/    # Legislators tracking app
-│   │   ├── regions/        # Geographic regions app
-│   │   ├── api/           # API endpoints and schemas
-│   │   └── core/          # Core settings and configuration
-│   ├── stakeholders/       # Stakeholder management app
-│   ├── endorsements/       # Campaign endorsements app
-│   ├── scripts/           # Backend-specific utilities
-│   ├── manage.py          # Django management script
-│   └── pyproject.toml     # Python dependencies (Poetry)
+│   ├── coalition/           # Main Django project
+│   │   ├── api/             # API endpoints and schemas
+│   │   ├── campaigns/       # Policy campaigns app
+│   │   ├── endorsements/    # Campaign endorsements app
+│   │   ├── legislators/     # Legislators tracking app
+│   │   ├── regions/         # Geographic regions app
+│   │   ├── stakeholders/    # Stakeholder management app
+│   │   ├── templates/       # Django templates
+│   │   └── core/            # Core settings and configuration
+│   ├── sample_data/         # Example fixtures
+│   ├── static/              # Static assets
+│   ├── scripts/             # Backend-specific utilities
+│   ├── manage.py            # Django management script
+│   └── pyproject.toml       # Python dependencies (Poetry)
 ├── frontend/               # React TypeScript application
 │   ├── src/
 │   │   ├── components/    # React components
@@ -102,8 +105,14 @@ This project uses a modern, scalable architecture:
 │   └── outputs.tf       # Infrastructure outputs
 ├── scripts/              # Project-wide automation scripts
 │   └── lint.py          # Cross-language linting and formatting
+├── Dockerfile           # Multi-stage container build
+├── docker-compose.yml   # Local development environment
+├── entrypoint.sh        # Docker container entrypoint
+├── init-db.sh           # Database initialization helper
+├── branding.json        # Default logos and text
+├── FORK_AND_CUSTOMIZE.md # Customization guide
 ├── .github/workflows/    # CI/CD pipelines
-└── docker-compose.yml   # Local development environment
+└── DEPLOY_TO_ECS.md     # Production deployment instructions
 ```
 
 ## 🚀 Quick Start
@@ -122,8 +131,8 @@ Get the entire stack running in minutes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/lhadjchikh/coalition.git
-cd coalition
+git clone https://github.com/lhadjchikh/coalition-builder.git
+cd coalition-builder
 
 # Start all services (database, backend, frontend, SSR)
 docker-compose up
@@ -357,6 +366,14 @@ AWS_ACCESS_KEY_ID=your-aws-access-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret-key
 # ... additional AWS and domain settings
 ```
+
+## 🖌️ Customization
+
+After cloning you can personalize the application:
+
+- Edit `branding.json` to change default logos, organization name, and tagline.
+- Review [FORK_AND_CUSTOMIZE.md](FORK_AND_CUSTOMIZE.md) for environment variable overrides.
+- Rebuild your containers with `docker-compose up --build` to apply branding.
 
 ## 🚀 Production Deployment
 
