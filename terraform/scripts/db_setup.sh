@@ -270,15 +270,18 @@ BEGIN
 END
 $;
 
--- Grant basic connect privileges using format() for safety
+-- Grant comprehensive privileges for Django application
 DO $
 BEGIN
     EXECUTE format('GRANT CONNECT ON DATABASE %I TO %I', :'db_name', :'app_user');
     EXECUTE format('GRANT USAGE ON SCHEMA public TO %I', :'app_user');
+    EXECUTE format('GRANT CREATE ON SCHEMA public TO %I', :'app_user');
     EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO %I', :'app_user');
     EXECUTE format('GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO %I', :'app_user');
+    EXECUTE format('GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO %I', :'app_user');
     EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO %I', :'app_user');
     EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO %I', :'app_user');
+    EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO %I', :'app_user');
 END
 $;
 

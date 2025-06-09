@@ -1,13 +1,13 @@
 # Coalition Builder
 
-[![Backend Tests](https://github.com/lhadjchikh/coalition/actions/workflows/test_backend.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/test_backend.yml)
-[![Frontend Tests](https://github.com/lhadjchikh/coalition/actions/workflows/test_frontend.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/test_frontend.yml)
-[![Full Stack Tests](https://github.com/lhadjchikh/coalition/actions/workflows/test_fullstack.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/test_fullstack.yml)
-[![Python Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_python.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_python.yml)
-[![Prettier Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_prettier.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_prettier.yml)
-[![TypeScript Type Check](https://github.com/lhadjchikh/coalition/actions/workflows/lint_typescript.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_typescript.yml)
-[![Terraform Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_terraform.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_terraform.yml)
-[![ShellCheck Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_shellcheck.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_shellcheck.yml)
+[![Backend Tests](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_backend.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_backend.yml)
+[![Frontend Tests](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_frontend.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_frontend.yml)
+[![Full Stack Tests](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_fullstack.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_fullstack.yml)
+[![Python Lint](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_python.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_python.yml)
+[![Prettier Lint](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_prettier.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_prettier.yml)
+[![TypeScript Type Check](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_typescript.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_typescript.yml)
+[![Terraform Lint](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_terraform.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_terraform.yml)
+[![ShellCheck Lint](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_shellcheck.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_shellcheck.yml)
 
 A comprehensive web application for managing policy campaigns, tracking legislative support, and organizing endorsers. Built with Django REST API backend, React TypeScript frontend, and optional Next.js Server-Side Rendering.
 
@@ -61,17 +61,20 @@ This project uses a modern, scalable architecture:
 
 ```
 ├── backend/                 # Django API server
-│   ├── coalition/         # Main Django project
-│   │   ├── campaigns/      # Policy campaigns app
-│   │   ├── legislators/    # Legislators tracking app
-│   │   ├── regions/        # Geographic regions app
-│   │   ├── api/           # API endpoints and schemas
-│   │   └── core/          # Core settings and configuration
-│   ├── stakeholders/       # Stakeholder management app
-│   ├── endorsements/       # Campaign endorsements app
-│   ├── scripts/           # Backend-specific utilities
-│   ├── manage.py          # Django management script
-│   └── pyproject.toml     # Python dependencies (Poetry)
+│   ├── coalition/           # Main Django project
+│   │   ├── api/             # API endpoints and schemas
+│   │   ├── campaigns/       # Policy campaigns app
+│   │   ├── endorsements/    # Campaign endorsements app
+│   │   ├── legislators/     # Legislators tracking app
+│   │   ├── regions/         # Geographic regions app
+│   │   ├── stakeholders/    # Stakeholder management app
+│   │   ├── templates/       # Django templates
+│   │   └── core/            # Core settings and configuration
+│   ├── sample_data/         # Example fixtures
+│   ├── static/              # Static assets
+│   ├── scripts/             # Backend-specific utilities
+│   ├── manage.py            # Django management script
+│   └── pyproject.toml       # Python dependencies (Poetry)
 ├── frontend/               # React TypeScript application
 │   ├── src/
 │   │   ├── components/    # React components
@@ -87,13 +90,29 @@ This project uses a modern, scalable architecture:
 │   └── tests/            # Integration tests
 ├── terraform/            # Infrastructure as Code
 │   ├── modules/          # Reusable Terraform modules
+│   │   ├── compute/      # ECS, ECR, and container services
+│   │   ├── database/     # RDS PostgreSQL with PostGIS
+│   │   ├── dns/          # Route53 records and domain management
+│   │   ├── loadbalancer/ # Application Load Balancer with SSL
+│   │   ├── monitoring/   # CloudWatch, budgets, and alerts
+│   │   ├── networking/   # VPC, subnets, and security groups
+│   │   ├── secrets/      # AWS Secrets Manager integration
+│   │   └── security/     # WAF, security policies, and KMS
+│   ├── scripts/          # Database setup and utility scripts
 │   ├── tests/            # Terraform unit and integration tests
 │   ├── main.tf          # Main infrastructure configuration
-│   └── variables.tf     # Configuration variables
+│   ├── variables.tf     # Configuration variables
+│   └── outputs.tf       # Infrastructure outputs
 ├── scripts/              # Project-wide automation scripts
 │   └── lint.py          # Cross-language linting and formatting
+├── Dockerfile           # Multi-stage container build
+├── docker-compose.yml   # Local development environment
+├── entrypoint.sh        # Docker container entrypoint
+├── init-db.sh           # Database initialization helper
+├── branding.json        # Default logos and text
+├── FORK_AND_CUSTOMIZE.md # Customization guide
 ├── .github/workflows/    # CI/CD pipelines
-└── docker-compose.yml   # Local development environment
+└── DEPLOY_TO_ECS.md     # Production deployment instructions
 ```
 
 ## 🚀 Quick Start
@@ -112,8 +131,8 @@ Get the entire stack running in minutes:
 
 ```bash
 # Clone the repository
-git clone https://github.com/lhadjchikh/coalition.git
-cd coalition
+git clone https://github.com/lhadjchikh/coalition-builder.git
+cd coalition-builder
 
 # Start all services (database, backend, frontend, SSR)
 docker-compose up
@@ -348,6 +367,14 @@ AWS_SECRET_ACCESS_KEY=your-aws-secret-key
 # ... additional AWS and domain settings
 ```
 
+## 🖌️ Customization
+
+After cloning you can personalize the application:
+
+- Edit `branding.json` to change default logos, organization name, and tagline.
+- Review [FORK_AND_CUSTOMIZE.md](FORK_AND_CUSTOMIZE.md) for environment variable overrides.
+- Rebuild your containers with `docker-compose up --build` to apply branding.
+
 ## 🚀 Production Deployment
 
 This project includes a complete production deployment setup for AWS:
@@ -488,7 +515,7 @@ poetry run python manage.py test campaigns
 
 ### Getting Help
 
-- Check existing [GitHub Issues](https://github.com/lhadjchikh/coalition/issues)
+- Check existing [GitHub Issues](https://github.com/lhadjchikh/coalition-builder/issues)
 - Review documentation in the `docs/` directory
 - Check the application logs: `docker-compose logs [service-name]`
 

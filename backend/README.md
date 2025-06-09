@@ -1,8 +1,8 @@
 # Coalition Builder Backend
 
-[![Black Code Style](https://github.com/lhadjchikh/coalition/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/black.yml)
-[![Ruff Linting](https://github.com/lhadjchikh/coalition/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/ruff.yml)
-[![Backend Tests](https://github.com/lhadjchikh/coalition/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/backend-tests.yml)
+[![Black Code Style](https://github.com/lhadjchikh/coalition-builder/actions/workflows/black.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/black.yml)
+[![Ruff Linting](https://github.com/lhadjchikh/coalition-builder/actions/workflows/ruff.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/ruff.yml)
+[![Backend Tests](https://github.com/lhadjchikh/coalition-builder/actions/workflows/backend-tests.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/backend-tests.yml)
 
 This is the Django backend for Coalition Builder. It provides a REST API for managing
 policy campaigns, stakeholders, endorsements, and legislators.

@@ -7,6 +7,8 @@ locals {
 
   # Parameter group names based on prevent_destroy setting
   parameter_group_name = var.prevent_destroy ? aws_db_parameter_group.postgres[0].name : aws_db_parameter_group.postgres_testing[0].name
+
+  db_setup_script_path = "${path.root}/scripts/db_setup.sh"
 }
 
 # KMS key for RDS encryption
@@ -198,7 +200,7 @@ resource "null_resource" "db_setup" {
     db_instance_endpoint = aws_db_instance.postgres.endpoint
 
     # ✅ USEFUL: Re-run when setup script is modified
-    script_hash = filesha256("${path.root}/db_setup.sh")
+    script_hash = filesha256(local.db_setup_script_path)
 
     # ✅ FUNCTIONAL: Re-run when key database parameters change
     db_name      = var.db_name
@@ -215,27 +217,27 @@ resource "null_resource" "db_setup" {
       echo "🔧 Preparing database setup..."
       
       # ✅ ADDED: Check if script exists
-      if [ ! -f "${path.root}/db_setup.sh" ]; then
-        echo "❌ ERROR: db_setup.sh script not found in ${path.root}"
-        echo "Please ensure the db_setup.sh script is in the same directory as your main Terraform files"
-        echo "Expected location: ${path.root}/db_setup.sh"
+      if [ ! -f "${local.db_setup_script_path}" ]; then
+        echo "❌ ERROR: db_setup.sh script not found in ${path.root}/scripts"
+        echo "Please ensure the db_setup.sh script is in the scripts directory"
+        echo "Expected location: ${local.db_setup_script_path}"
         exit 1
       fi
       
       # Check script is readable
-      if [ ! -r "${path.root}/db_setup.sh" ]; then
+      if [ ! -r "${local.db_setup_script_path}" ]; then
         echo "❌ ERROR: db_setup.sh script is not readable"
-        echo "Please check file permissions for ${path.root}/db_setup.sh"
+        echo "Please check file permissions for ${local.db_setup_script_path}"
         exit 1
       fi
       
       # Make script executable
-      chmod +x "${path.root}/db_setup.sh"
+      chmod +x "${local.db_setup_script_path}"
       
       # Verify script is now executable
-      if [ ! -x "${path.root}/db_setup.sh" ]; then
+      if [ ! -x "${local.db_setup_script_path}" ]; then
         echo "❌ ERROR: Failed to make db_setup.sh executable"
-        echo "Please check file permissions and try manually: chmod +x \"${path.root}/db_setup.sh\""
+        echo "Please check file permissions and try manually: chmod +x \"${local.db_setup_script_path}\""
         exit 1
       fi
       
@@ -261,7 +263,7 @@ resource "null_resource" "db_setup" {
       fi
       
       echo "✅ All prerequisites check passed"
-      echo "✅ Script found and made executable: ${path.root}/db_setup.sh"
+      echo "✅ Script found and made executable: ${local.db_setup_script_path}"
     EOT
   }
 
@@ -270,13 +272,13 @@ resource "null_resource" "db_setup" {
     command = <<-EOT
       echo "🚀 Database setup triggered by:"
       echo "  - Endpoint: ${aws_db_instance.postgres.endpoint}"
-      echo "  - Script hash: ${filesha256("${path.root}/db_setup.sh")}"
-      echo "  - Script location: ${path.root}/db_setup.sh"
+      echo "  - Script hash: ${filesha256(local.db_setup_script_path)}"
+      echo "  - Script location: ${local.db_setup_script_path}"
       echo "  - Rotation trigger: ${var.credential_rotation_trigger}"
       echo ""
       
       # Run the script with comprehensive error handling
-      if ! "${path.root}/db_setup.sh" \
+      if ! "${local.db_setup_script_path}" \
         --endpoint "${aws_db_instance.postgres.endpoint}" \
         --database "${var.db_name}" \
         --master-user "${local.master_username}" \
@@ -288,10 +290,10 @@ resource "null_resource" "db_setup" {
         echo "❌ Database setup failed!"
         echo ""
         echo "🔧 TROUBLESHOOTING:"
-        echo "1. Verify script exists: ls -la \"${path.root}/db_setup.sh\""
-        echo "2. Check script permissions: chmod +x \"${path.root}/db_setup.sh\""
+        echo "1. Verify script exists: ls -la \"${local.db_setup_script_path}\""
+        echo "2. Check script permissions: chmod +x \"${local.db_setup_script_path}\""
         echo "3. Test script manually:"
-        echo "   \"${path.root}/db_setup.sh\" --endpoint ${aws_db_instance.postgres.endpoint} --database ${var.db_name} --master-user ${local.master_username} --app-user ${local.app_username} --prefix ${var.prefix}"
+        echo "   \"${local.db_setup_script_path}\" --endpoint ${aws_db_instance.postgres.endpoint} --database ${var.db_name} --master-user ${local.master_username} --app-user ${local.app_username} --prefix ${var.prefix}"
         echo ""
         exit 1
       fi
