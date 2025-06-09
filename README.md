@@ -1,13 +1,13 @@
 # Coalition Builder
 
-[![Backend Tests](https://github.com/lhadjchikh/coalition/actions/workflows/test_backend.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/test_backend.yml)
-[![Frontend Tests](https://github.com/lhadjchikh/coalition/actions/workflows/test_frontend.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/test_frontend.yml)
-[![Full Stack Tests](https://github.com/lhadjchikh/coalition/actions/workflows/test_fullstack.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/test_fullstack.yml)
-[![Python Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_python.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_python.yml)
-[![Prettier Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_prettier.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_prettier.yml)
-[![TypeScript Type Check](https://github.com/lhadjchikh/coalition/actions/workflows/lint_typescript.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_typescript.yml)
-[![Terraform Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_terraform.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_terraform.yml)
-[![ShellCheck Lint](https://github.com/lhadjchikh/coalition/actions/workflows/lint_shellcheck.yml/badge.svg)](https://github.com/lhadjchikh/coalition/actions/workflows/lint_shellcheck.yml)
+[![Backend Tests](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_backend.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_backend.yml)
+[![Frontend Tests](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_frontend.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_frontend.yml)
+[![Full Stack Tests](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_fullstack.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/test_fullstack.yml)
+[![Python Lint](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_python.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_python.yml)
+[![Prettier Lint](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_prettier.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_prettier.yml)
+[![TypeScript Type Check](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_typescript.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_typescript.yml)
+[![Terraform Lint](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_terraform.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_terraform.yml)
+[![ShellCheck Lint](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_shellcheck.yml/badge.svg)](https://github.com/lhadjchikh/coalition-builder/actions/workflows/lint_shellcheck.yml)
 
 A comprehensive web application for managing policy campaigns, tracking legislative support, and organizing endorsers. Built with Django REST API backend, React TypeScript frontend, and optional Next.js Server-Side Rendering.
 
@@ -87,9 +87,19 @@ This project uses a modern, scalable architecture:
 │   └── tests/            # Integration tests
 ├── terraform/            # Infrastructure as Code
 │   ├── modules/          # Reusable Terraform modules
+│   │   ├── compute/      # ECS, ECR, and container services
+│   │   ├── database/     # RDS PostgreSQL with PostGIS
+│   │   ├── dns/          # Route53 records and domain management
+│   │   ├── loadbalancer/ # Application Load Balancer with SSL
+│   │   ├── monitoring/   # CloudWatch, budgets, and alerts
+│   │   ├── networking/   # VPC, subnets, and security groups
+│   │   ├── secrets/      # AWS Secrets Manager integration
+│   │   └── security/     # WAF, security policies, and KMS
+│   ├── scripts/          # Database setup and utility scripts
 │   ├── tests/            # Terraform unit and integration tests
 │   ├── main.tf          # Main infrastructure configuration
-│   └── variables.tf     # Configuration variables
+│   ├── variables.tf     # Configuration variables
+│   └── outputs.tf       # Infrastructure outputs
 ├── scripts/              # Project-wide automation scripts
 │   └── lint.py          # Cross-language linting and formatting
 ├── .github/workflows/    # CI/CD pipelines
@@ -488,7 +498,7 @@ poetry run python manage.py test campaigns
 
 ### Getting Help
 
-- Check existing [GitHub Issues](https://github.com/lhadjchikh/coalition/issues)
+- Check existing [GitHub Issues](https://github.com/lhadjchikh/coalition-builder/issues)
 - Review documentation in the `docs/` directory
 - Check the application logs: `docker-compose logs [service-name]`
 
