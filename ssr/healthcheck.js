@@ -1,8 +1,8 @@
 /**
- * Lenient health check script for Docker container
+ * Health check script for Docker container
  *
- * This script checks the health of the Next.js SSR service without
- * requiring immediate Django API connectivity during startup.
+ * This script checks the health of the Next.js SSR service by
+ * making a request to the dedicated health endpoint.
  */
 
 const http = require("http");
@@ -35,14 +35,16 @@ const req = http.request(options, (res) => {
         // Parse the JSON response
         const healthData = JSON.parse(data);
 
-        // Check if the SSR service itself is healthy
-        // Don't require immediate API connectivity during container startup
-        if (healthData.status === "healthy") {
-          console.log("✅ Health check passed - SSR service is healthy");
+        // Check if the status is healthy and API is connected
+        if (
+          healthData.status === "healthy" &&
+          healthData.api?.status === "connected"
+        ) {
+          console.log("✅ Health check passed - API connection verified");
           process.exit(0);
         } else {
-          console.log(
-            `❌ Health check failed - SSR Status: ${healthData.status}`,
+          console.error(
+            `❌ Health check failed - Status: ${healthData.status}, API: ${healthData.api?.status}`,
           );
           process.exit(1);
         }

@@ -123,8 +123,6 @@ module "compute" {
   container_port_ssr        = 3000
   domain_name               = var.domain_name
   enable_ssr                = var.enable_ssr
-  health_check_path_api     = var.health_check_path_api
-  health_check_path_ssr     = var.health_check_path_ssr
 
   # Make sure load balancer and secrets are created first
   depends_on = [
