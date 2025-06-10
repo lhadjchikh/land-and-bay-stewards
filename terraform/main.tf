@@ -66,7 +66,8 @@ module "loadbalancer" {
   alb_logs_bucket       = module.monitoring.alb_logs_bucket
   acm_certificate_arn   = var.acm_certificate_arn
   waf_web_acl_arn       = module.security.waf_web_acl_arn
-  health_check_path     = var.health_check_path
+  health_check_path_api = var.health_check_path_api
+  health_check_path_ssr = var.health_check_path_ssr
 }
 
 # Database Module
@@ -118,10 +119,12 @@ module "compute" {
   bastion_key_name          = var.bastion_key_name
   bastion_public_key        = var.bastion_public_key
   create_new_key_pair       = var.create_new_key_pair
-  container_port            = 8000
+  container_port_api        = 8000
+  container_port_ssr        = 3000
   domain_name               = var.domain_name
   enable_ssr                = var.enable_ssr
-  health_check_path         = var.health_check_path
+  health_check_path_api     = var.health_check_path_api
+  health_check_path_ssr     = var.health_check_path_ssr
 
   # Make sure load balancer and secrets are created first
   depends_on = [

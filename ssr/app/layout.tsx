@@ -1,15 +1,20 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 const org = process.env.ORGANIZATION_NAME || "Coalition Builder";
+
 export const metadata: Metadata = {
   title: org,
   description: process.env.TAGLINE || "Building strong advocacy partnerships",
-  viewport: "width=device-width, initial-scale=1",
   robots: "index, follow",
   generator: "Next.js",
   applicationName: org,
   authors: [{ name: org + " Team" }],
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({

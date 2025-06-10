@@ -190,8 +190,8 @@ resource "aws_ecs_task_definition" "app" {
 
       portMappings = [
         {
-          containerPort = var.container_port
-          hostPort      = var.container_port
+          containerPort = var.container_port_api
+          hostPort      = var.container_port_api
           protocol      = "tcp"
           name          = "django-api"
         }
@@ -219,7 +219,7 @@ resource "aws_ecs_task_definition" "app" {
       healthCheck = {
         command = [
           "CMD-SHELL",
-          "curl -f http://localhost:${var.container_port}${var.health_check_path} || exit 1"
+          "curl -f http://localhost:${var.container_port_api}${var.health_check_path_api} || exit 1"
         ],
         interval    = 30,
         timeout     = 10,
@@ -246,8 +246,8 @@ resource "aws_ecs_task_definition" "app" {
 
       portMappings = [
         {
-          containerPort = 3000
-          hostPort      = 3000
+          containerPort = var.container_port_ssr
+          hostPort      = var.container_port_ssr
           protocol      = "tcp"
           name          = "ssr-app"
         }
@@ -259,7 +259,7 @@ resource "aws_ecs_task_definition" "app" {
         },
         {
           name  = "API_URL"
-          value = "http://localhost:${var.container_port}"
+          value = "http://localhost:${var.container_port_api}"
         },
         {
           name  = "NEXT_PUBLIC_API_URL"
@@ -267,18 +267,18 @@ resource "aws_ecs_task_definition" "app" {
         },
         {
           name  = "PORT"
-          value = "3000"
+          value = tostring(var.container_port_ssr)
         }
       ]
       healthCheck = {
         command = [
           "CMD-SHELL",
-          "node /app/healthcheck-lenient.js"
+          "curl -f http://localhost:${var.container_port_ssr}${var.health_check_path_ssr} || exit 1"
         ],
         interval    = 30,
-        timeout     = 15,
+        timeout     = 10,
         retries     = 5,
-        startPeriod = 120
+        startPeriod = 90
       }
       logConfiguration = {
         logDriver = "awslogs"
@@ -304,8 +304,8 @@ resource "aws_ecs_task_definition" "app" {
 
       portMappings = [
         {
-          containerPort = var.container_port
-          hostPort      = var.container_port
+          containerPort = var.container_port_api
+          hostPort      = var.container_port_api
           protocol      = "tcp"
           name          = "django-api"
         }
@@ -333,7 +333,7 @@ resource "aws_ecs_task_definition" "app" {
       healthCheck = {
         command = [
           "CMD-SHELL",
-          "curl -f http://localhost:${var.container_port}${var.health_check_path} || exit 1"
+          "curl -f http://localhost:${var.container_port_api}${var.health_check_path_api} || exit 1"
         ],
         interval    = 30,
         timeout     = 5,
@@ -394,7 +394,7 @@ resource "aws_ecs_service" "app" {
   load_balancer {
     target_group_arn = var.api_target_group_arn
     container_name   = "app"
-    container_port   = var.container_port
+    container_port   = var.container_port_api
   }
 
   # Load balancer configuration for SSR (only if SSR is enabled and target group is provided)

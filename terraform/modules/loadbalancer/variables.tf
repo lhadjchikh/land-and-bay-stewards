@@ -34,9 +34,14 @@ variable "waf_web_acl_arn" {
   type        = string
 }
 
-variable "health_check_path" {
+variable "health_check_path_api" {
   description = "Path for load balancer health checks on Django backend"
   type        = string
   default     = "/health/"
 }
 
+variable "health_check_path_ssr" {
+  description = "Path for load balancer health checks on frontend"
+  type        = string
+  default     = "/health"
+}
