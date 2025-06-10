@@ -240,8 +240,14 @@ variable "enable_ssr" {
   default     = true
 }
 
-variable "health_check_path" {
+variable "health_check_path_api" {
   description = "Path for backend container and load balancer health checks"
   type        = string
   default     = "/health/"
+}
+
+variable "health_check_path_ssr" {
+  description = "Path for frontend container and load balancer health checks"
+  type        = string
+  default     = "/health"
 }

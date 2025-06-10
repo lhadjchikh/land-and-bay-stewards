@@ -53,10 +53,16 @@ locals {
   )
 }
 
-variable "container_port" {
-  description = "Container port"
+variable "container_port_api" {
+  description = "Container port for API"
   type        = number
   default     = 8000
+}
+
+variable "container_port_ssr" {
+  description = "Container port for SSR"
+  type        = number
+  default     = 3000
 }
 
 variable "desired_count" {
@@ -149,8 +155,14 @@ variable "enable_ssr" {
   default     = true
 }
 
-variable "health_check_path" {
-  description = "Path for container health checks"
+variable "health_check_path_api" {
+  description = "Path for API container health checks"
   type        = string
   default     = "/health/"
+}
+
+variable "health_check_path_ssr" {
+  description = "Path for SSR container health checks"
+  type        = string
+  default     = "/health"
 }

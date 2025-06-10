@@ -27,7 +27,7 @@ resource "aws_lb_target_group" "api" {
 
   health_check {
     enabled             = true
-    path                = var.health_check_path # Django backend health at /health/
+    path                = var.health_check_path_api # Django backend health at /health/
     port                = "traffic-port"
     healthy_threshold   = 3
     unhealthy_threshold = 3
@@ -51,7 +51,7 @@ resource "aws_lb_target_group" "ssr" {
 
   health_check {
     enabled             = true
-    path                = "/health" # SSR health endpoint (no trailing slash)
+    path                = var.health_check_path_ssr
     port                = "traffic-port"
     healthy_threshold   = 3
     unhealthy_threshold = 3
