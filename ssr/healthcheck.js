@@ -1,8 +1,8 @@
 /**
- * Health check script for Docker container
+ * Lenient health check script for Docker container
  *
- * This script checks the health of the Next.js SSR service by
- * making a request to the dedicated health endpoint.
+ * This script checks the health of the Next.js SSR service without
+ * requiring immediate Django API connectivity during startup.
  */
 
 const http = require("http");
@@ -35,27 +35,25 @@ const req = http.request(options, (res) => {
         // Parse the JSON response
         const healthData = JSON.parse(data);
 
-        // Check if the status is healthy and API is connected
-        if (
-          healthData.status === "healthy" &&
-          healthData.api?.status === "connected"
-        ) {
-          console.log("✅ Health check passed - API connection verified");
+        // Check if the SSR service itself is healthy
+        // Don't require immediate API connectivity during container startup
+        if (healthData.status === "healthy") {
+          console.log("✅ Health check passed - SSR service is healthy");
           process.exit(0);
         } else {
           console.log(
-            `❌ Health check failed - Status: ${healthData.status}, API: ${healthData.api?.status}`,
+            `❌ Health check failed - SSR Status: ${healthData.status}`,
           );
           process.exit(1);
         }
       } catch (e) {
-        console.log(
+        console.error(
           `❌ Health check failed - Invalid JSON response: ${e.message}`,
         );
         process.exit(1);
       }
     } else {
-      console.log(`❌ Health check failed with status: ${res.statusCode}`);
+      console.error(`❌ Health check failed with status: ${res.statusCode}`);
       process.exit(1);
     }
   });
@@ -63,13 +61,13 @@ const req = http.request(options, (res) => {
 
 // Handle connection errors
 req.on("error", (err) => {
-  console.log(`❌ Health check failed: ${err.message}`);
+  console.error(`❌ Health check failed: ${err.message}`);
   process.exit(1);
 });
 
 // Handle timeouts
 req.on("timeout", () => {
-  console.log("❌ Health check timed out");
+  console.error("❌ Health check timed out");
   req.destroy();
   process.exit(1);
 });
