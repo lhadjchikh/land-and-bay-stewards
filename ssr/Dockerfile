@@ -38,6 +38,10 @@ RUN --mount=type=cache,target=/app/.next/cache npm run build
 FROM base AS runner
 WORKDIR /app
 
+# Install utilities needed at runtime
+RUN apk add --no-cache curl
+
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
