@@ -154,3 +154,9 @@ variable "enable_ssr" {
   type        = bool
   default     = true
 }
+
+variable "health_check_path_api" {
+  description = "Path for load balancer health checks on Django backend"
+  type        = string
+  default     = "/health/"
+}
