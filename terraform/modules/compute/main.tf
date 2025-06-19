@@ -288,6 +288,12 @@ resource "aws_ecs_task_definition" "app" {
           "awslogs-stream-prefix" = "ssr"
         }
       }
+      dependsOn = [
+        {
+          containerName = "app"
+          condition     = "HEALTHY"
+        }
+      ]
     }
     ]) : jsonencode([
     # Django API Container only (when enable_ssr is false)
