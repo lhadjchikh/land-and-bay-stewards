@@ -270,6 +270,16 @@ resource "aws_ecs_task_definition" "app" {
           value = tostring(var.container_port_ssr)
         }
       ]
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "curl -f http://localhost:${var.container_port_ssr}${var.health_check_path_ssr} || exit 1"
+        ],
+        interval    = 30,
+        timeout     = 10,
+        retries     = 5,
+        startPeriod = 90
+      }
       logConfiguration = {
         logDriver = "awslogs"
         options = {
