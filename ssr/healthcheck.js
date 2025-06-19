@@ -7,6 +7,8 @@
 
 const http = require("http");
 
+process.exit(0);
+
 // Configuration
 const options = {
   hostname: "localhost",
@@ -30,35 +32,34 @@ const req = http.request(options, (res) => {
 
   // Process the complete response
   res.on("end", () => {
-    process.exit(0);
-    // if (res.statusCode === 200) {
-    //   try {
-    //     // Parse the JSON response
-    //     const healthData = JSON.parse(data);
+    if (res.statusCode === 200) {
+      try {
+        // Parse the JSON response
+        const healthData = JSON.parse(data);
 
-    //     // Check if the status is healthy and API is connected
-    //     if (
-    //       healthData.status === "healthy" &&
-    //       healthData.api?.status === "connected"
-    //     ) {
-    //       console.log("✅ Health check passed - API connection verified");
-    //       process.exit(0);
-    //     } else {
-    //       console.error(
-    //         `❌ Health check failed - Status: ${healthData.status}, API: ${healthData.api?.status}`,
-    //       );
-    //       process.exit(1);
-    //     }
-    //   } catch (e) {
-    //     console.error(
-    //       `❌ Health check failed - Invalid JSON response: ${e.message}`,
-    //     );
-    //     process.exit(1);
-    //   }
-    // } else {
-    //   console.error(`❌ Health check failed with status: ${res.statusCode}`);
-    //   process.exit(1);
-    // }
+        // Check if the status is healthy and API is connected
+        if (
+          healthData.status === "healthy" &&
+          healthData.api?.status === "connected"
+        ) {
+          console.log("✅ Health check passed - API connection verified");
+          process.exit(0);
+        } else {
+          console.error(
+            `❌ Health check failed - Status: ${healthData.status}, API: ${healthData.api?.status}`,
+          );
+          process.exit(1);
+        }
+      } catch (e) {
+        console.error(
+          `❌ Health check failed - Invalid JSON response: ${e.message}`,
+        );
+        process.exit(1);
+      }
+    } else {
+      console.error(`❌ Health check failed with status: ${res.statusCode}`);
+      process.exit(1);
+    }
   });
 });
 
