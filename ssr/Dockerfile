@@ -70,8 +70,8 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Health check
-# HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=3 \
-#   CMD node healthcheck.js
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=3 \
+  CMD node healthcheck.js
 
 # Use Next.js standalone server
 CMD ["node", "server.js"]

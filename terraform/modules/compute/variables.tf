@@ -160,9 +160,3 @@ variable "health_check_path_api" {
   type        = string
   default     = "/health/"
 }
-
-variable "health_check_path_ssr" {
-  description = "Path for load balancer health checks on frontend"
-  type        = string
-  default     = "/health"
-}
