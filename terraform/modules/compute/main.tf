@@ -270,6 +270,16 @@ resource "aws_ecs_task_definition" "app" {
           value = tostring(var.container_port_ssr)
         }
       ]
+      healthCheck = {
+        command = [
+          "CMD-SHELL",
+          "node healthcheck.js"
+        ],
+        interval    = 30,
+        timeout     = 10,
+        retries     = 5,
+        startPeriod = 60
+      }
       logConfiguration = {
         logDriver = "awslogs"
         options = {
