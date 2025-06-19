@@ -84,8 +84,8 @@ RUN chmod +x /app/entrypoint.sh
 RUN chmod +x /app/healthcheck.py
 
 # Configure health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD python /app/healthcheck.py
+# HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+#   CMD python /app/healthcheck.py
 
 # Set entrypoint and default command
 ENTRYPOINT ["/app/entrypoint.sh"]
