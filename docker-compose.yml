@@ -33,11 +33,12 @@ services:
       - SECRET_KEY=dev_secret_key_replace_in_production
       - DATABASE_URL=postgis://${APP_DB_USERNAME:-coalition_app}:${APP_DB_PASSWORD:-app_password}@db:5432/${DB_NAME:-coalition}
       - ALLOWED_HOSTS=localhost,127.0.0.1,api,ssr,nginx
+      - PYTHONPATH=/app/backend
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app/backend
-    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+    command: ["python", "/app/backend/manage.py", "runserver", "0.0.0.0:8000"]
     networks:
       - app-network
 
