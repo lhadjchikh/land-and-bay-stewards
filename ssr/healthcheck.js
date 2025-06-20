@@ -6,22 +6,22 @@
  */
 
 const http = require("http");
+const os = require("os");
 
 // Configuration
 const options = {
-  hostname: "localhost",
+  hostname: os.hostname() || "localhost",
   port: parseInt(process.env.PORT) || 3000,
   path: "/health",
   method: "GET",
   timeout: 3000,
-  // headers: {
-  //   Accept: "application/json",
-  // },
+  headers: {
+    Accept: "application/json",
+  },
 };
 
 // Execute health check
 const req = http.request(options, (res) => {
-  process.exit(0);
   let data = "";
 
   // Collect response data
