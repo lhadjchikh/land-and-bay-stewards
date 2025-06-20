@@ -7,12 +7,10 @@
 
 const http = require("http");
 
-process.exit(0);
-
 // Configuration
 const options = {
   hostname: "localhost",
-  port: process.env.PORT || 3000,
+  port: parseInt(process.env.PORT) || 3000,
   path: "/health",
   method: "GET",
   timeout: 3000,
@@ -33,6 +31,7 @@ const req = http.request(options, (res) => {
   // Process the complete response
   res.on("end", () => {
     if (res.statusCode === 200) {
+      process.exit(0);
       try {
         // Parse the JSON response
         const healthData = JSON.parse(data);
@@ -46,13 +45,13 @@ const req = http.request(options, (res) => {
           process.exit(0);
         } else {
           console.error(
-            `❌ Health check failed - Status: ${healthData.status}, API: ${healthData.api?.status}`,
+            `❌ Health check failed - Status: ${healthData.status}, API: ${healthData.api?.status}`
           );
           process.exit(1);
         }
       } catch (e) {
         console.error(
-          `❌ Health check failed - Invalid JSON response: ${e.message}`,
+          `❌ Health check failed - Invalid JSON response: ${e.message}`
         );
         process.exit(1);
       }
