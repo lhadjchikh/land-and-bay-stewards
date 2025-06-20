@@ -20,6 +20,8 @@ yarn-error.log*
 *.env.production.local
 build/
 dist/
+.next/
+ssr/.next/
 
 # Docker
 *.pid
