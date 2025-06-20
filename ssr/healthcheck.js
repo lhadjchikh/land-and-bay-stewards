@@ -9,7 +9,7 @@ const http = require("http");
 
 // Configuration
 const options = {
-  hostname: "localhost",
+  hostname: "0.0.0.0",
   port: parseInt(process.env.PORT) || 3000,
   path: "/health",
   method: "GET",
