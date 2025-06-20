@@ -2,12 +2,12 @@ import json
 import logging
 import os
 import time
-from datetime import UTC, datetime
 
 from django.conf import settings
 from django.db import connection
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.shortcuts import render
+from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 logger = logging.getLogger(__name__)
@@ -270,7 +270,7 @@ def health_check(request: HttpRequest) -> JsonResponse:
     # Build response
     health_data = {
         "status": "healthy" if db_status == "healthy" else "unhealthy",
-        "timestamp": datetime.now(tz=UTC).isoformat(),
+        "timestamp": timezone.now().isoformat(),
         "application": {
             "name": f"{settings.ORGANIZATION_NAME} API",
             "debug": settings.DEBUG,

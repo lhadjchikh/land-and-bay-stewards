@@ -30,7 +30,7 @@ ruff = "^0.11.12"
 
 [tool.black]
 line-length = 88
-target-version = ["py313"]
+target-version = ["py311"]
 include = '\.pyi?$'
 
 [tool.ruff]
@@ -42,11 +42,13 @@ select = ["E", "F", "I", "C90", "N", "B", "UP", "ANN", "A", "COM", "C4", "DTZ", 
 ignore = [
     "ARG001",  # Unused function argument - common in Django views/handlers
     "PT027",   # Use pytest.raises instead of unittest assertRaises - Django uses unittest
+    "ANN401",  # Allow Any in Django model save method *args, **kwargs
 ]
 
 # Disable specific rules for certain paths
 [tool.ruff.lint.per-file-ignores]
 "scripts/*.py" = ["T201"]  # Allow print statements in scripts directory
+"*/migrations/*.py" = ["E501", "ANN"]  # Ignore line length and type annotations in migrations
 
 [tool.ruff.lint.isort]
 known-first-party = ["coalition", "campaigns", "endorsers", "legislators", "regions", "api"]
