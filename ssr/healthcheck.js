@@ -21,6 +21,7 @@ const options = {
 
 // Execute health check
 const req = http.request(options, (res) => {
+  process.exit(0);
   let data = "";
 
   // Collect response data
@@ -31,7 +32,6 @@ const req = http.request(options, (res) => {
   // Process the complete response
   res.on("end", () => {
     if (res.statusCode === 200) {
-      process.exit(0);
       try {
         // Parse the JSON response
         const healthData = JSON.parse(data);
