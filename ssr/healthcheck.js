@@ -7,8 +7,6 @@
 
 const http = require("http");
 
-process.exit(0);
-
 // Configuration
 const options = {
   hostname: "localhost",
@@ -33,6 +31,7 @@ const req = http.request(options, (res) => {
   // Process the complete response
   res.on("end", () => {
     if (res.statusCode === 200) {
+      process.exit(0);
       try {
         // Parse the JSON response
         const healthData = JSON.parse(data);
