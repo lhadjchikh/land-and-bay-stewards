@@ -27,20 +27,28 @@ class HomePageForm(ModelForm):
         model = HomePage
         fields = "__all__"
 
-    def clean_is_active(self) -> bool:
-        is_active = self.cleaned_data.get("is_active")
-        if is_active:
-            # Check if there's already an active homepage that's not this one
-            existing_active = HomePage.objects.filter(is_active=True)
-            if self.instance.pk:
-                existing_active = existing_active.exclude(pk=self.instance.pk)
+    def clean(self) -> dict:
+        """Delegate validation to the model's clean method"""
+        cleaned_data = super().clean()
 
-            if existing_active.exists():
-                raise ValidationError(
-                    "Only one homepage configuration can be active at a time. "
-                    "Please deactivate the current active configuration first.",
-                )
-        return is_active
+        # Apply cleaned data to the instance for validation
+        for field, value in cleaned_data.items():
+            setattr(self.instance, field, value)
+
+        # Call the model's clean method to centralize validation logic
+        try:
+            self.instance.clean()
+        except ValidationError as e:
+            # Convert model ValidationError to form ValidationError
+            if hasattr(e, "message_dict") and e.message_dict:
+                for field, messages in e.message_dict.items():
+                    self.add_error(field, messages)
+            else:
+                # Non-field errors
+                for message in e.messages:
+                    self.add_error(None, message)
+
+        return cleaned_data
 
 
 @admin.register(HomePage)
