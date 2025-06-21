@@ -1,4 +1,4 @@
-from django.http import HttpRequest
+from django.http import Http404, HttpRequest
 from django.shortcuts import get_object_or_404
 from ninja import Router
 
@@ -14,27 +14,7 @@ def get_homepage(request: HttpRequest) -> HomePage:
     """Get the active homepage configuration with all content blocks"""
     homepage = HomePage.get_active()
     if not homepage:
-        # Create a default homepage if none exists
-        homepage = HomePage.objects.create(
-            organization_name="Coalition Builder",
-            tagline="Building strong advocacy partnerships",
-            hero_title="Welcome to Coalition Builder",
-            hero_subtitle="Empowering advocates to build strong policy coalitions",
-            about_section_title="About Our Mission",
-            about_section_content=(
-                "We believe in the power of collective action to drive "
-                "meaningful policy change. Our platform connects advocates, "
-                "stakeholders, and organizations to build effective coalitions "
-                "for important causes."
-            ),
-            contact_email="info@example.org",
-            cta_title="Get Involved",
-            cta_content=(
-                "Join our coalition and help make a difference in policy " "advocacy."
-            ),
-            cta_button_text="Learn More",
-            is_active=True,
-        )
+        raise Http404("No active homepage configuration found")
 
     return homepage
 

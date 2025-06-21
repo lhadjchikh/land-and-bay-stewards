@@ -99,3 +99,8 @@ class HomePageOut(Schema):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+
+    @staticmethod
+    def resolve_content_blocks(obj):
+        """Only return visible content blocks, ordered by order field"""
+        return obj.content_blocks.filter(is_visible=True).order_by("order")
