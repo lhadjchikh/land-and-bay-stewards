@@ -85,7 +85,7 @@ def create_test_data() -> int:
                 cta_title="Join Our Test",
                 cta_content="Help us test and improve this platform",
                 cta_button_text="Get Started",
-                cta_button_url="/campaigns/",
+                cta_button_url="https://example.com/campaigns/",
                 contact_email="test@coalition.org",
                 contact_phone="(555) 123-4567",
                 campaigns_section_title="Test Campaigns",
