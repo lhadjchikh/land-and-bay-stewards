@@ -13,12 +13,14 @@ A comprehensive web application for managing policy campaigns, tracking legislat
 
 ## 🌟 Features
 
+- **Dynamic Homepage Management**: Database-driven content management with flexible content blocks
 - **Policy Campaign Management**: Create and manage advocacy campaigns with legislative tracking
 - **Stakeholder Management**: Manage organizations and individuals (farmers, watermen, businesses, nonprofits)
 - **Endorsement Tracking**: Collect and display campaign endorsements from stakeholders
 - **Legislator Tracking**: Monitor representatives and senators with bill sponsorship data
+- **Content Management System**: Django admin interface for easy content editing
 - **Geographic Data**: PostGIS integration for location-based features
-- **Server-Side Rendering**: Optional Next.js SSR for improved SEO and performance
+- **Server-Side Rendering**: Next.js SSR with dynamic metadata generation for improved SEO
 - **Production-Ready**: Secure AWS deployment with Terraform infrastructure as code
 
 ## 🏗️ Architecture
@@ -69,7 +71,7 @@ This project uses a modern, scalable architecture:
 │   │   ├── regions/         # Geographic regions app
 │   │   ├── stakeholders/    # Stakeholder management app
 │   │   ├── templates/       # Django templates
-│   │   └── core/            # Core settings and configuration
+│   │   └── core/            # Homepage models and core configuration
 │   ├── sample_data/         # Example fixtures
 │   ├── static/              # Static assets
 │   ├── scripts/             # Backend-specific utilities
@@ -137,14 +139,19 @@ cd coalition-builder
 # Start all services (database, backend, frontend, SSR)
 docker-compose up
 
-# In another terminal, create test data
-docker-compose exec api python backend/scripts/create_test_data.py
+# In another terminal, create sample data (campaigns, stakeholders, homepage content)
+docker-compose exec api python scripts/create_test_data.py
+
+# Create an admin user to access the Django admin interface
+docker-compose exec api python manage.py createsuperuser
 ```
 
 **Services will be available at:**
 
 - Frontend (React): http://localhost:3000
+- SSR (Next.js): http://localhost:3001
 - Backend API: http://localhost:8000
+- Django Admin: http://localhost:8000/admin
 - Load Balancer: http://localhost:80
 - Database: localhost:5432
 
@@ -361,6 +368,11 @@ SECRET_KEY=your-secret-key-here
 DATABASE_URL=postgis://user:password@localhost:5432/coalition
 ALLOWED_HOSTS=localhost,127.0.0.1
 
+# Organization defaults (used when no homepage configuration exists)
+ORGANIZATION_NAME="Your Organization Name"
+ORG_TAGLINE="Your organization tagline"
+CONTACT_EMAIL="contact@yourorg.org"
+
 # For production deployment (see DEPLOY_TO_ECS.md)
 AWS_ACCESS_KEY_ID=your-aws-access-key
 AWS_SECRET_ACCESS_KEY=your-aws-secret-key
@@ -369,11 +381,32 @@ AWS_SECRET_ACCESS_KEY=your-aws-secret-key
 
 ## 🖌️ Customization
 
-After cloning you can personalize the application:
+Coalition Builder offers multiple ways to customize the application for your organization:
 
-- Edit `branding.json` to change default logos, organization name, and tagline.
-- Review [FORK_AND_CUSTOMIZE.md](FORK_AND_CUSTOMIZE.md) for environment variable overrides.
-- Rebuild your containers with `docker-compose up --build` to apply branding.
+### Content Management (Recommended)
+
+Use the Django admin interface to customize your homepage:
+
+1. **Access Admin**: Navigate to `http://localhost:8000/admin` and log in
+2. **Homepage Configuration**: Edit organization details, hero section, about content, and call-to-action
+3. **Content Blocks**: Add flexible content sections (text, images, statistics, quotes)
+4. **Real-time Updates**: Changes are immediately reflected on the frontend
+
+See [backend/CONTENT_MANAGEMENT.md](backend/CONTENT_MANAGEMENT.md) for detailed instructions.
+
+### Environment Variables
+
+For quick setup or fallback content:
+
+- Edit `branding.json` to change default logos and text
+- Set environment variables like `ORGANIZATION_NAME`, `ORG_TAGLINE`, `CONTACT_EMAIL`
+- Review [FORK_AND_CUSTOMIZE.md](FORK_AND_CUSTOMIZE.md) for complete customization options
+
+### Development
+
+- Rebuild containers with `docker-compose up --build` to apply branding changes
+- Use the admin interface for content that changes frequently
+- Use environment variables for deployment-specific configuration
 
 ## 🚀 Production Deployment
 
@@ -434,6 +467,7 @@ The Django backend provides a comprehensive REST API:
 
 ### Endpoints
 
+- **Homepage**: `/api/homepage/` - Dynamic homepage content and configuration
 - **Campaigns**: `/api/campaigns/` - Policy campaign management
 - **Stakeholders**: `/api/stakeholders/` - Stakeholder information and management
 - **Endorsements**: `/api/endorsements/` - Campaign endorsement relationships
@@ -471,7 +505,9 @@ This application includes sophisticated geographic data handling:
 
 ## 📖 Additional Documentation
 
-- **[Backend Documentation](backend/README.md)** - Django API details
+- **[Backend Documentation](backend/README.md)** - Django API details and setup
+- **[API Documentation](backend/API.md)** - Complete API reference for developers
+- **[Content Management Guide](backend/CONTENT_MANAGEMENT.md)** - Admin interface usage
 - **[Frontend Documentation](frontend/README.md)** - React TypeScript guide
 - **[SSR Documentation](ssr/README.md)** - Next.js server-side rendering
 - **[Deployment Guide](DEPLOY_TO_ECS.md)** - AWS deployment instructions

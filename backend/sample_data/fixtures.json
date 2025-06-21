@@ -6,7 +6,8 @@
       "title": "Clean Water Act",
       "slug": "clean-water-act",
       "summary": "Advocacy for stronger water protections",
-      "active": true
+      "active": true,
+      "created_at": "2024-01-15T10:00:00Z"
     }
   },
   {
@@ -31,7 +32,8 @@
       "role": "Director",
       "email": "jamie@example.org",
       "state": "MD",
-      "type": "nonprofit"
+      "type": "nonprofit",
+      "created_at": "2024-01-10T10:00:00Z"
     }
   },
   {
@@ -41,7 +43,73 @@
       "stakeholder": 1,
       "campaign": 1,
       "statement": "We fully support this effort",
-      "public_display": true
+      "public_display": true,
+      "created_at": "2024-01-20T10:00:00Z"
+    }
+  },
+  {
+    "model": "core.homepage",
+    "pk": 1,
+    "fields": {
+      "organization_name": "Coalition Builder",
+      "tagline": "Building strong advocacy partnerships",
+      "hero_title": "Empowering Advocates to Drive Policy Change",
+      "hero_subtitle": "Join our coalition of stakeholders, organizations, and advocates working together to create meaningful policy impact.",
+      "hero_background_image": "",
+      "about_section_title": "About Our Mission",
+      "about_section_content": "We believe in the power of collective action to drive meaningful policy change. Our platform connects advocates, stakeholders, and organizations to build effective coalitions for important causes. Together, we amplify voices, share resources, and coordinate efforts to influence policy decisions that matter most to our communities.",
+      "cta_title": "Get Involved",
+      "cta_content": "Join our coalition and help make a difference in policy advocacy. Together, we can create lasting change.",
+      "cta_button_text": "Learn More",
+      "cta_button_url": "/about",
+      "contact_email": "info@coalitionbuilder.org",
+      "contact_phone": "(555) 123-4567",
+      "facebook_url": "",
+      "twitter_url": "",
+      "instagram_url": "",
+      "linkedin_url": "",
+      "campaigns_section_title": "Policy Campaigns",
+      "campaigns_section_subtitle": "Current initiatives driving policy change",
+      "show_campaigns_section": true,
+      "is_active": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "core.contentblock",
+    "pk": 1,
+    "fields": {
+      "homepage": 1,
+      "title": "Why Coalition Building Matters",
+      "block_type": "text",
+      "content": "<p>Effective policy change requires more than individual voices—it requires coordinated action from diverse stakeholders. Our platform facilitates collaboration between organizations, advocates, and community leaders to create powerful coalitions that can influence policy decisions.</p><p>When stakeholders unite around common goals, they can amplify their impact, share resources, and present a unified front to policymakers.</p>",
+      "image_url": "",
+      "image_alt_text": "",
+      "css_classes": "bg-gray-50",
+      "background_color": "",
+      "order": 1,
+      "is_visible": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
+    }
+  },
+  {
+    "model": "core.contentblock",
+    "pk": 2,
+    "fields": {
+      "homepage": 1,
+      "title": "Our Impact",
+      "block_type": "stats",
+      "content": "<div class=\"text-center\"><div class=\"text-4xl font-bold text-blue-600 mb-2\">150+</div><div class=\"text-gray-600\">Organizations</div></div><div class=\"text-center\"><div class=\"text-4xl font-bold text-blue-600 mb-2\">25</div><div class=\"text-gray-600\">Active Campaigns</div></div><div class=\"text-center\"><div class=\"text-4xl font-bold text-blue-600 mb-2\">500+</div><div class=\"text-gray-600\">Stakeholder Endorsements</div></div>",
+      "image_url": "",
+      "image_alt_text": "",
+      "css_classes": "",
+      "background_color": "",
+      "order": 2,
+      "is_visible": true,
+      "created_at": "2024-01-01T10:00:00Z",
+      "updated_at": "2024-01-01T10:00:00Z"
     }
   }
 ]

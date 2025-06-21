@@ -28,4 +28,4 @@ class Legislator(models.Model):
             )
         elif self.chamber == "House" and self.district:
             suffix = f" – District {self.district}"
-        return f"{self.name}{suffix} – {self.state}"
+        return f"{self.first_name} {self.last_name}{suffix} – {self.state}"

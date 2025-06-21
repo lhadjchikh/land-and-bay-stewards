@@ -20,6 +20,11 @@ yarn-error.log*
 *.env.production.local
 build/
 dist/
+.next/
+ssr/.next/
+next-env.d.ts
+ssr/next-env.d.ts
+ssr/tsconfig.tsbuildinfo
 
 # Docker
 *.pid

@@ -19,6 +19,7 @@ def create_test_data() -> int:
     try:
         # Import models after Django is initialized
         from coalition.campaigns.models import PolicyCampaign
+        from coalition.core.models import ContentBlock, HomePage
         from coalition.endorsements.models import Endorsement
         from coalition.legislators.models import Legislator
         from coalition.stakeholders.models import Stakeholder
@@ -68,6 +69,64 @@ def create_test_data() -> int:
                 party="D",
             )
             print("Created test legislator")
+
+        # Create a test homepage if none exists
+        if not HomePage.objects.exists():
+            homepage = HomePage.objects.create(
+                organization_name="Test Coalition",
+                tagline="Building test partnerships",
+                hero_title="Welcome to Test Coalition",
+                hero_subtitle="Testing our coalition-building platform",
+                about_section_title="About Our Test Mission",
+                about_section_content=(
+                    "We are dedicated to testing and improving our coalition-building "
+                    "platform to help organizations create meaningful policy change."
+                ),
+                cta_title="Join Our Test",
+                cta_content="Help us test and improve this platform",
+                cta_button_text="Get Started",
+                cta_button_url="https://example.com/campaigns/",
+                contact_email="test@coalition.org",
+                contact_phone="(555) 123-4567",
+                campaigns_section_title="Test Campaigns",
+                campaigns_section_subtitle="Our current testing initiatives",
+                show_campaigns_section=True,
+                is_active=True,
+            )
+            print("Created test homepage")
+
+            # Create test content blocks
+            ContentBlock.objects.create(
+                homepage=homepage,
+                title="Why Testing Matters",
+                block_type="text",
+                content=(
+                    "<p>Thorough testing ensures our platform works reliably for all "
+                    "coalition-building needs. We test every feature to make sure "
+                    "advocates can focus on their mission, not technical issues.</p>"
+                ),
+                order=1,
+                is_visible=True,
+            )
+
+            ContentBlock.objects.create(
+                homepage=homepage,
+                title="Our Test Impact",
+                block_type="stats",
+                content=(
+                    '<div class="grid grid-cols-3 gap-4 text-center">'
+                    '<div><div class="text-3xl font-bold text-blue-600">100+</div>'
+                    '<div class="text-gray-600">Test Cases</div></div>'
+                    '<div><div class="text-3xl font-bold text-blue-600">50+</div>'
+                    '<div class="text-gray-600">Features Tested</div></div>'
+                    '<div><div class="text-3xl font-bold text-blue-600">99%</div>'
+                    '<div class="text-gray-600">Uptime</div></div>'
+                    "</div>"
+                ),
+                order=2,
+                is_visible=True,
+            )
+            print("Created test content blocks")
 
         return 0  # Success
     except ImportError as e:

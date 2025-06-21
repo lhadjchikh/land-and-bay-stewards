@@ -1,4 +1,10 @@
-import { Campaign, Endorser, Legislator } from "@/types";
+import {
+  Campaign,
+  Endorser,
+  Legislator,
+  HomePage,
+  ContentBlock,
+} from "@/types";
 
 const API_URL =
   process.env.API_URL ||
@@ -54,6 +60,27 @@ class ApiClient {
   // Legislators
   async getLegislators(): Promise<Legislator[]> {
     return this.request<Legislator[]>("/api/legislators/");
+  }
+
+  // Homepage
+  async getHomepage(): Promise<HomePage> {
+    return this.request<HomePage>("/api/homepage/");
+  }
+
+  async getHomepageById(id: number): Promise<HomePage> {
+    return this.request<HomePage>(`/api/homepage/${id}/`);
+  }
+
+  async getContentBlocks(homepageId: number): Promise<ContentBlock[]> {
+    return this.request<ContentBlock[]>(
+      `/api/homepage/${homepageId}/content-blocks/`,
+    );
+  }
+
+  async getContentBlock(blockId: number): Promise<ContentBlock> {
+    return this.request<ContentBlock>(
+      `/api/homepage/content-blocks/${blockId}/`,
+    );
   }
 
   // Health check
