@@ -7,6 +7,15 @@
 This is the frontend for Coalition Builder. It's a React application with TypeScript
 that interacts with the Django backend API.
 
+## 📚 Documentation
+
+**For complete documentation, visit: [your-org.github.io/coalition-builder](https://your-org.github.io/coalition-builder/)**
+
+Quick links:
+
+- [Frontend Development Guide](../docs/development/frontend.md)
+- [Development Setup](../docs/development/setup.md)
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app) and has been
 migrated to TypeScript.
 
