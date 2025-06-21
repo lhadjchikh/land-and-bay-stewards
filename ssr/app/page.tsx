@@ -1,5 +1,5 @@
 import { apiClient } from "../lib/api";
-import { Campaign, HomePage } from "../types";
+import type { Campaign, HomePage } from "../types";
 import Link from "next/link";
 import HeroSection from "./components/HeroSection";
 import ContentBlock from "./components/ContentBlock";

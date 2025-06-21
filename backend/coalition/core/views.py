@@ -279,7 +279,7 @@ def health_check(request: HttpRequest) -> JsonResponse:
             "status": db_status,
             "responseTime": f"{db_response_time}ms",
             "engine": settings.DATABASES["default"]["ENGINE"],
-            "name": settings.DATABASES["default"]["NAME"],
+            "name": str(settings.DATABASES["default"]["NAME"]),
         },
         "memory": memory,
         "responseTime": f"{round((time.time() - start_time) * 1000)}ms",
