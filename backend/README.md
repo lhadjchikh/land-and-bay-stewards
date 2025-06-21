@@ -102,6 +102,7 @@ The API is available at `/api/` with the following routers:
 ### Homepage API
 
 #### `GET /api/homepage/`
+
 Returns the active homepage configuration with all visible content blocks:
 
 ```json
@@ -140,23 +141,27 @@ Returns the active homepage configuration with all visible content blocks:
 ```
 
 #### `GET /api/homepage/{id}/`
+
 Returns a specific homepage configuration by ID.
 
 #### `GET /api/homepage/{id}/content-blocks/`
+
 Returns all visible content blocks for a specific homepage, ordered by the `order` field.
 
 #### `GET /api/homepage/content-blocks/{block_id}/`
+
 Returns a specific content block by ID.
 
 ## Content Management
 
 ### Django Admin Interface
 
-Coalition Builder provides a comprehensive Django admin interface for managing homepage content, campaigns, stakeholders, and other data. 
+Coalition Builder provides a comprehensive Django admin interface for managing homepage content, campaigns, stakeholders, and other data.
 
 #### Accessing the Admin
 
 1. **Create a superuser account**:
+
    ```bash
    poetry run python manage.py createsuperuser
    ```
@@ -169,6 +174,7 @@ Coalition Builder provides a comprehensive Django admin interface for managing h
 The admin interface provides dedicated sections for managing homepage content:
 
 **Homepage Configuration**:
+
 - Organization information (name, tagline, contact details)
 - Hero section (title, subtitle, background image)
 - About section content
@@ -177,6 +183,7 @@ The admin interface provides dedicated sections for managing homepage content:
 - Campaign section settings
 
 **Content Blocks**:
+
 - Flexible content sections that can be added to the homepage
 - Support for different block types: text, image, text+image, quote, statistics, custom HTML
 - Drag-and-drop ordering via the `order` field
@@ -184,6 +191,7 @@ The admin interface provides dedicated sections for managing homepage content:
 - Rich content editing with HTML support
 
 **Key Features**:
+
 - **Single Active Homepage**: Only one homepage configuration can be active at a time
 - **Content Block Management**: Add, edit, and reorder content blocks inline
 - **Validation**: Built-in validation ensures data integrity

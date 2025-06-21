@@ -41,6 +41,7 @@ All API responses follow a consistent JSON format:
 Returns the active homepage configuration with all content.
 
 **Response Example:**
+
 ```json
 {
   "id": 1,
@@ -101,6 +102,7 @@ Returns the active homepage configuration with all content.
 ```
 
 **Status Codes:**
+
 - `200 OK`: Homepage found and returned
 - `404 Not Found`: No active homepage configuration exists
 
@@ -122,6 +124,7 @@ Content blocks support different types for flexible page layouts:
 Returns all active policy campaigns.
 
 **Response Example:**
+
 ```json
 [
   {
@@ -146,6 +149,7 @@ Returns a specific campaign by slug.
 Returns all stakeholders.
 
 **Response Example:**
+
 ```json
 [
   {
@@ -163,8 +167,9 @@ Returns all stakeholders.
 ```
 
 **Stakeholder Types:**
+
 - `farmer`: Agricultural stakeholders
-- `waterman`: Commercial fishing/maritime stakeholders  
+- `waterman`: Commercial fishing/maritime stakeholders
 - `business`: Private sector organizations
 - `nonprofit`: Non-profit organizations
 - `other`: Other stakeholder types
@@ -176,6 +181,7 @@ Returns all stakeholders.
 Returns all public endorsements with stakeholder and campaign details.
 
 **Response Example:**
+
 ```json
 [
   {
@@ -204,6 +210,7 @@ Returns all public endorsements with stakeholder and campaign details.
 Returns all legislators.
 
 **Response Example:**
+
 ```json
 [
   {
@@ -264,7 +271,7 @@ export async function generateMetadata(): Promise<Metadata> {
   } catch {
     return {
       title: "Coalition Builder",
-      description: "Building strong advocacy partnerships"
+      description: "Building strong advocacy partnerships",
     };
   }
 }
@@ -280,7 +287,7 @@ let homepage: HomePage | null = null;
 try {
   homepage = await apiClient.getHomepage();
 } catch (error) {
-  console.error('Failed to fetch homepage:', error);
+  console.error("Failed to fetch homepage:", error);
   // Use fallback content
   homepage = {
     organization_name: process.env.ORGANIZATION_NAME || "Coalition Builder",
@@ -296,7 +303,7 @@ Content blocks should be filtered by visibility and ordered:
 
 ```typescript
 const visibleBlocks = homepage.content_blocks
-  .filter(block => block.is_visible)
+  .filter((block) => block.is_visible)
   .sort((a, b) => a.order - b.order);
 ```
 

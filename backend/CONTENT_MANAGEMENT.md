@@ -13,7 +13,7 @@ This guide explains how to manage content in Coalition Builder using the Django 
 ### Creating Your First Homepage
 
 1. Click on **"Homepage Configurations"** under the **Core** section
-2. Click **"Add Homepage Configuration"** 
+2. Click **"Add Homepage Configuration"**
 3. Fill out the required fields:
    - **Organization name**: Your organization's name
    - **Tagline**: A brief description or slogan
@@ -62,8 +62,9 @@ The hero section is the large banner area at the top of your homepage.
 ### Social Media
 
 Add URLs for your organization's social media profiles:
+
 - Facebook URL
-- Twitter/X URL  
+- Twitter/X URL
 - Instagram URL
 - LinkedIn URL
 
@@ -84,37 +85,43 @@ Content blocks allow you to add flexible sections to your homepage beyond the st
 ### Adding Content Blocks
 
 1. When editing a homepage configuration, scroll down to the **Content blocks** section
-2. Click **"Add another Content block"** 
+2. Click **"Add another Content block"**
 3. Choose a block type and configure the content
 
 ### Block Types
 
 **Text Block**: Rich text content with HTML support
+
 - Use for additional information sections
 - Supports headings, paragraphs, lists, and basic styling
 - Good for mission statements, program descriptions
 
 **Image Block**: Display images with optional captions
+
 - Use for photos, infographics, or visual content
 - Include descriptive alt text for accessibility
 - Image URL should point to web-accessible images
 
 **Text + Image Block**: Combined text and image layout
+
 - Use for feature highlights or program descriptions
 - Balances visual and textual content
 - Good for showcasing specific initiatives
 
 **Quote Block**: Highlighted testimonials or quotes
+
 - Use for member testimonials or impactful statements
 - Creates visual emphasis with special styling
 - Include attribution in the content
 
 **Statistics Block**: Display metrics or achievements
+
 - Use for impact numbers, membership stats, or milestones
 - Supports custom HTML for flexible layouts
 - Great for demonstrating organizational impact
 
 **Custom HTML Block**: Advanced layouts and custom content
+
 - Use for complex layouts not covered by other types
 - Requires HTML knowledge
 - Allows maximum flexibility
@@ -144,6 +151,7 @@ Content blocks allow you to add flexible sections to your homepage beyond the st
 ### Single Active Homepage
 
 Only one homepage configuration can be active at a time. This ensures:
+
 - Consistent branding across the site
 - No confusion about which content to display
 - Clear organizational identity
@@ -153,6 +161,7 @@ Only one homepage configuration can be active at a time. This ensures:
 To switch to a different organization's homepage:
 
 1. Deactivate the current homepage:
+
    - Edit the current active homepage
    - Uncheck **"Is active"**
    - Save
@@ -165,8 +174,9 @@ To switch to a different organization's homepage:
 ### Environment Variables as Fallbacks
 
 If no active homepage exists, the system falls back to environment variables:
+
 - `ORGANIZATION_NAME`
-- `ORG_TAGLINE`  
+- `ORG_TAGLINE`
 - `CONTACT_EMAIL`
 
 This ensures the site always displays some content.
@@ -208,20 +218,24 @@ This ensures the site always displays some content.
 ### Common Issues
 
 **"Only one homepage configuration can be active" Error**:
+
 - Deactivate the existing homepage before activating a new one
 - Check that no other homepage has "Is active" checked
 
 **Content Not Appearing**:
+
 - Verify the homepage configuration is marked as active
 - Check that content blocks are marked as visible
 - Ensure content blocks have reasonable order values
 
 **Images Not Loading**:
+
 - Verify image URLs are publicly accessible
 - Use full URLs including https://
 - Check image file formats (JPG, PNG, WebP recommended)
 
 **Styling Issues**:
+
 - CSS classes require corresponding styles in the frontend
 - Background colors should use hex format (#ffffff)
 - Test changes on different screen sizes
@@ -266,7 +280,9 @@ For advanced users, custom HTML blocks allow complex layouts:
 Most text fields support HTML formatting:
 
 ```html
-<p>This is a paragraph with <strong>bold text</strong> and <em>italic text</em>.</p>
+<p>
+  This is a paragraph with <strong>bold text</strong> and <em>italic text</em>.
+</p>
 <ul>
   <li>First bullet point</li>
   <li>Second bullet point</li>

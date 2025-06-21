@@ -46,7 +46,7 @@ class HomePageModelTest(TestCase):
             "contact_email": "minimal@test.org",
         }
         homepage = HomePage.objects.create(**minimal_data)
-        
+
         assert homepage.about_section_title == "About Our Mission"
         assert homepage.cta_title == "Get Involved"
         assert homepage.cta_button_text == "Learn More"
@@ -64,7 +64,7 @@ class HomePageModelTest(TestCase):
         data2 = self.homepage_data.copy()
         data2["organization_name"] = "Second Organization"
         data2["contact_email"] = "contact2@testorg.org"
-        
+
         # This should raise a ValidationError due to clean() method
         with self.assertRaises(ValidationError):
             homepage2 = HomePage(**data2)
@@ -83,15 +83,17 @@ class HomePageModelTest(TestCase):
     def test_get_active_multiple_active_returns_most_recent(self) -> None:
         """Test that get_active returns most recent when multiple exist"""
         # Create first homepage
-        homepage1 = HomePage.objects.create(**self.homepage_data)
-        
+        HomePage.objects.create(**self.homepage_data)
+
         # Create second homepage bypassing validation using bulk_create
         data2 = self.homepage_data.copy()
         data2["organization_name"] = "Second Organization"
         data2["contact_email"] = "contact2@testorg.org"
-        
+
         HomePage.objects.bulk_create([HomePage(**data2)])
-        homepage2 = HomePage.objects.filter(organization_name="Second Organization").first()
+        homepage2 = HomePage.objects.filter(
+            organization_name="Second Organization",
+        ).first()
 
         # Both should be active, get_active should return the most recent
         active_homepage = HomePage.get_active()
@@ -116,7 +118,7 @@ class HomePageModelTest(TestCase):
             "contact_email": "minimal@test.org",
         }
         homepage = HomePage.objects.create(**minimal_data)
-        
+
         # These should be blank/empty
         assert homepage.hero_subtitle == ""
         assert homepage.hero_background_image == ""
@@ -139,7 +141,7 @@ class ContentBlockModelTest(TestCase):
             about_section_content="About content",
             contact_email="contact@test.org",
         )
-        
+
         self.content_block_data = {
             "homepage": self.homepage,
             "title": "Test Content Block",
@@ -177,7 +179,7 @@ class ContentBlockModelTest(TestCase):
     def test_content_block_types(self) -> None:
         """Test all valid content block types"""
         valid_types = ["text", "image", "text_image", "quote", "stats", "custom_html"]
-        
+
         for i, block_type in enumerate(valid_types):
             data = self.content_block_data.copy()
             data["block_type"] = block_type
@@ -193,7 +195,7 @@ class ContentBlockModelTest(TestCase):
             "content": "Minimal content",
         }
         block = ContentBlock.objects.create(**minimal_data)
-        
+
         assert block.title == ""
         assert block.block_type == "text"
         assert block.order == 0
@@ -234,7 +236,7 @@ class ContentBlockModelTest(TestCase):
     def test_content_block_homepage_relationship(self) -> None:
         """Test the relationship between homepage and content blocks"""
         block1 = ContentBlock.objects.create(**self.content_block_data)
-        
+
         data2 = self.content_block_data.copy()
         data2["title"] = "Second Block"
         data2["order"] = 2
@@ -250,10 +252,10 @@ class ContentBlockModelTest(TestCase):
         """Test that content blocks are deleted when homepage is deleted"""
         block = ContentBlock.objects.create(**self.content_block_data)
         block_id = block.id
-        
+
         # Delete homepage
         self.homepage.delete()
-        
+
         # Content block should also be deleted
         assert not ContentBlock.objects.filter(id=block_id).exists()
 
@@ -266,7 +268,7 @@ class ContentBlockModelTest(TestCase):
             content="Visible content",
             is_visible=True,
         )
-        
+
         # Create hidden block
         hidden_block = ContentBlock.objects.create(
             homepage=self.homepage,

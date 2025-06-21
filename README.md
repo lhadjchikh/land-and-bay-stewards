@@ -149,7 +149,7 @@ docker-compose exec api python manage.py createsuperuser
 **Services will be available at:**
 
 - Frontend (React): http://localhost:3000
-- SSR (Next.js): http://localhost:3001  
+- SSR (Next.js): http://localhost:3001
 - Backend API: http://localhost:8000
 - Django Admin: http://localhost:8000/admin
 - Load Balancer: http://localhost:80

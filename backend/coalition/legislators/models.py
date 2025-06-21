@@ -24,8 +24,10 @@ class Legislator(models.Model):
             suffix = (
                 " (Sr.)"
                 if self.is_senior
-                else " (Jr.)" if self.is_senior is not None else ""
+                else " (Jr.)"
+                if self.is_senior is not None
+                else ""
             )
         elif self.chamber == "House" and self.district:
             suffix = f" – District {self.district}"
-        return f"{self.name}{suffix} – {self.state}"
+        return f"{self.first_name} {self.last_name}{suffix} – {self.state}"

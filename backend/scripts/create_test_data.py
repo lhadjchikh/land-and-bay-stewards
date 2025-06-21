@@ -121,7 +121,7 @@ def create_test_data() -> int:
                     '<div class="text-gray-600">Features Tested</div></div>'
                     '<div><div class="text-3xl font-bold text-blue-600">99%</div>'
                     '<div class="text-gray-600">Uptime</div></div>'
-                    '</div>'
+                    "</div>"
                 ),
                 order=2,
                 is_visible=True,

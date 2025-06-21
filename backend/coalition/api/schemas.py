@@ -1,6 +1,12 @@
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from ninja import Schema
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
+
+    from coalition.core.models import ContentBlock, HomePage
 
 
 class PolicyCampaignOut(Schema):
@@ -101,6 +107,6 @@ class HomePageOut(Schema):
     updated_at: datetime
 
     @staticmethod
-    def resolve_content_blocks(obj):
+    def resolve_content_blocks(obj: "HomePage") -> "QuerySet[ContentBlock]":
         """Only return visible content blocks, ordered by order field"""
         return obj.content_blocks.filter(is_visible=True).order_by("order")
