@@ -2,6 +2,15 @@
 
 This directory contains the Next.js application that provides server-side rendering for the Coalition Builder project.
 
+## 📚 Documentation
+
+**For complete documentation, visit: [your-org.github.io/coalition-builder](https://your-org.github.io/coalition-builder/)**
+
+Quick links:
+
+- [SSR Development Guide](../docs/development/ssr.md)
+- [Development Setup](../docs/development/setup.md)
+
 ## Architecture
 
 This implementation uses Next.js App Router for server-side rendering. Key aspects:

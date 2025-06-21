@@ -7,6 +7,16 @@
 This is the Django backend for Coalition Builder. It provides a REST API for managing
 policy campaigns, stakeholders, endorsements, legislators, and dynamic homepage content.
 
+## 📚 Documentation
+
+**For complete documentation, visit: [your-org.github.io/coalition-builder](https://your-org.github.io/coalition-builder/)**
+
+Quick links:
+
+- [Backend Development Guide](../docs/development/backend.md)
+- [API Reference](../docs/api/index.md)
+- [Development Setup](../docs/development/setup.md)
+
 ## Technology Stack
 
 - **Python 3.13**: Core programming language
